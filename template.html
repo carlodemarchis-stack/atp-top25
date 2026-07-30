@@ -311,7 +311,7 @@
   .mhead .mcat{display:inline-block; margin-bottom:10px}
   .mtitle{font-size:24px; font-weight:800; letter-spacing:-.01em}
   .msub{font-size:12.5px; color:var(--muted); margin-top:5px}
-  .mmeta{display:flex; gap:18px; margin-top:14px}
+  .mmeta{display:flex; flex-wrap:wrap; gap:13px 18px; margin-top:14px}
   .mmeta .m{display:flex; flex-direction:column}
   .mmeta .m b{font-size:17px; font-weight:800} .mmeta .m span{font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted-2); margin-top:2px}
   .mmeta .m.win b{color:var(--gold)}
@@ -848,6 +848,7 @@ function renderTourn(){
         <div class="m"><b>${t.won}–${t.lost}</b><span>Matches</span></div>
         <div class="m"><b>${setsW}–${setsL}</b><span>Sets</span></div>
         <div class="m"><b>${t.points||0}</b><span>Points</span></div>
+        <div class="m"><b>${t.prize?esc(t.cur||"$")+Number(t.prize).toLocaleString("en-US"):"—"}</b><span>Prize</span></div>
       </div>
     </div>
     <div class="mmatches">${matches}</div>
