@@ -452,6 +452,10 @@
     .topcredit{display:none}
     .pgcredit{display:block; text-align:center; padding:18px 16px 26px;
       font-size:10.5px; line-height:1.5; letter-spacing:.02em; color:var(--muted-2); opacity:.85}
+    /* bar-chart cards (Leaders / Race): rotate the crowded x-labels -45° so 10 names fit */
+    .chartcard .cxlab{transform:rotate(-45deg); transform-origin:top center; white-space:nowrap;
+      text-align:center; max-width:none; overflow:visible; text-overflow:clip; margin-top:14px; font-size:11px}
+    .chartcard .chart{padding-bottom:48px}
     /* prize-money leaderboard: single column, scrolls with the card */
     .moneylist{column-count:1}
     .moneycard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 4px}
