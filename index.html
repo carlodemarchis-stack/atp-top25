@@ -275,6 +275,9 @@
   .cxlab{margin-top:12px; font-size:clamp(9px,0.95vw,13px); font-weight:700; color:var(--muted); text-align:center;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px}
   .cxlab b{color:var(--ink); margin-right:3px}
+  /* race chart: top 8 qualify for the Nitto ATP Finals (green rank); 9-10 are on the bubble (faded) */
+  .racecard .col.qual .cxlab b{color:var(--green)}
+  .racecard .col:not(.qual){opacity:.66}
 
   /* ---- final card: 2026 prize-money leaderboard (round faces + horizontal bars) ---- */
   .moneycard .chartwrap{max-width:980px}
@@ -731,7 +734,28 @@ function chartCard(){
   return `<section class="card chartcard">
     <div class="card__bg"></div>
     <div class="chartwrap">
-      <div class="charthead"><div class="ch-t">The Field</div><div class="ch-s">ATP Top 10 · Ranking Points · 2026</div></div>
+      <div class="charthead"><div class="ch-t">Leaders</div><div class="ch-s">ATP Top 10 · Ranking Points · 2026</div></div>
+      <div class="chart">${cols}</div>
+    </div>
+  </section>`;
+}
+
+function raceCard(){
+  const num=s=>+String(s).replace(/[^0-9]/g,"");
+  const top=players.filter(p=>p.raceRank&&p.raceRank<=10).sort((a,b)=>a.raceRank-b.raceRank);
+  const max=Math.max(...top.map(p=>num(p.racePoints)));
+  const cols=top.map(p=>{
+    const frac=(num(p.racePoints)/max).toFixed(3);
+    return `<div class="col${p.raceRank===1?" lead":""}${p.raceRank<=8?" qual":""}">
+      <div class="cpts">${esc(p.racePoints)}</div>
+      <img class="figbar" src="img/full/${p.id}.png" alt="${esc(p.last)}" style="--frac:${frac}">
+      <div class="cxlab"><b>${p.raceRank}</b> ${esc(p.last)}</div>
+    </div>`;
+  }).join("");
+  return `<section class="card chartcard racecard">
+    <div class="card__bg"></div>
+    <div class="chartwrap">
+      <div class="charthead"><div class="ch-t">Race to Turin</div><div class="ch-s">Nitto ATP Finals · Top 8 qualify · 2026</div></div>
       <div class="chart">${cols}</div>
     </div>
   </section>`;
@@ -764,7 +788,7 @@ const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p)
 const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
-track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + cardHtml.slice(splitAt).join("") + moneyCard();
+track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + raceCard() + cardHtml.slice(splitAt).join("") + moneyCard();
 // per-card credit at the bottom of every page (shown on mobile only)
 const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a onclick="openCredits();return false;">Credits</a>';
 [...track.children].forEach(c=>{const host=c.querySelector(".inner")||c.querySelector(".chartwrap")||c;const d=document.createElement("div");d.className="pgcredit";d.innerHTML=CREDIT_HTML;host.appendChild(d);});
@@ -803,12 +827,14 @@ document.getElementById("fs").onclick=()=>{ document.fullscreenElement?document.
 
 // ---- jump-to menu (grouped by rank range + the two chart cards) ----
 (function(){
-  const rankToIdx=r=> r<=10 ? r-1 : r;              // rank -> card index (chart sits after rank 10)
+  const rankToIdx=r=> r<=10 ? r-1 : r+1;            // rank -> card index (two charts sit after rank 10)
   const items=[];
   for(let a=1;a<=91;a+=10){ const b=Math.min(a+9,100); items.push({label:a+"–"+b, idx:rankToIdx(a), lo:rankToIdx(a), hi:rankToIdx(b)}); }
-  const fieldIdx=[...track.children].findIndex(c=>c.classList.contains("chartcard"));
+  const fieldIdx=[...track.children].findIndex(c=>c.classList.contains("chartcard")&&!c.classList.contains("racecard"));
+  const raceIdx=[...track.children].findIndex(c=>c.classList.contains("racecard"));
   const moneyIdx=[...track.children].findIndex(c=>c.classList.contains("moneycard"));
-  if(fieldIdx>=0) items.push({label:"The Field", idx:fieldIdx, spc:1});
+  if(fieldIdx>=0) items.push({label:"Leaders", idx:fieldIdx, spc:1});
+  if(raceIdx>=0) items.push({label:"Race", idx:raceIdx, spc:1});
   if(moneyIdx>=0) items.push({label:"Prize $", idx:moneyIdx, spc:1});
   const grid=document.getElementById("jgrid"), pop=document.getElementById("jumppop"), counter=document.getElementById("counter");
   grid.innerHTML=items.map(it=>`<button class="jchip${it.spc?" spc":""}" data-idx="${it.idx}">${it.label}</button>`).join("");
