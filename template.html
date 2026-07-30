@@ -174,6 +174,7 @@
   .cat.a250{color:#aeb9d4; background:rgba(140,165,220,.1); border-color:rgba(140,165,220,.24)}
   .cat.uc{color:#c9b7ff; background:rgba(150,120,255,.14); border-color:rgba(150,120,255,.34)}
   .tn{font-size:var(--tfs,14px); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+  .tn .tfl{margin-right:8px; font-size:.95em}
   .tn .cty{color:var(--muted-2); font-weight:600; margin-left:7px}
   .badge{font-size:12px; font-weight:800; padding:2px 9px; border-radius:6px; min-width:40px; text-align:center}
   .badge.W{background:rgba(242,193,78,.18); color:var(--gold)}
@@ -461,7 +462,7 @@
 <script>
 const DATA = /*__DATA__*/;
 const RANK_POINTS = {1:"13,450",2:"8,480",3:"8,160",4:"4,740",5:"3,760",6:"3,660",7:"3,620",8:"3,580",9:"3,420",10:"3,300"};
-const FLAG = {"Italy":"🇮🇹","Germany":"🇩🇪","Spain":"🇪🇸","Canada":"🇨🇦","Serbia":"🇷🇸","Australia":"🇦🇺","Russia":"🇷🇺","United States":"🇺🇸","Great Britain":"🇬🇧","France":"🇫🇷","Kazakhstan":"🇰🇿","Czechia":"🇨🇿","Norway":"🇳🇴","Monaco":"🇲🇨","Argentina":"🇦🇷","Greece":"🇬🇷","Denmark":"🇩🇰","Netherlands":"🇳🇱","Chile":"🇨🇱","Bulgaria":"🇧🇬","Poland":"🇵🇱","Switzerland":"🇨🇭","Austria":"🇦🇹","Hungary":"🇭🇺","Finland":"🇫🇮","Portugal":"🇵🇹","Belgium":"🇧🇪","Croatia":"🇭🇷","Japan":"🇯🇵","China":"🇨🇳","Brazil":"🇧🇷"};
+const FLAG = {"Italy":"🇮🇹","Germany":"🇩🇪","Spain":"🇪🇸","Canada":"🇨🇦","Serbia":"🇷🇸","Australia":"🇦🇺","Russia":"🇷🇺","United States":"🇺🇸","Great Britain":"🇬🇧","France":"🇫🇷","Kazakhstan":"🇰🇿","Czechia":"🇨🇿","Norway":"🇳🇴","Monaco":"🇲🇨","Argentina":"🇦🇷","Greece":"🇬🇷","Denmark":"🇩🇰","Netherlands":"🇳🇱","Chile":"🇨🇱","Bulgaria":"🇧🇬","Poland":"🇵🇱","Switzerland":"🇨🇭","Austria":"🇦🇹","Hungary":"🇭🇺","Finland":"🇫🇮","Portugal":"🇵🇹","Belgium":"🇧🇪","Croatia":"🇭🇷","Japan":"🇯🇵","China":"🇨🇳","Brazil":"🇧🇷","Bahrain":"🇧🇭","Dominican Republic":"🇩🇴","Ecuador":"🇪🇨","Hong Kong":"🇭🇰","Mexico":"🇲🇽","Morocco":"🇲🇦","New Zealand":"🇳🇿","Paraguay":"🇵🇾","Qatar":"🇶🇦","Romania":"🇷🇴","Rwanda":"🇷🇼","Slovak Republic":"🇸🇰","South Korea":"🇰🇷","Sweden":"🇸🇪","United Arab Emirates":"🇦🇪"};
 const CAT = {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 250",UC:"United Cup"};
 const MONTH=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -486,10 +487,12 @@ function trow(t,pi,ti){
   const cls=["W","F","SF","QF","RR"].includes(t.result)?t.result:"o";
   const res=t.result&&t.result!=="-"?`<span class="badge ${cls}">${esc(t.result)}</span>`:`<span class="badge o">—</span>`;
   const city=t.loc&&(t.loc.EventCity||t.loc.EventLocation)||"";
+  const flag=(t.loc&&FLAG[t.loc.EventCountry])||"";
+  const showCity=city && !t.name.toLowerCase().includes(city.toLowerCase());
   return `<div class="trow" data-p="${pi}" data-t="${ti}">
     <span class="surf ${esc(t.surface)}" title="${esc(t.surface)}"></span>
     ${catChip(t.type)}
-    <span class="tn">${esc(t.name)}<span class="cty">${esc(city)}</span></span>
+    <span class="tn">${flag?`<span class="tfl">${flag}</span>`:""}${esc(t.name)}${showCity?`<span class="cty">${esc(city)}</span>`:""}</span>
     ${res}
     <span class="tpts">${t.points?t.points:"–"}</span>
   </div>`;
