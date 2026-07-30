@@ -209,11 +209,27 @@
   .controls .play{width:52px; height:52px; background:var(--ink); color:#0a1430}
   .controls .play:hover{background:#fff; color:#0a1430}
   .controls .play svg{width:22px; height:22px}
-  .counter{display:flex; align-items:center; gap:9px; padding:0 16px; white-space:nowrap;
-    font-size:12px; font-weight:800; letter-spacing:.1em; color:var(--muted)}
+  .counter{display:flex; align-items:center; gap:9px; padding:6px 12px 6px 16px; white-space:nowrap;
+    font-size:12px; font-weight:800; letter-spacing:.1em; color:var(--muted); cursor:pointer; border-radius:999px; transition:.15s}
+  .counter:hover{color:var(--ink); background:rgba(255,255,255,.06)}
   .counter b{color:var(--gold); font-size:14px}
   .counter .lbl{color:var(--muted-2); letter-spacing:.16em}
+  .counter .cchev{width:13px; height:13px; fill:var(--muted-2); transition:.18s}
+  body.jump-open .counter .cchev{transform:rotate(180deg); fill:var(--gold)}
   .sep{width:1px; height:24px; background:var(--line); margin:0 4px}
+  /* jump-to popover */
+  .jumppop{position:absolute; left:50%; bottom:calc(100% + 14px); transform:translateX(-50%);
+    background:rgba(6,12,28,.96); border:1px solid var(--line); border-radius:16px; padding:12px;
+    backdrop-filter:blur(14px); box-shadow:0 18px 55px rgba(0,0,0,.6); animation:jpop .16s ease}
+  .jumppop[hidden]{display:none}
+  @keyframes jpop{from{opacity:0; transform:translateX(-50%) translateY(6px)}to{opacity:1}}
+  .jgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:7px}
+  .jchip{border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--muted); cursor:pointer;
+    font-size:12px; font-weight:800; letter-spacing:.02em; padding:9px 8px; border-radius:9px; white-space:nowrap;
+    min-width:66px; text-align:center; transition:.12s; font-variant-numeric:tabular-nums}
+  .jchip:hover{color:var(--ink); border-color:var(--gold); background:rgba(226,186,82,.09)}
+  .jchip.on{color:var(--gold); border-color:var(--gold); background:rgba(226,186,82,.15)}
+  .jchip.spc{color:var(--muted-2); font-weight:700}
 
   .brand{position:fixed; left:22px; top:18px; z-index:30; font-size:12px; font-weight:800;
     letter-spacing:.22em; color:var(--muted-2)}
@@ -434,9 +450,10 @@
   <button id="prev" title="Previous (←)"><svg viewBox="0 0 24 24"><path d="M15.5 5v14l-11-7z"/><rect x="16.5" y="5" width="2.4" height="14" rx="1"/></svg></button>
   <button class="play" id="play" title="Play / Pause (Space)"><svg id="playIcon" viewBox="0 0 24 24"><path d="M7 5v14l12-7z"/></svg></button>
   <button id="next" title="Next (→)"><svg viewBox="0 0 24 24"><path d="M8.5 5v14l11-7z"/><rect x="5.1" y="5" width="2.4" height="14" rx="1"/></svg></button>
-  <div class="counter"><b id="cnum">1</b><span class="lbl">/ <span id="ctot">25</span></span></div>
+  <div class="counter" id="counter" role="button" tabindex="0" title="Jump to…"><b id="cnum">1</b><span class="lbl">/ <span id="ctot">25</span></span><svg class="cchev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
   <div class="sep"></div>
   <button id="fs" title="Fullscreen (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 3v-3h2v5h-5v-2z"/></svg></button>
+  <div class="jumppop" id="jumppop" hidden><div class="jgrid" id="jgrid"></div></div>
 </div>
 
 <div class="modal" id="modal" hidden>
@@ -757,6 +774,27 @@ document.getElementById("prev").onclick=()=>{prev(); if(playing) setPlay(true);}
 document.getElementById("restart").onclick=()=>{go(0); if(playing) setPlay(true);};
 document.getElementById("play").onclick=()=>setPlay(!playing);
 document.getElementById("fs").onclick=()=>{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); };
+
+// ---- jump-to menu (grouped by rank range + the two chart cards) ----
+(function(){
+  const rankToIdx=r=> r<=10 ? r-1 : r;              // rank -> card index (chart sits after rank 10)
+  const items=[];
+  for(let a=1;a<=91;a+=10){ const b=Math.min(a+9,100); items.push({label:a+"–"+b, idx:rankToIdx(a), lo:rankToIdx(a), hi:rankToIdx(b)}); }
+  const fieldIdx=[...track.children].findIndex(c=>c.classList.contains("chartcard"));
+  const moneyIdx=[...track.children].findIndex(c=>c.classList.contains("moneycard"));
+  if(fieldIdx>=0) items.push({label:"The Field", idx:fieldIdx, spc:1});
+  if(moneyIdx>=0) items.push({label:"Prize $", idx:moneyIdx, spc:1});
+  const grid=document.getElementById("jgrid"), pop=document.getElementById("jumppop"), counter=document.getElementById("counter");
+  grid.innerHTML=items.map(it=>`<button class="jchip${it.spc?" spc":""}" data-idx="${it.idx}">${it.label}</button>`).join("");
+  const chips=[...grid.querySelectorAll(".jchip")];
+  const highlight=()=>chips.forEach((ch,i)=>{ const it=items[i]; ch.classList.toggle("on", it.spc? idx===it.idx : (idx>=it.lo && idx<=it.hi)); });
+  const setOpen=o=>{ pop.hidden=!o; document.body.classList.toggle("jump-open",o); if(o) highlight(); };
+  counter.addEventListener("click", ()=>setOpen(pop.hidden));
+  counter.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setOpen(pop.hidden);} });
+  grid.addEventListener("click", e=>{ const b=e.target.closest(".jchip"); if(!b) return; go(+b.dataset.idx); if(playing) setPlay(true); setOpen(false); });
+  document.addEventListener("click", e=>{ if(!pop.hidden && !pop.contains(e.target) && !counter.contains(e.target)) setOpen(false); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !pop.hidden) setOpen(false); });
+})();
 
 addEventListener("keydown",e=>{
   if(!cmodal.hidden){ if(e.key==="Escape") closeCredits(); return; }
