@@ -114,6 +114,14 @@
   /* tournaments */
   .thead{font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--muted-2)}
   .tlist{display:flex; flex-direction:column; min-height:0}
+  /* lists are height-capped so a long one scrolls within its own space
+     instead of overlapping the header or the control bar (the card centers them;
+     its 104px bottom padding already reserves room for the control bar) */
+  .tlist,.olist,.rlist,.flist{max-height:calc(100vh - 226px); overflow-y:auto; overscroll-behavior:contain;
+    scrollbar-width:thin; scrollbar-color:rgba(140,165,220,.3) transparent}
+  .tlist::-webkit-scrollbar,.olist::-webkit-scrollbar,.rlist::-webkit-scrollbar,.flist::-webkit-scrollbar{width:6px}
+  .tlist::-webkit-scrollbar-thumb,.olist::-webkit-scrollbar-thumb,.rlist::-webkit-scrollbar-thumb,.flist::-webkit-scrollbar-thumb{background:rgba(140,165,220,.26); border-radius:4px}
+  .tlist:hover::-webkit-scrollbar-thumb,.olist:hover::-webkit-scrollbar-thumb,.rlist:hover::-webkit-scrollbar-thumb,.flist:hover::-webkit-scrollbar-thumb{background:rgba(140,165,220,.5)}
 
   /* opponents (head-to-head) list */
   .olist,.rlist{display:none; flex-direction:column; max-height:68vh; overflow-y:auto; padding-right:6px}
@@ -813,19 +821,12 @@ addEventListener("keydown",e=>{
 
 // adaptive fit: keep sparse cards roomy, compact only the busy ones so all rows clear the control bar
 function fitAll(){
-  if(innerWidth<=860){  // mobile: no compaction — rows are full size, the card scrolls
-    document.querySelectorAll('.card').forEach(card=>{ card.style.setProperty('--rpad','7px'); card.style.setProperty('--tfs','14px'); });
-    return;
-  }
-  const safe=document.querySelector('.controls').getBoundingClientRect().top-14;
+  // Rows stay full-size and readable; the list is height-capped in CSS (see .tlist max-height)
+  // so a too-long list scrolls within its own space instead of overlapping the header or control bar.
+  const mobile=innerWidth<=860;
   document.querySelectorAll('.card').forEach(card=>{
-    const rows=card.querySelectorAll('.trow'); if(!rows.length) return;
-    let pad=6, fs=14; card.style.setProperty('--rpad',pad+'px'); card.style.setProperty('--tfs',fs+'px');
-    let g=0;
-    while(rows[rows.length-1].getBoundingClientRect().bottom>safe && pad>1.5 && g<60){
-      pad-=0.5; if(fs>11.5) fs-=0.15;
-      card.style.setProperty('--rpad',pad+'px'); card.style.setProperty('--tfs',fs.toFixed(2)+'px'); g++;
-    }
+    card.style.setProperty('--rpad', mobile?'7px':'6px');
+    card.style.setProperty('--tfs','14px');
   });
 }
 // smart name fit: largest size that keeps the name on one line; drop to two lines only when needed
