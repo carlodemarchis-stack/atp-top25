@@ -311,6 +311,7 @@
   .mhead{padding:22px 24px 18px; border-bottom:1px solid var(--line)}
   .mhead .mcat{display:inline-block; margin-bottom:10px}
   .mtitle{font-size:24px; font-weight:800; letter-spacing:-.01em}
+  .mtitle .tfl{margin-right:10px}
   .msub{font-size:12.5px; color:var(--muted); margin-top:5px}
   .mmeta{display:flex; flex-wrap:wrap; gap:13px 18px; margin-top:14px}
   .mmeta .m{display:flex; flex-direction:column}
@@ -824,6 +825,7 @@ let curPi=0, curTi=0;
 function renderTourn(){
   const p=players[curPi], t=p.tournaments[curTi], n=p.tournaments.length;
   const city=t.loc&&(t.loc.EventCity||t.loc.EventLocation)||"";
+  const flag=(t.loc&&FLAG[t.loc.EventCountry])||"";
   const dstr=t.date?new Date(t.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
   const won=!!(t.title || t.result==="W");
   let setsW=0, setsL=0;
@@ -844,7 +846,7 @@ function renderTourn(){
     <button class="mclose" aria-label="Close">×</button>
     <div class="mhead">
       <span class="cat ${catKey(t.type)} mcat">${esc(catLabel(t.type))}</span>
-      <div class="mtitle">${esc(t.name)}</div>
+      <div class="mtitle">${flag?`<span class="tfl">${flag}</span>`:""}${esc(t.name)}</div>
       <div class="msub">${esc(city)} · ${esc(t.surface)} court · ${dstr}${t.draw?` · Draw ${t.draw}`:""}${t.seed?` · Seeded #${t.seed}`:""}</div>
       <div class="mmeta">
         <div class="m${won?" win":""}"><b>${won?"🏆 ":""}${esc(t.resultLong||t.result||"—")}</b><span>Result</span></div>
