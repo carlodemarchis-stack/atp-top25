@@ -539,6 +539,14 @@ function seasonSets(p){
       const a=+mm[1], b=+mm[2]; if(a>b) w++; else if(b>a) l++; }); }));
   return [w,l];
 }
+// count every match shown on the card (incl. qualifying, Challengers, walkovers) so
+// the Matches stat is consistent with the Sets stat and the tournament breakdown below
+function seasonMatches(p){
+  let w=0,l=0;
+  (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(m.bye) return;
+    if(m.wl==="W") w++; else if(m.wl==="L") l++; }));
+  return [w,l];
+}
 function titleBreakdown(p){
   const c={};
   (p.tournaments||[]).forEach(t=>{ if(t.title) c[t.type]=(c[t.type]||0)+1; });
@@ -599,6 +607,7 @@ function card(p,pi){
   const showRivals=p.rank<=10;
   const riv=showRivals?rivalsList(p):null;
   const [setW,setL]=seasonSets(p);
+  const [matW,matL]=seasonMatches(p);
   const tb=titleBreakdown(p);
   const titlesLine = p.ytdTitles>0
     ? `<span class="tt-n">${p.ytdTitles} Title${p.ytdTitles==1?"":"s"}</span>`+tb.map(x=>`<span class="tt-c"><b>${x.n}</b> ${esc(x.label)}</span>`).join("")
@@ -650,7 +659,7 @@ function card(p,pi){
           <div class="vit">${vit}</div>
           <div class="statbar">
             <div class="stat"><div class="v">${esc(p.points)}</div><div class="k">Points</div></div>
-            <div class="stat"><div class="v">${p.ytdWon}<small>–${p.ytdLost}</small></div><div class="k">Matches</div></div>
+            <div class="stat"><div class="v">${matW}<small>–${matL}</small></div><div class="k">Matches</div></div>
             <div class="stat"><div class="v">${setW}<small>–${setL}</small></div><div class="k">Sets</div></div>
             <div class="stat"><div class="v">${abbrMoney(p.ytdPrize)}</div><div class="k">Prize ’26</div></div>
           </div>
