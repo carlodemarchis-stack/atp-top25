@@ -219,6 +219,7 @@
   .brand b{color:var(--gold)}
   .updated{position:fixed; left:23px; top:36px; z-index:30; font-size:9.5px; font-weight:700;
     letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2); opacity:.75}
+  .minihdr{display:none}  /* sticky player header — mobile only */
 
   /* ---- final card: points bar chart ---- */
   .chartwrap{position:relative; z-index:2; width:100%; max-width:1240px; height:100%; margin:0 auto;
@@ -295,6 +296,16 @@
     /* gradient scrim behind the fixed brand header so scrolling content doesn't clash under it */
     body::before{content:""; position:fixed; top:0; left:0; right:0; height:60px; z-index:29;
       background:linear-gradient(180deg, var(--navy-0) 44%, rgba(5,10,26,0)); pointer-events:none}
+    /* sticky mini header: slides in with rank·flag·name when the big name scrolls away */
+    .minihdr{display:flex; position:fixed; top:0; left:0; right:0; z-index:31; align-items:center; gap:9px;
+      padding:13px 16px 15px; background:linear-gradient(180deg, var(--navy-0) 76%, rgba(5,10,26,0));
+      transform:translateY(-102%); transition:transform .22s cubic-bezier(.4,0,.2,1)}
+    .minihdr.show{transform:none}
+    .mh-rank{font-size:15px; font-weight:800; color:var(--muted-2)}
+    .mh-flag{font-size:17px; line-height:1}
+    .mh-name{font-size:15px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .brand,.updated{transition:opacity .18s}
+    body.mini-on .brand, body.mini-on .updated{opacity:0}
     .inner{grid-template-columns:1fr; align-items:start; gap:16px; height:auto; padding-top:0}
     .col-id{order:-1; height:auto; gap:10px}
     .col-tourn{height:auto; justify-content:flex-start}
@@ -348,6 +359,7 @@
 <body>
 <div class="brand"><b>ATP</b> · TOP 25 · SINGLES</div>
 <div class="updated" id="updated"></div>
+<div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
 <div class="stage"><div class="track" id="track"></div></div>
 
 <div class="controls">
@@ -601,6 +613,7 @@ document.body.dataset.view="tournaments";
 document.getElementById("ctot").textContent=nCards;
 document.getElementById("updated").textContent = DATA.updated ? "Updated "+DATA.updated : "";
 const modal=document.getElementById("modal"), box=document.getElementById("modalBox");
+const minihdr=document.getElementById("minihdr");
 
 let idx=0, playing=false, timer=null, SPEED=5000;
 const saveState=()=>{ const v=document.body.dataset.view;
@@ -610,6 +623,8 @@ const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*10
   const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
   if(lc && cur && !cur.querySelector(lc)) document.body.dataset.view="tournaments";
   if(cur) cur.scrollTop=0;   // start each player at the top (mobile vertical scroll)
+  if(minihdr) minihdr.classList.remove("show");
+  document.body.classList.remove("mini-on");
   document.getElementById("cnum").textContent=idx+1; saveState(); };
 const next=()=>go(idx+1), prev=()=>go(idx-1);
 const setPlay=on=>{ playing=on; document.getElementById("playIcon").innerHTML=on
@@ -734,6 +749,23 @@ document.addEventListener("click",e=>{
   if(e.target.closest(".mclose")||e.target.classList.contains("modal__ov")){ closeModal(); return; }
   const row=e.target.closest(".trow[data-p]");
   if(row) openTourn(+row.dataset.p,+row.dataset.t);
+});
+
+// sticky mini header (mobile): show rank·flag·name once the big name scrolls out of view
+function updateMini(card){
+  if(!minihdr) return;
+  const nl=card.querySelector(".nameline");
+  const show = innerWidth<=860 && !!(nl && nl.getBoundingClientRect().bottom < 48);
+  if(show && !minihdr.classList.contains("show")){
+    minihdr.querySelector(".mh-rank").textContent=card.querySelector(".no")?.textContent||"";
+    minihdr.querySelector(".mh-flag").textContent=card.querySelector(".ctry .flag")?.textContent||"";
+    minihdr.querySelector(".mh-name").textContent=card.querySelector(".nm")?.textContent||"";
+  }
+  minihdr.classList.toggle("show", show);
+  document.body.classList.toggle("mini-on", show);
+}
+[...document.querySelectorAll(".card")].forEach(card=>{
+  card.addEventListener("scroll", ()=>{ if(card===track.children[idx]) updateMini(card); }, {passive:true});
 });
 
 // restore card + view from the URL hash so a reload lands on the same place
