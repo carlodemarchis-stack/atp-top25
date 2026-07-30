@@ -617,7 +617,9 @@ const minihdr=document.getElementById("minihdr");
 
 let idx=0, playing=false, timer=null, SPEED=5000;
 const saveState=()=>{ const v=document.body.dataset.view;
-  try{ history.replaceState(null,"","#"+idx+(v&&v!=="tournaments"?"-"+v:"")); }catch(e){} };
+  let h="#"+idx+(v&&v!=="tournaments"?"-"+v:"");
+  if(modal && !modal.hidden) h+="~"+curPi+"."+curTi;   // include open tournament modal
+  try{ history.replaceState(null,"",h); }catch(e){} };
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
   const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
@@ -735,9 +737,9 @@ function renderTourn(){
     <div class="mmatches">${matches}</div>
     <div class="mfoot"><button class="mfnav" data-d="-1" aria-label="Previous tournament">‹</button><span class="mpager"><b>${curTi+1}</b> / ${n} · ${esc(p.last)}</span><button class="mfnav" data-d="1" aria-label="Next tournament">›</button></div>`;
 }
-function openTourn(pi,ti){ curPi=pi; curTi=ti; renderTourn(); modal.hidden=false; setPlay(false); }
-function navT(dir){ const n=players[curPi].tournaments.length; curTi=(curTi+dir+n)%n; renderTourn(); const mm=box.querySelector(".mmatches"); if(mm) mm.scrollTop=0; }
-function closeModal(){ modal.hidden=true; }
+function openTourn(pi,ti){ curPi=pi; curTi=ti; renderTourn(); modal.hidden=false; setPlay(false); saveState(); }
+function navT(dir){ const n=players[curPi].tournaments.length; curTi=(curTi+dir+n)%n; renderTourn(); const mm=box.querySelector(".mmatches"); if(mm) mm.scrollTop=0; saveState(); }
+function closeModal(){ modal.hidden=true; saveState(); }
 document.getElementById("mPrev").onclick=()=>navT(-1);
 document.getElementById("mNext").onclick=()=>navT(1);
 document.addEventListener("click",e=>{
@@ -770,12 +772,13 @@ function updateMini(card){
 
 // restore card + view from the URL hash so a reload lands on the same place
 (function restore(){
-  const m=(location.hash||"").replace("#","").match(/^(\d+)(?:-(tournaments|opponents|rivals|finals))?$/);
+  const m=(location.hash||"").replace("#","").match(/^(\d+)(?:-(tournaments|opponents|rivals|finals))?(?:~(\d+)\.(\d+))?$/);
   if(!m) return;
   if(m[2]) document.body.dataset.view=m[2];
   const prev=track.style.transition; track.style.transition="none";
   go(Math.min(Math.max(+m[1],0), nCards-1));
   requestAnimationFrame(()=>{ track.style.transition=prev||""; });
+  if(m[3]!==undefined && players[+m[3]] && (players[+m[3]].tournaments||[])[+m[4]]) openTourn(+m[3], +m[4]);
 })();
 </script>
 </body>
