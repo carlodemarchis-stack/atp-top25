@@ -262,6 +262,29 @@
   .prow.lead .pl{color:#12203e; text-shadow:0 1px 1px rgba(255,255,255,.25)}
   .prow.lead .patp{color:#2a3a5e; text-shadow:none}
   .prow.lead .pamt{color:var(--gold)}
+  /* footnote + credit line on the finale card */
+  .moneynote{max-width:820px; margin:clamp(12px,2vh,22px) auto 0; text-align:center;
+    font-size:11px; line-height:1.55; color:var(--muted-2)}
+  .credit{max-width:820px; margin:clamp(8px,1.3vh,14px) auto 0; text-align:center;
+    font-size:10.5px; letter-spacing:.02em; color:var(--muted-2); opacity:.85}
+  .credit a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
+  .credit a:hover{color:var(--gold)}
+
+  /* ---- credits modal ---- */
+  .cmodal{position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; padding:20px}
+  .cmodal[hidden]{display:none}
+  .cmodal__ov{position:absolute; inset:0; background:rgba(3,7,18,.78); backdrop-filter:blur(5px)}
+  .cmodal__box{position:relative; z-index:1; width:min(640px,92vw); max-height:88vh; overflow-y:auto;
+    background:linear-gradient(180deg,#0c1836,#0a1330); border:1px solid var(--line); border-radius:20px;
+    box-shadow:0 30px 90px rgba(0,0,0,.6); animation:pop .22s cubic-bezier(.3,1.2,.5,1);
+    padding:30px clamp(22px,4vw,40px) 34px}
+  .cmodal__box h2{font-size:20px; font-weight:800; letter-spacing:-.01em; margin:0}
+  .cmodal__box .csub{font-size:11.5px; color:var(--muted-2); margin:5px 0 6px; letter-spacing:.08em; text-transform:uppercase}
+  .csec{margin-top:17px}
+  .csec h3{font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin:0 0 6px}
+  .csec p{font-size:13px; line-height:1.62; color:var(--muted); margin:0}
+  .csec a{color:var(--ink); text-decoration:underline; text-underline-offset:2px}
+  .csign{margin-top:20px; font-size:13px; color:var(--muted); font-style:italic}
 
   /* ---- tournament modal ---- */
   .modal{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
@@ -410,6 +433,20 @@
   <button class="mnav" id="mPrev" aria-label="Previous tournament">‹</button>
   <div class="modal__box" id="modalBox"></div>
   <button class="mnav" id="mNext" aria-label="Next tournament">›</button>
+</div>
+
+<div class="cmodal" id="cmodal" hidden>
+  <div class="cmodal__ov" onclick="closeCredits()"></div>
+  <div class="cmodal__box">
+    <button class="mclose" onclick="closeCredits()" aria-label="Close credits">×</button>
+    <h2>Credits</h2>
+    <div class="csub">ATP Top 25 · Player Film</div>
+    <div class="csec"><h3>Design &amp; Build</h3><p>Designed and built by Carlo De Marchis — “A guy with a scarf”. The concept, the ranking-ordered card-film layout, the visual language and the interactions are my own — an alternative, more playful way to move through a season of ATP data, told in my own style.</p></div>
+    <div class="csec"><h3>Data &amp; Images — atptour.com</h3><p>Every number and every image here comes from the official ATP site, <a href="https://www.atptour.com" target="_blank" rel="noopener noreferrer">atptour.com</a>: the PIF ATP Rankings and Race to Turin, each player’s season activity and match-by-match results, and the player imagery (round headshots and full-body cutouts). All of it is the property of the ATP and its partners — it is used here only to power this fan experience, and the credit belongs entirely to them.</p></div>
+    <div class="csec"><h3>Built With</h3><p>Designed and developed with Claude (Anthropic) — Claude Code for the build — and hosted on GitHub Pages. A single self-contained page, vanilla JavaScript.</p></div>
+    <div class="csec"><h3>A Note &amp; A Disclaimer</h3><p>This is an independent, non-commercial fan project. I made it purely for the love of tennis, of data-visualisation, and of interactive fan experiences on digital — as a way to show that there are alternative ways to create engaging experiences on top of data and visuals that already exist, in one’s own style. I have no commercial intent whatsoever. Everything shown is the property of the ATP and the respective rights-holders, used with respect and gratitude. If you hold the rights to anything here and would rather it wasn’t shown, just get in touch and I’ll take it down right away.</p></div>
+    <div class="csign">Made with love. — Carlo De Marchis, “A guy with a scarf”</div>
+  </div>
 </div>
 
 <script>
@@ -652,8 +689,10 @@ function moneyCard(){
   return `<section class="card moneycard">
     <div class="card__bg"></div>
     <div class="chartwrap">
-      <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">ATP Top 25 · 2026 Season Earnings</div></div>
+      <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">ATP Nos. 1–25 · 2026 Season Earnings</div></div>
       <div class="moneylist">${list}</div>
+      <div class="moneynote">The ATP ranking’s current Top 25, ordered by their 2026 on-court prize money — this is not the overall prize-money leaderboard, and players ranked outside the Top 25 may have earned more.</div>
+      <div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
     </div>
   </section>`;
 }
@@ -697,6 +736,7 @@ document.getElementById("play").onclick=()=>setPlay(!playing);
 document.getElementById("fs").onclick=()=>{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); };
 
 addEventListener("keydown",e=>{
+  if(!cmodal.hidden){ if(e.key==="Escape") closeCredits(); return; }
   if(!modal.hidden){
     if(e.key==="Escape") closeModal();
     else if(e.key==="ArrowRight") navT(1);
@@ -797,6 +837,8 @@ function renderTourn(){
 function openTourn(pi,ti){ curPi=pi; curTi=ti; renderTourn(); modal.hidden=false; setPlay(false); saveState(); }
 function navT(dir){ const n=players[curPi].tournaments.length; curTi=(curTi+dir+n)%n; renderTourn(); const mm=box.querySelector(".mmatches"); if(mm) mm.scrollTop=0; saveState(); }
 function closeModal(){ modal.hidden=true; saveState(); }
+function openCredits(){ cmodal.hidden=false; setPlay(false); }
+function closeCredits(){ cmodal.hidden=true; }
 document.getElementById("mPrev").onclick=()=>navT(-1);
 document.getElementById("mNext").onclick=()=>navT(1);
 document.addEventListener("click",e=>{
