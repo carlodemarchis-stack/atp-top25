@@ -292,6 +292,9 @@
     /* step 1 — stacked view: the card scrolls vertically */
     .card{overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
       align-items:flex-start; padding:54px 16px 40px}
+    /* gradient scrim behind the fixed brand header so scrolling content doesn't clash under it */
+    body::before{content:""; position:fixed; top:0; left:0; right:0; height:60px; z-index:29;
+      background:linear-gradient(180deg, var(--navy-0) 44%, rgba(5,10,26,0)); pointer-events:none}
     .inner{grid-template-columns:1fr; align-items:start; gap:16px; height:auto; padding-top:0}
     .col-id{order:-1; height:auto; gap:10px}
     .col-tourn{height:auto; justify-content:flex-start}
