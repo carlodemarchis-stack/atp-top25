@@ -532,19 +532,19 @@ function oppList(p){
   return {html:out, count:opps.length};
 }
 
+// A match "counts toward W-L" the way the official ATP record does: main-draw singles
+// at Grand Slam / Masters 1000 / ATP 500 / ATP 250 / United Cup / Davis Cup — i.e. not a
+// bye, not a qualifying round (Q1/Q2/Q3), and not a Challenger. (Walkovers carry no score,
+// so they add no sets regardless.) This reproduces atptour.com's season W-L exactly.
+const WL_TIERS={GS:1,"1000":1,"500":1,"250":1,UC:1,DC:1};
+const isQualRound=r=>/^Q[0-9]/.test((r||"").toUpperCase());
+const countsWL=(t,m)=>!m.bye && !!WL_TIERS[t.type] && !isQualRound(m.round);
+// sets from only the matches that count toward the official W-L
 function seasonSets(p){
   let w=0,l=0;
-  (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(m.bye) return;
+  (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(!countsWL(t,m)) return;
     (m.score||"").split(/\s+/).forEach(tok=>{ const mm=tok.match(/^(\d+)-(\d+)/); if(!mm) return;
       const a=+mm[1], b=+mm[2]; if(a>b) w++; else if(b>a) l++; }); }));
-  return [w,l];
-}
-// count every match shown on the card (incl. qualifying, Challengers, walkovers) so
-// the Matches stat is consistent with the Sets stat and the tournament breakdown below
-function seasonMatches(p){
-  let w=0,l=0;
-  (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(m.bye) return;
-    if(m.wl==="W") w++; else if(m.wl==="L") l++; }));
   return [w,l];
 }
 function titleBreakdown(p){
@@ -607,7 +607,6 @@ function card(p,pi){
   const showRivals=p.rank<=10;
   const riv=showRivals?rivalsList(p):null;
   const [setW,setL]=seasonSets(p);
-  const [matW,matL]=seasonMatches(p);
   const tb=titleBreakdown(p);
   const titlesLine = p.ytdTitles>0
     ? `<span class="tt-n">${p.ytdTitles} Title${p.ytdTitles==1?"":"s"}</span>`+tb.map(x=>`<span class="tt-c"><b>${x.n}</b> ${esc(x.label)}</span>`).join("")
@@ -659,7 +658,7 @@ function card(p,pi){
           <div class="vit">${vit}</div>
           <div class="statbar">
             <div class="stat"><div class="v">${esc(p.points)}</div><div class="k">Points</div></div>
-            <div class="stat"><div class="v">${matW}<small>–${matL}</small></div><div class="k">Matches</div></div>
+            <div class="stat"><div class="v">${p.ytdWon}<small>–${p.ytdLost}</small></div><div class="k">Matches</div></div>
             <div class="stat"><div class="v">${setW}<small>–${setL}</small></div><div class="k">Sets</div></div>
             <div class="stat"><div class="v">${abbrMoney(p.ytdPrize)}</div><div class="k">Prize ’26</div></div>
           </div>
@@ -825,7 +824,7 @@ function renderTourn(){
   const dstr=t.date?new Date(t.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
   const won=!!(t.title || t.result==="W");
   let setsW=0, setsL=0;
-  (t.matches||[]).forEach(m=>{ if(m.bye) return; (m.score||"").split(/\s+/).forEach(tok=>{
+  (t.matches||[]).forEach(m=>{ if(!countsWL(t,m)) return; (m.score||"").split(/\s+/).forEach(tok=>{
     const mm=tok.match(/^(\d+)-(\d+)/); if(!mm) return; const a=+mm[1], b=+mm[2];
     if(a>b) setsW++; else if(b>a) setsL++; }); });
   const matches=(t.matches||[]).map((m,mi)=>{
