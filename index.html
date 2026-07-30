@@ -49,7 +49,7 @@
 
   /* country + rank tag float above the panel, flanking the player's lower body */
   .topbar{position:absolute; left:6px; right:6px; bottom:14px; z-index:4; pointer-events:none;
-    display:flex; align-items:center; justify-content:space-between; gap:12px}
+    display:flex; align-items:flex-end; justify-content:space-between; gap:12px}
   .ctry{display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:.06em; font-size:18px}
   .ctry .flag{font-size:26px; line-height:1}
   .tag{font-size:11px; font-weight:800; letter-spacing:.16em; color:var(--gold);
@@ -167,6 +167,7 @@
   .surf.Hard{background:var(--hard)} .surf.Clay{background:var(--clay)} .surf.Grass{background:var(--grass)}
   .cat{font-size:9.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; text-align:center;
     padding:3px 4px; border-radius:5px; white-space:nowrap; border:1px solid transparent}
+  .cat .cs{display:none}
   .cat.gs{color:#ffdd8a; background:rgba(242,193,78,.15); border-color:rgba(242,193,78,.4)}
   .cat.m1000{color:#a9c6ff; background:rgba(63,139,255,.15); border-color:rgba(63,139,255,.36)}
   .cat.a500{color:#83e6bc; background:rgba(62,196,109,.12); border-color:rgba(62,196,109,.32)}
@@ -193,6 +194,7 @@
     border-radius:50%; background:radial-gradient(closest-side, rgba(0,0,0,.6), transparent 76%); filter:blur(4px)}
   .gladiator{position:relative; z-index:2; height:min(44vh,420px); width:auto; object-fit:contain;
     filter:drop-shadow(0 16px 18px rgba(0,0,0,.45))}
+  .sh{display:none}  /* swipe-hint arrows: mobile only */
 
   /* ---- bottom control bar ---- */
   .controls{position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:40;
@@ -263,6 +265,8 @@
   .mmeta .m.win b{color:var(--gold)}
   .mmatches{overflow-y:auto; padding:8px 24px 18px; flex:1 1 auto; min-height:0}
   .mfoot{flex:none; border-top:1px solid var(--line); padding:11px; display:flex; align-items:center; justify-content:center; gap:6px}
+  .mfnav{display:none; background:none; border:0; color:var(--muted); font-size:24px; line-height:1; cursor:pointer; padding:0 14px; border-radius:8px}
+  .mfnav:hover{color:var(--ink)}
   .mpager{font-size:12px; font-weight:800; letter-spacing:.16em; color:var(--muted-2)}
   .mpager b{color:var(--gold); font-size:14px}
   .mrow{display:grid; grid-template-columns:46px minmax(0,1fr) auto 22px; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid rgba(140,165,220,.09)}
@@ -285,12 +289,56 @@
   .mempty{color:var(--muted-2); font-size:13px; padding:18px 0}
 
   @media (max-width:860px){
-    .inner{grid-template-columns:1fr; align-items:start; gap:12px; padding-top:44px}
+    /* step 1 — stacked view: the card scrolls vertically */
+    .card{overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+      align-items:flex-start; padding:54px 16px 40px}
+    .inner{grid-template-columns:1fr; align-items:start; gap:16px; height:auto; padding-top:0}
     .col-id{order:-1; height:auto; gap:10px}
     .col-tourn{height:auto; justify-content:flex-start}
-    .gladiator{height:30vh}
+    /* photo on top, flag + race row BELOW it (no overlap) */
+    .stagephoto{position:relative; flex-direction:column; align-items:center; margin-bottom:0}
+    .glow,.floor{display:none}
+    .gladiator{height:34vh}
+    .topbar{position:static; width:100%; margin-top:12px; padding:0 2px; align-items:center}
+    /* swipe-hint arrows at the photo's vertical middle */
+    .sh{display:flex; position:absolute; top:17vh; transform:translateY(-50%); z-index:6;
+      width:34px; height:34px; align-items:center; justify-content:center; border-radius:50%;
+      background:rgba(8,16,40,.45); border:1px solid rgba(140,165,220,.28); color:var(--muted);
+      font-size:22px; line-height:1; backdrop-filter:blur(3px); opacity:.7}
+    .sh-l{left:4px} .sh-r{right:4px}
     .rankghost{font-size:44vw; top:0}
     .statbar{grid-template-columns:repeat(4,1fr); gap:14px}
+    /* lists flow into the page scroll instead of their own scrollbox */
+    .tlist,.olist,.rlist,.flist{max-height:none; overflow:visible}
+    /* step 2 — hide the control bar on mobile for now */
+    .controls{display:none}
+    /* 1 — short category labels (GS / M1000 / 500 / 250) */
+    .cat .cf{display:none} .cat .cs{display:inline}
+    /* 2 — tournament/finals rows may wrap to two lines instead of truncating */
+    .trow{grid-template-columns:11px auto minmax(0,1fr) auto 40px; gap:9px; align-items:center}
+    .trow .tn{white-space:normal; overflow:visible; text-overflow:clip; line-height:1.25}
+    .frow{grid-template-columns:11px auto minmax(0,1fr) 28px; gap:9px}
+    .frow .ftn{white-space:normal; overflow:visible; text-overflow:clip; line-height:1.25}
+    .frow .fsub{white-space:normal; overflow:visible; text-overflow:clip}
+    /* 3 — season titles line: smaller so it fits */
+    .titles{gap:6px 10px; padding-top:10px}
+    .tt-yr,.tt-n{font-size:12.5px} .tt-n::before{font-size:12.5px} .tt-c{font-size:12px}
+
+    /* ---- modal on mobile ---- */
+    .modal{gap:0; padding:14px}
+    .modal__box{width:94vw; max-width:none}
+    .mnav{display:none}                 /* side arrows off */
+    .mfnav{display:inline-flex; align-items:center}   /* arrows move into the footer */
+    .mfoot{justify-content:space-between; padding:8px 12px}
+    .mhead{padding:18px 18px 14px}
+    .mmatches{padding:6px 16px 16px}
+    /* two-row match: round | opponent(name #rank) | W-L  /  scores below full width */
+    .mrow{grid-template-columns:42px minmax(0,1fr) auto; grid-template-areas:"rnd opp wl" "rnd sc sc"; gap:3px 10px; padding:10px 0}
+    .mround{grid-area:rnd; align-self:center}
+    .mopp{grid-area:opp; min-width:0}
+    .mopp .on{white-space:normal}
+    .mrow .wl{grid-area:wl}
+    .sc{grid-area:sc; justify-content:flex-start; width:auto}
   }
 </style>
 </head>
@@ -337,15 +385,16 @@ function tag(rank){ if(rank===1)return "World No. 1"; if(rank<=4)return "Top 4";
 
 function catKey(type){return {GS:"gs","1000":"m1000","500":"a500","250":"a250","UC":"uc"}[type]||"a250";}
 function catLabel(type){return {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 250","UC":"United Cup"}[type]||type;}
+function catShort(type){return {GS:"GS","1000":"M1000","500":"500","250":"250",UC:"UC"}[type]||type;}
+function catChip(type){return `<span class="cat ${catKey(type)}"><span class="cf">${esc(catLabel(type))}</span><span class="cs">${esc(catShort(type))}</span></span>`;}
 
 function trow(t,pi,ti){
   const cls=["W","F","SF","QF","RR"].includes(t.result)?t.result:"o";
   const res=t.result&&t.result!=="-"?`<span class="badge ${cls}">${esc(t.result)}</span>`:`<span class="badge o">—</span>`;
   const city=t.loc&&(t.loc.EventCity||t.loc.EventLocation)||"";
-  const ck=catKey(t.type), cl=catLabel(t.type);
   return `<div class="trow" data-p="${pi}" data-t="${ti}">
     <span class="surf ${esc(t.surface)}" title="${esc(t.surface)}"></span>
-    <span class="cat ${ck}">${esc(cl)}</span>
+    ${catChip(t.type)}
     <span class="tn">${esc(t.name)}<span class="cty">${esc(city)}</span></span>
     ${res}
     <span class="tpts">${t.points?t.points:"–"}</span>
@@ -435,13 +484,12 @@ function finalsList(p){
 }
 function frow(f){
   const t=f.t, m=f.m, won=t.result==="W";
-  const ck=catKey(t.type), cl=catLabel(t.type);
   const city=t.loc&&(t.loc.EventCity||t.loc.EventLocation)||"";
   let sub=`<span class="fvs">${won?"Won":"Runner-up"}</span>`;
   if(m) sub=`<span class="fvs">${won?"def.":"lost to"}</span> ${flagOf(m.oppC)} ${esc(m.opp)}${m.oppR?`<span class="fr">#${m.oppR}</span>`:""}${m.score?` · ${fmtScore(m.score)}`:""}`;
   return `<div class="frow${won?" won":""}">
     <span class="surf ${esc(t.surface)}"></span>
-    <span class="cat ${ck}">${esc(cl)}</span>
+    ${catChip(t.type)}
     <div class="fmeta">
       <div class="ftn">${esc(t.name)}<span class="fcity">${esc(city)}</span></div>
       <div class="fsub">${sub}</div>
@@ -492,6 +540,8 @@ function card(p,pi){
         <div class="stagephoto">
           <div class="glow"></div><div class="floor"></div>
           <img class="gladiator" src="img/full/${p.id}.png" alt="${esc(p.first)} ${esc(p.last)}" loading="lazy">
+          <button class="sh sh-l" data-d="-1" aria-label="Previous player">‹</button>
+          <button class="sh sh-r" data-d="1" aria-label="Next player">›</button>
           <div class="topbar">
             <div class="ctry"><span class="flag">${flag}</span>${esc(p.country.toUpperCase())}</div>
             <div class="raceinfo">
@@ -556,6 +606,7 @@ const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*10
   const cur=track.children[idx];
   const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
   if(lc && cur && !cur.querySelector(lc)) document.body.dataset.view="tournaments";
+  if(cur) cur.scrollTop=0;   // start each player at the top (mobile vertical scroll)
   document.getElementById("cnum").textContent=idx+1; saveState(); };
 const next=()=>go(idx+1), prev=()=>go(idx-1);
 const setPlay=on=>{ playing=on; document.getElementById("playIcon").innerHTML=on
@@ -584,6 +635,10 @@ addEventListener("keydown",e=>{
 
 // adaptive fit: keep sparse cards roomy, compact only the busy ones so all rows clear the control bar
 function fitAll(){
+  if(innerWidth<=860){  // mobile: no compaction — rows are full size, the card scrolls
+    document.querySelectorAll('.card').forEach(card=>{ card.style.setProperty('--rpad','7px'); card.style.setProperty('--tfs','14px'); });
+    return;
+  }
   const safe=document.querySelector('.controls').getBoundingClientRect().top-14;
   document.querySelectorAll('.card').forEach(card=>{
     const rows=card.querySelectorAll('.trow'); if(!rows.length) return;
@@ -619,11 +674,11 @@ let rt; addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(fitLayout
 document.addEventListener('fullscreenchange',()=>setTimeout(fitLayout,120));
 fitLayout();
 
-// swipe (disabled while modal open)
-let x0=null;
-addEventListener("pointerdown",e=>{ x0=modal.hidden?e.clientX:null; });
-addEventListener("pointerup",e=>{ if(x0==null)return; const dx=e.clientX-x0; x0=null;
-  if(Math.abs(dx)>60){ dx<0?next():prev(); if(playing)setPlay(true);} });
+// swipe left/right to change player — must be horizontally dominant so vertical scroll is untouched
+let x0=null, y0=null;
+addEventListener("pointerdown",e=>{ if(modal.hidden){ x0=e.clientX; y0=e.clientY; } else { x0=null; } });
+addEventListener("pointerup",e=>{ if(x0==null)return; const dx=e.clientX-x0, dy=e.clientY-y0; x0=null;
+  if(Math.abs(dx)>55 && Math.abs(dx)>Math.abs(dy)*1.3){ dx<0?next():prev(); if(playing)setPlay(true);} });
 
 // ---- tournament detail modal ----
 let curPi=0, curTi=0;
@@ -660,7 +715,7 @@ function renderTourn(){
       </div>
     </div>
     <div class="mmatches">${matches}</div>
-    <div class="mfoot"><span class="mpager"><b>${curTi+1}</b> / ${n} · ${esc(p.last)}</span></div>`;
+    <div class="mfoot"><button class="mfnav" data-d="-1" aria-label="Previous tournament">‹</button><span class="mpager"><b>${curTi+1}</b> / ${n} · ${esc(p.last)}</span><button class="mfnav" data-d="1" aria-label="Next tournament">›</button></div>`;
 }
 function openTourn(pi,ti){ curPi=pi; curTi=ti; renderTourn(); modal.hidden=false; setPlay(false); }
 function navT(dir){ const n=players[curPi].tournaments.length; curTi=(curTi+dir+n)%n; renderTourn(); const mm=box.querySelector(".mmatches"); if(mm) mm.scrollTop=0; }
@@ -671,6 +726,8 @@ document.addEventListener("click",e=>{
   const tab=e.target.closest(".ltab");
   if(tab){ document.body.dataset.view=tab.dataset.view; saveState(); requestAnimationFrame(fitAll); return; }
   if(e.target.closest(".mnav")) return;
+  const fn=e.target.closest(".mfnav"); if(fn){ navT(+fn.dataset.d); return; }
+  const sh=e.target.closest(".sh"); if(sh){ (+sh.dataset.d>0?next():prev()); if(playing)setPlay(true); return; }
   if(e.target.closest(".mclose")||e.target.classList.contains("modal__ov")){ closeModal(); return; }
   const row=e.target.closest(".trow[data-p]");
   if(row) openTourn(+row.dataset.p,+row.dataset.t);
