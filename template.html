@@ -215,6 +215,8 @@
   .brand{position:fixed; left:22px; top:18px; z-index:30; font-size:12px; font-weight:800;
     letter-spacing:.22em; color:var(--muted-2)}
   .brand b{color:var(--gold)}
+  .updated{position:fixed; left:23px; top:36px; z-index:30; font-size:9.5px; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2); opacity:.75}
 
   /* ---- final card: points bar chart ---- */
   .chartwrap{position:relative; z-index:2; width:100%; max-width:1240px; height:100%; margin:0 auto;
@@ -294,6 +296,7 @@
 </head>
 <body>
 <div class="brand"><b>ATP</b> · TOP 25 · SINGLES</div>
+<div class="updated" id="updated"></div>
 <div class="stage"><div class="track" id="track"></div></div>
 
 <div class="controls">
@@ -543,6 +546,7 @@ track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + cardHtml.slic
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
 document.getElementById("ctot").textContent=nCards;
+document.getElementById("updated").textContent = DATA.updated ? "Updated "+DATA.updated : "";
 const modal=document.getElementById("modal"), box=document.getElementById("modalBox");
 
 let idx=0, playing=false, timer=null, SPEED=5000;
