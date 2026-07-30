@@ -739,7 +739,7 @@ function chartCard(){
 
 function moneyCard(){
   const num=s=>+String(s).replace(/[^0-9]/g,"");
-  const rows=players.filter(p=>p.rank<=25).sort((a,b)=>num(b.ytdPrize)-num(a.ytdPrize));
+  const rows=[...players].sort((a,b)=>num(b.ytdPrize)-num(a.ytdPrize)).slice(0,25);
   const max=num(rows[0].ytdPrize)||1;
   const list=rows.map((p,i)=>{
     const pct=Math.max(4, Math.round(num(p.ytdPrize)/max*100));
@@ -753,9 +753,9 @@ function moneyCard(){
   return `<section class="card moneycard">
     <div class="card__bg"></div>
     <div class="chartwrap">
-      <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">ATP Nos. 1–25 · 2026 Season Earnings</div></div>
+      <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">Top 25 Earners · 2026 Season</div></div>
       <div class="moneylist">${list}</div>
-      <div class="moneynote">The ATP ranking’s current Top 25, ordered by their 2026 on-court prize money — this is not the overall prize-money leaderboard, and players ranked outside the Top 25 may have earned more.</div>
+      <div class="moneynote">The 25 biggest 2026 on-court earners among the ATP Top 100 — ranked by prize money, not by ATP ranking (shown as #). A big season can lift a lower-ranked player above higher-ranked ones: Hurkacz (#71), Fery (#37) and Etcheverry (#31) all out-earned much of the Top 25.</div>
     </div>
   </section>`;
 }
