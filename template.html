@@ -219,6 +219,12 @@
   .brand b{color:var(--gold)}
   .updated{position:fixed; left:23px; top:36px; z-index:30; font-size:9.5px; font-weight:700;
     letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2); opacity:.75}
+  .topcredit{position:fixed; right:24px; bottom:16px; z-index:40; font-size:10px; font-weight:600;
+    letter-spacing:.02em; color:var(--muted-2); opacity:.82; text-align:right}
+  .topcredit a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
+  .topcredit a:hover{color:var(--gold)}
+  /* per-card credit at the bottom of each page (mobile) */
+  .pgcredit{display:none}
   .minihdr{display:none}  /* sticky player header — mobile only */
 
   /* ---- final card: points bar chart ---- */
@@ -265,10 +271,8 @@
   /* footnote + credit line on the finale card */
   .moneynote{max-width:820px; margin:clamp(12px,2vh,22px) auto 0; text-align:center;
     font-size:11px; line-height:1.55; color:var(--muted-2)}
-  .credit{max-width:820px; margin:clamp(8px,1.3vh,14px) auto 0; text-align:center;
-    font-size:10.5px; letter-spacing:.02em; color:var(--muted-2); opacity:.85}
-  .credit a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
-  .credit a:hover{color:var(--gold)}
+  .pgcredit a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
+  .pgcredit a:hover{color:var(--gold)}
 
   /* ---- credits modal ---- */
   .cmodal{position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; padding:20px}
@@ -400,6 +404,10 @@
     .mopp .on{white-space:normal}
     .mrow .wl{grid-area:wl}
     .sc{grid-area:sc; justify-content:flex-start; width:auto}
+    /* mobile: fixed credit off; per-card credit at the bottom of every page */
+    .topcredit{display:none}
+    .pgcredit{display:block; text-align:center; padding:18px 16px 26px;
+      font-size:10.5px; line-height:1.5; letter-spacing:.02em; color:var(--muted-2); opacity:.85}
     /* prize-money leaderboard: single column, scrolls with the card */
     .moneylist{column-count:1}
     .moneycard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 4px}
@@ -415,6 +423,7 @@
 <body>
 <div class="brand"><b>ATP</b> · TOP 25 · SINGLES</div>
 <div class="updated" id="updated"></div>
+<div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a>  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
 <div class="stage"><div class="track" id="track"></div></div>
 
@@ -692,7 +701,6 @@ function moneyCard(){
       <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">ATP Nos. 1–25 · 2026 Season Earnings</div></div>
       <div class="moneylist">${list}</div>
       <div class="moneynote">The ATP ranking’s current Top 25, ordered by their 2026 on-court prize money — this is not the overall prize-money leaderboard, and players ranked outside the Top 25 may have earned more.</div>
-      <div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
     </div>
   </section>`;
 }
@@ -702,6 +710,9 @@ const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
 track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + cardHtml.slice(splitAt).join("") + moneyCard();
+// per-card credit at the bottom of every page (shown on mobile only)
+const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a onclick="openCredits();return false;">Credits</a>';
+[...track.children].forEach(c=>{const host=c.querySelector(".inner")||c.querySelector(".chartwrap")||c;const d=document.createElement("div");d.className="pgcredit";d.innerHTML=CREDIT_HTML;host.appendChild(d);});
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
 document.getElementById("ctot").textContent=nCards;
