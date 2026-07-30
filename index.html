@@ -239,6 +239,30 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px}
   .cxlab b{color:var(--ink); margin-right:3px}
 
+  /* ---- final card: 2026 prize-money leaderboard (round faces + horizontal bars) ---- */
+  .moneycard .chartwrap{max-width:980px}
+  .moneylist{column-count:2; column-gap:clamp(22px,4vw,56px); width:100%}
+  .prow{display:grid; grid-template-columns:24px 28px minmax(0,1fr) 56px;
+    align-items:center; gap:clamp(8px,1vw,14px); break-inside:avoid; margin-bottom:clamp(5px,1vh,11px)}
+  .prank{font-size:12px; font-weight:800; color:var(--muted-2); text-align:right}
+  .pface{width:28px; height:28px; border-radius:50%; object-fit:cover; border:1.5px solid var(--line);
+    background:var(--navy-2); justify-self:center}
+  /* full-width bar; fill grows from the right, surname sits over the empty left part */
+  .pbar{position:relative; display:flex; justify-content:flex-end; height:22px; border-radius:6px;
+    background:rgba(140,165,220,.1); overflow:hidden}
+  .pfill{height:100%; border-radius:6px; background:linear-gradient(90deg, rgba(63,139,255,.35), #4a86e8)}
+  .pname{position:absolute; left:11px; top:0; bottom:0; display:flex; align-items:center; gap:5px; z-index:1;
+    max-width:calc(100% - 20px)}
+  .pl{font-size:13px; font-weight:700; color:var(--ink); text-shadow:0 1px 3px rgba(8,14,30,.6);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+  .patp{flex:none; font-size:11px; font-weight:600; color:var(--muted); text-shadow:0 1px 3px rgba(8,14,30,.6)}
+  .pamt{font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; text-align:right; color:var(--ink)}
+  .prow.lead .pface{border-color:var(--gold)}
+  .prow.lead .pfill{background:linear-gradient(90deg, rgba(242,193,78,.45), var(--gold))}
+  .prow.lead .pl{color:#12203e; text-shadow:0 1px 1px rgba(255,255,255,.25)}
+  .prow.lead .patp{color:#2a3a5e; text-shadow:none}
+  .prow.lead .pamt{color:var(--gold)}
+
   /* ---- tournament modal ---- */
   .modal{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
     gap:clamp(6px,1.6vw,22px); padding:20px}
@@ -353,6 +377,15 @@
     .mopp .on{white-space:normal}
     .mrow .wl{grid-area:wl}
     .sc{grid-area:sc; justify-content:flex-start; width:auto}
+    /* prize-money leaderboard: single column, scrolls with the card */
+    .moneylist{column-count:1}
+    .moneycard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 4px}
+    .prow{grid-template-columns:22px 30px minmax(0,1fr) 52px; margin-bottom:10px}
+    .pface{width:30px; height:30px}
+    .pbar{height:27px; border-radius:7px}
+    .pname{left:13px}
+    .pl{font-size:14.5px}
+    .patp{font-size:12px}
   }
 </style>
 </head>
@@ -603,15 +636,39 @@ function chartCard(){
   </section>`;
 }
 
+function moneyCard(){
+  const num=s=>+String(s).replace(/[^0-9]/g,"");
+  const rows=[...players].sort((a,b)=>num(b.ytdPrize)-num(a.ytdPrize));
+  const max=num(rows[0].ytdPrize)||1;
+  const list=rows.map((p,i)=>{
+    const pct=Math.max(4, Math.round(num(p.ytdPrize)/max*100));
+    return `<div class="prow${i===0?" lead":""}">
+      <span class="prank">${i+1}</span>
+      <img class="pface" src="img/face/${p.id}.png" alt="${esc(p.last)}" loading="lazy">
+      <span class="pbar"><span class="pname"><span class="pl">${esc(p.last)}</span><span class="patp">#${p.rank}</span></span><span class="pfill" style="width:${pct}%"></span></span>
+      <span class="pamt">${abbrMoney(p.ytdPrize)}</span>
+    </div>`;
+  }).join("");
+  return `<section class="card moneycard">
+    <div class="card__bg"></div>
+    <div class="chartwrap">
+      <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">ATP Top 25 · 2026 Season Earnings</div></div>
+      <div class="moneylist">${list}</div>
+    </div>
+  </section>`;
+}
+
 const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p));
 const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
-track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + cardHtml.slice(splitAt).join("");
+track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + cardHtml.slice(splitAt).join("") + moneyCard();
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
 document.getElementById("ctot").textContent=nCards;
-document.getElementById("updated").textContent = DATA.updated ? "Updated "+DATA.updated : "";
+(function(){var rd=DATA.ranking_date; if(!rd){document.getElementById("updated").textContent="";return;}
+  var d=new Date(rd+"T00:00:00");
+  document.getElementById("updated").textContent="Rankings "+d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});})();
 const modal=document.getElementById("modal"), box=document.getElementById("modalBox");
 const minihdr=document.getElementById("minihdr");
 
