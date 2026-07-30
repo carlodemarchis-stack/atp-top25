@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ATP Top 10 — Player Film</title>
+<title>ATP Top 100 — Player Film</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23c9e548'/><path d='M6.5 3.5C12 9 12 23 6.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/><path d='M25.5 3.5C20 9 20 23 25.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/></svg>">
 <style>
   :root{
@@ -421,7 +421,7 @@
 </style>
 </head>
 <body>
-<div class="brand"><b>ATP</b> · TOP 25 · SINGLES</div>
+<div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a>  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
@@ -449,7 +449,7 @@
   <div class="cmodal__box">
     <button class="mclose" onclick="closeCredits()" aria-label="Close credits">×</button>
     <h2>Credits</h2>
-    <div class="csub">ATP Top 25 · Player Film</div>
+    <div class="csub">ATP Top 100 · Player Film</div>
     <div class="csec"><h3>Design &amp; Build</h3><p>Designed and built by Carlo De Marchis — “A guy with a scarf”. The concept, the ranking-ordered card-film layout, the visual language and the interactions are my own — an alternative, more playful way to move through a season of ATP data, told in my own style.</p></div>
     <div class="csec"><h3>Data &amp; Images — atptour.com</h3><p>Every number and every image here comes from the official ATP site, <a href="https://www.atptour.com" target="_blank" rel="noopener noreferrer">atptour.com</a>: the PIF ATP Rankings and Race to Turin, each player’s season activity and match-by-match results, and the player imagery (round headshots and full-body cutouts). All of it is the property of the ATP and its partners — it is used here only to power this fan experience, and the credit belongs entirely to them.</p></div>
     <div class="csec"><h3>Built With</h3><p>Designed and developed with Claude (Anthropic) — Claude Code for the build — and hosted on GitHub Pages. A single self-contained page, vanilla JavaScript.</p></div>
@@ -684,7 +684,7 @@ function chartCard(){
 
 function moneyCard(){
   const num=s=>+String(s).replace(/[^0-9]/g,"");
-  const rows=[...players].sort((a,b)=>num(b.ytdPrize)-num(a.ytdPrize));
+  const rows=players.filter(p=>p.rank<=25).sort((a,b)=>num(b.ytdPrize)-num(a.ytdPrize));
   const max=num(rows[0].ytdPrize)||1;
   const list=rows.map((p,i)=>{
     const pct=Math.max(4, Math.round(num(p.ytdPrize)/max*100));
