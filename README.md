@@ -1,4 +1,4 @@
-# ATP Top 10 — Player Film (snapshot prototype)
+# ATP Top 100 — Player Film (snapshot prototype)
 
 Ranking-ordered player film, styled after the WC "player film". One full-screen card per player:
 **left** column = every tournament played in 2026; **right** column = a smaller full-body cutout on
@@ -28,7 +28,7 @@ Open `index.html` directly in a browser — self-contained (data inlined, images
 `server.py` serves the folder for local preview (`python3 server.py` → localhost:8777).
 
 ## Data snapshot
-- **Ranking date:** 2026-07-27 · **captured:** 2026-07-29 · **scope:** Top 25 singles (Rivals tab only on the top 10; finale chart is top 10)
+- **Ranking date:** 2026-07-27 · **captured:** 2026-07-29 · **scope:** Top 100 singles (102 cards: 100 player cards + "The Field" top-10 points chart + "Prize Money" top-25 chart; Rivals tab only on the top 10)
 - `data/players.json` — assembled records
 - `img/full/{id}.png` — 379×603 transparent full-body "gladiator" cutouts
 - `img/face/{id}.png` — 300×300 round headshots
