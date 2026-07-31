@@ -52,6 +52,9 @@
     display:flex; align-items:flex-end; justify-content:space-between; gap:12px}
   .ctry{display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:.06em; font-size:18px}
   .ctry .flag{font-size:26px; line-height:1}
+  /* neutral flag (Russian players): white box sized like a flag emoji, scales with context font-size */
+  .flagbox{display:inline-block; width:1.32em; height:0.9em; background:#fff; border-radius:2px;
+    vertical-align:-0.1em; box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
   .tag{font-size:11px; font-weight:800; letter-spacing:.16em; color:var(--gold);
     border:1px solid rgba(242,193,78,.42); border-radius:999px; padding:5px 12px; text-transform:uppercase}
   .tag.race{color:var(--muted); border-color:var(--line); background:rgba(255,255,255,.04)}
@@ -516,7 +519,9 @@ const MONTH=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const abbrMoney=s=>{const n=+String(s).replace(/[^0-9]/g,"");if(!n)return s||"";if(n>=1e6)return "$"+(n/1e6).toFixed(1).replace(/\.0$/,"")+"M";if(n>=1e3)return "$"+Math.round(n/1e3)+"K";return "$"+n;};
 const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX"};
-const flagOf=code=>{const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
+// Russians compete under a neutral (blank) flag in tennis — show a white box instead
+const NEUTRAL='<span class="flagbox" title="Neutral flag"></span>';
+const flagOf=code=>{ if((code||"").toUpperCase()==="RUS") return NEUTRAL; const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
 const fmtScore=s=>esc(s||"").replace(/\((\d+)\)/g,'<span class="t">($1)</span>');
 const scoreCells=s=>(s||"").trim().split(/\s+/).filter(Boolean).map(tok=>{
   const m=tok.match(/^(\d+)-(\d+)(?:\((\d+)\))?/);
@@ -655,7 +660,7 @@ function frow(f){
 }
 
 function card(p,pi){
-  const flag=FLAG[p.country]||"🎾";
+  const flag=p.country==="Russia"?NEUTRAL:(FLAG[p.country]||"🎾");
   const opp=oppList(p);
   const finals=finalsList(p);
   const showRivals=p.rank<=10;
@@ -971,7 +976,7 @@ function updateMini(card){
   const show = innerWidth<=860 && !!(nl && nl.getBoundingClientRect().bottom < 48);
   if(show && !minihdr.classList.contains("show")){
     minihdr.querySelector(".mh-rank").textContent=card.querySelector(".no")?.textContent||"";
-    minihdr.querySelector(".mh-flag").textContent=card.querySelector(".ctry .flag")?.textContent||"";
+    minihdr.querySelector(".mh-flag").innerHTML=card.querySelector(".ctry .flag")?.innerHTML||"";
     minihdr.querySelector(".mh-name").textContent=card.querySelector(".nm")?.textContent||"";
   }
   minihdr.classList.toggle("show", show);
