@@ -676,7 +676,7 @@ function card(p,pi){
   const hiYear=p.hiRankDate?new Date(p.hiRankDate).getFullYear():"";
   const plays=(p.plays&&p.plays.Description||"").replace("-Handed","-handed");
   const coach=(p.coach||"").split(",")[0];
-  const vit=[`<b>${p.age}</b> yrs`,esc(p.heightFt),plays,`pro <b>${p.proYear}</b>`,coach?("coach "+esc(coach)):"",esc(p.birthCity)]
+  const vit=[p.age?`<b>${p.age}</b> yrs`:"",esc(p.heightFt),plays,p.proYear?`pro <b>${p.proYear}</b>`:"",coach?("coach "+esc(coach)):"",esc(p.birthCity)]
     .filter(Boolean).join(" &nbsp;·&nbsp; ");
   const pills=[
     [`Career high`, `#${p.hiRank}${hiYear?" · "+hiYear:""}`, "gold"],
