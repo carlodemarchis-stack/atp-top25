@@ -704,7 +704,7 @@ function card(p,pi){
           <button class="sh sh-l" data-d="-1" aria-label="Previous player">‹</button>
           <button class="sh sh-r" data-d="1" aria-label="Next player">›</button>
           <div class="topbar">
-            <div class="ctry"><span class="flag">${flag}</span>${esc(p.country.toUpperCase())}</div>
+            <div class="ctry"><span class="flag">${flag}</span>${p.country==="Russia"?"":esc(p.country.toUpperCase())}</div>
             <div class="raceinfo">
               ${p.raceRank?`<div class="pts-top${p.raceRank<=8?" qual":""}">${esc(p.racePoints)}<span>race pts</span></div>
               <span class="tag race${p.raceRank<=8?" qual":""}">Race to Turin · #${p.raceRank}</span>`:""}
