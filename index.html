@@ -22,9 +22,12 @@
 
   /* ---- film viewport / horizontal track ---- */
   .stage{position:fixed; inset:0; overflow:hidden}
-  .track{display:flex; height:100%; width:100%; transition:transform .55s cubic-bezier(.7,0,.2,1); will-change:transform}
+  .track{display:flex; height:100%; width:100%; transition:transform .55s cubic-bezier(.7,0,.2,1)}
+  /* content-visibility keeps off-screen cards unpainted; with 100+ full-screen cards this is
+     what keeps iOS Safari from blowing its per-tab memory limit and reloading the page */
   .card{flex:0 0 100%; height:100%; position:relative; display:flex; align-items:center;
-    justify-content:center; padding:clamp(14px,3vw,44px) clamp(16px,4vw,72px) 104px; overflow:hidden}
+    justify-content:center; padding:clamp(14px,3vw,44px) clamp(16px,4vw,72px) 104px; overflow:hidden;
+    content-visibility:auto; contain-intrinsic-size:100vw 100vh}
   .card__bg{position:absolute; inset:0; z-index:0;
     background:radial-gradient(120% 95% at 82% 12%, var(--navy-3) 0%, var(--navy-1) 46%, var(--navy-0) 100%)}
   .card__bg::after{content:""; position:absolute; inset:0; opacity:.45;
