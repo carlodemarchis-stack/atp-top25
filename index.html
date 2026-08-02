@@ -311,14 +311,14 @@
 
   /* ---- season calendar cards (tournament + final four per row) ---- */
   .calcard .chartwrap{max-width:1200px}
+  .calcard .charthead{margin-bottom:clamp(8px,1.6vh,16px)}   /* compact header so all rows fit landscape */
+  .calcard .ch-t{font-size:clamp(24px,3.4vw,40px)}
   .calhead{display:grid; grid-template-columns:minmax(210px,1.5fr) repeat(4,minmax(0,1fr)); gap:12px;
     padding:0 8px 8px; margin-top:6px; font-size:9.5px; font-weight:800; letter-spacing:.12em;
     text-transform:uppercase; color:var(--muted-2); border-bottom:1px solid var(--line)}
-  .callist{display:flex; flex-direction:column; width:100%; overflow-y:auto; overscroll-behavior:contain;
-    max-height:calc(100vh - 268px); scrollbar-width:thin; scrollbar-color:rgba(140,165,220,.3) transparent}
-  .callist::-webkit-scrollbar{width:6px} .callist::-webkit-scrollbar-thumb{background:rgba(140,165,220,.26); border-radius:4px}
+  .callist{display:flex; flex-direction:column; width:100%}   /* landscape: all rows fit, no scroll */
   .calrow{display:grid; grid-template-columns:minmax(210px,1.5fr) repeat(4,minmax(0,1fr)); gap:12px;
-    align-items:center; padding:clamp(4px,0.85vh,9px) 8px; border-bottom:1px solid var(--line); font-size:13px}
+    align-items:center; padding:clamp(2px,0.5vh,7px) 8px; border-bottom:1px solid var(--line); font-size:13px}
   .calrow:hover{background:rgba(120,160,255,.06)}
   .calt{display:flex; align-items:center; gap:9px; min-width:0}
   .calt .surf{width:8px; height:8px; border-radius:50%; flex:none}
@@ -327,13 +327,13 @@
   .cat.finals{color:#e7c06a; background:rgba(226,186,82,.16); border-color:rgba(226,186,82,.4)}
   .calfl{font-size:15px; line-height:1; flex:none}
   .calnm{min-width:0; display:flex; flex-direction:column; line-height:1.22}
-  .calnm b{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .calnm b{font-weight:700; white-space:normal; line-height:1.15}
   .calw{font-size:10.5px; color:var(--muted-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .calp{display:flex; align-items:center; gap:5px; min-width:0; font-size:12px; color:var(--muted)}
   .calp .cpfl{font-size:12.5px; flex:none} .calp .cpn{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .calp.win{color:var(--ink); font-weight:800}
   .calp.win::before{content:"🏆"; font-size:11px; margin-right:1px; flex:none}
-  .calp.ru{color:var(--ink); font-weight:600}
+  .calp.ru{color:var(--muted); font-weight:500}
   .calp.sf{color:var(--muted-2)}
   .calp.empty{opacity:0}
   .calsoon{font-size:11px; color:var(--muted-2); font-weight:600; letter-spacing:.03em;
@@ -344,7 +344,7 @@
   .calcol{display:flex; flex-direction:column; min-width:0}
   .calcard.cols2 .calrow{grid-template-columns:minmax(90px,1.35fr) repeat(4,minmax(0,.82fr)); gap:8px; font-size:11.5px}
   .calcard.cols2 .calp{font-size:11px} .calcard.cols2 .calnm b{font-size:12.5px}
-  .calcard.cols2.nosf .calrow{grid-template-columns:minmax(110px,1.6fr) minmax(0,1fr) minmax(0,1fr); font-size:12.5px}
+  .calcard.cols2.nosf .calrow{grid-template-columns:minmax(120px,2.1fr) minmax(0,1fr) minmax(0,1fr); font-size:12.5px}
   .calcard.cols2.nosf .calp{font-size:12px}
   .calhead.h3{grid-template-columns:minmax(210px,1.5fr) 1fr 1fr}
   /* footnote + credit line on the finale card */
@@ -891,7 +891,7 @@ function calendarCard(cats,title,sub,opt){
     </div></section>`;
 }
 const calendarCards = calendarCard(["GS","1000","ATP Finals"],"Majors & Masters","Grand Slams · Masters 1000 · Nitto ATP Finals · 2026",{order:["GS","1000","ATP Finals"]})
-  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500",{cols:2})
+  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500",{cols:2,sf:false})
   + calendarCard(["250"],"ATP 250","2026 Season · every ATP 250",{cols:2,sf:false});
 
 const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p));
