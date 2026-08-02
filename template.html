@@ -338,6 +338,15 @@
   .calp.empty{opacity:0}
   .calsoon{font-size:11px; color:var(--muted-2); font-weight:600; letter-spacing:.03em;
     background:rgba(140,165,220,.08); padding:3px 11px; border-radius:999px}
+  /* two-column calendar cards (500 keeps the final four; 250 drops semi-finalists) */
+  .calcard.cols2 .chartwrap{max-width:1280px}
+  .callist.twocol{display:grid; grid-template-columns:1fr 1fr; gap:0 clamp(26px,3.4vw,60px); align-items:start}
+  .calcol{display:flex; flex-direction:column; min-width:0}
+  .calcard.cols2 .calrow{grid-template-columns:minmax(90px,1.35fr) repeat(4,minmax(0,.82fr)); gap:8px; font-size:11.5px}
+  .calcard.cols2 .calp{font-size:11px} .calcard.cols2 .calnm b{font-size:12.5px}
+  .calcard.cols2.nosf .calrow{grid-template-columns:minmax(110px,1.6fr) minmax(0,1fr) minmax(0,1fr); font-size:12.5px}
+  .calcard.cols2.nosf .calp{font-size:12px}
+  .calhead.h3{grid-template-columns:minmax(210px,1.5fr) 1fr 1fr}
   /* footnote + credit line on the finale card */
   .moneynote{max-width:820px; margin:clamp(12px,2vh,22px) auto 0; text-align:center;
     font-size:11px; line-height:1.55; color:var(--muted-2)}
@@ -496,6 +505,7 @@
     .calhead{display:none}
     .calcard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 2px}
     .callist{max-height:none; overflow:visible}
+    .callist.twocol{grid-template-columns:1fr; gap:0}
     .calrow{display:flex; flex-wrap:wrap; gap:7px 16px; align-items:center; padding:12px 2px}
     .calt{flex:1 1 100%}
     .calnm b{white-space:normal}
@@ -561,7 +571,7 @@ const CAT = {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 25
 const MONTH=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const abbrMoney=s=>{const n=+String(s).replace(/[^0-9]/g,"");if(!n)return s||"";if(n>=1e6)return "$"+(n/1e6).toFixed(1).replace(/\.0$/,"")+"M";if(n>=1e3)return "$"+Math.round(n/1e3)+"K";return "$"+n;};
-const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX",BOL:"BO",DOM:"DO",EST:"EE",GEO:"GE",HKG:"HK",JAM:"JM",JOR:"JO",LBN:"LB",LUX:"LU",MAR:"MA",MKD:"MK",PAR:"PY",UAE:"AE"};
+const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX",BOL:"BO",DOM:"DO",EST:"EE",GEO:"GE",HKG:"HK",JAM:"JM",JOR:"JO",LBN:"LB",LUX:"LU",MAR:"MA",MKD:"MK",PAR:"PY",UAE:"AE",QAT:"QA"};
 // Russians compete under a neutral (blank) flag in tennis — show a white box instead
 const NEUTRAL='<span class="flagbox" title="Neutral flag"></span>';
 const flagOf=code=>{ if((code||"").toUpperCase()==="RUS") return NEUTRAL; const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
@@ -844,12 +854,13 @@ function calBadge(cat){const m={"GS":["gs","GS"],"1000":["m1000","M1000"],"500":
   return `<span class="cat ${m[0]} calbadge">${esc(m[1])}</span>`;}
 function calPlayer(p,cls){ if(!p||!p.name) return `<span class="calp empty"></span>`;
   return `<span class="calp ${cls}"><span class="cpfl">${flagOf(p.ioc)}</span><span class="cpn">${esc(p.name)}</span></span>`; }
-function calRow(e){
+function calRow(e,sfOn){
   const played=e.winner&&e.winner.name;
   const sf=e.sf||[];
+  const span=sfOn?"2 / 6":"2 / 4";
   const right = played
-    ? `${calPlayer(e.winner,"win")}${calPlayer(e.runner,"ru")}${calPlayer(sf[0],"sf")}${calPlayer(sf[1],"sf")}`
-    : `<span class="calp soon" style="grid-column:2 / 6"><span class="calsoon">${calDates(e.start,e.end)}</span></span>`;
+    ? `${calPlayer(e.winner,"win")}${calPlayer(e.runner,"ru")}${sfOn?calPlayer(sf[0],"sf")+calPlayer(sf[1],"sf"):""}`
+    : `<span class="calp soon" style="grid-column:${span}"><span class="calsoon">${calDates(e.start,e.end)}</span></span>`;
   return `<div class="calrow">
     <div class="calt">
       <span class="surf ${e.surface?esc(e.surface):"none"}" title="${esc(e.surface||"")}"></span>
@@ -859,18 +870,29 @@ function calRow(e){
     </div>${right}
   </div>`;
 }
-function calendarCard(cats,title,sub){
-  const evs=(DATA.calendar||[]).filter(e=>cats.includes(e.cat)).sort((a,b)=>a.start.localeCompare(b.start));
-  return `<section class="card calcard"><div class="card__bg"></div>
+function calendarCard(cats,title,sub,opt){
+  opt=opt||{};
+  const sfOn=opt.sf!==false, two=opt.cols===2;
+  let evs=(DATA.calendar||[]).filter(e=>cats.includes(e.cat));
+  if(opt.order){ const oi=c=>{const i=opt.order.indexOf(c);return i<0?99:i;}; evs.sort((a,b)=>oi(a.cat)-oi(b.cat) || a.start.localeCompare(b.start)); }
+  else evs.sort((a,b)=>a.start.localeCompare(b.start));
+  const rows=evs.map(e=>calRow(e,sfOn));
+  let inner;
+  if(two){ const h=Math.ceil(rows.length/2); inner=`<div class="calcol">${rows.slice(0,h).join("")}</div><div class="calcol">${rows.slice(h).join("")}</div>`; }
+  else inner=rows.join("");
+  const head = two ? "" :
+    (sfOn ? `<div class="calhead"><span>Tournament</span><span>Champion</span><span>Runner-up</span><span>Semi-finalists</span><span></span></div>`
+          : `<div class="calhead h3"><span>Tournament</span><span>Champion</span><span>Runner-up</span></div>`);
+  return `<section class="card calcard${two?" cols2":""}${sfOn?"":" nosf"}"><div class="card__bg"></div>
     <div class="chartwrap calwrap">
       <div class="charthead"><div class="ch-t">${esc(title)}</div><div class="ch-s">${esc(sub)}</div></div>
-      <div class="calhead"><span>Tournament</span><span>Champion</span><span>Runner-up</span><span>Semi-finalists</span><span></span></div>
-      <div class="callist">${evs.map(calRow).join("")}</div>
+      ${head}
+      <div class="callist${two?" twocol":""}">${inner}</div>
     </div></section>`;
 }
-const calendarCards = calendarCard(["ATP Finals","GS","1000"],"Majors & Masters","Grand Slams · Masters 1000 · Nitto ATP Finals · 2026")
-  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500")
-  + calendarCard(["250"],"ATP 250","2026 Season · every ATP 250");
+const calendarCards = calendarCard(["GS","1000","ATP Finals"],"Majors & Masters","Grand Slams · Masters 1000 · Nitto ATP Finals · 2026",{order:["GS","1000","ATP Finals"]})
+  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500",{cols:2})
+  + calendarCard(["250"],"ATP 250","2026 Season · every ATP 250",{cols:2,sf:false});
 
 const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p));
 const track=document.getElementById("track");
