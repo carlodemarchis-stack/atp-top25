@@ -308,6 +308,36 @@
   .prow.lead .pl{color:#12203e; text-shadow:0 1px 1px rgba(255,255,255,.25)}
   .prow.lead .patp{color:#2a3a5e; text-shadow:none}
   .prow.lead .pamt{color:var(--gold)}
+
+  /* ---- season calendar cards (tournament + final four per row) ---- */
+  .calcard .chartwrap{max-width:1200px}
+  .calhead{display:grid; grid-template-columns:minmax(210px,1.5fr) repeat(4,minmax(0,1fr)); gap:12px;
+    padding:0 8px 8px; margin-top:6px; font-size:9.5px; font-weight:800; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted-2); border-bottom:1px solid var(--line)}
+  .callist{display:flex; flex-direction:column; width:100%; overflow-y:auto; overscroll-behavior:contain;
+    max-height:calc(100vh - 268px); scrollbar-width:thin; scrollbar-color:rgba(140,165,220,.3) transparent}
+  .callist::-webkit-scrollbar{width:6px} .callist::-webkit-scrollbar-thumb{background:rgba(140,165,220,.26); border-radius:4px}
+  .calrow{display:grid; grid-template-columns:minmax(210px,1.5fr) repeat(4,minmax(0,1fr)); gap:12px;
+    align-items:center; padding:clamp(4px,0.85vh,9px) 8px; border-bottom:1px solid var(--line); font-size:13px}
+  .calrow:hover{background:rgba(120,160,255,.06)}
+  .calt{display:flex; align-items:center; gap:9px; min-width:0}
+  .calt .surf{width:8px; height:8px; border-radius:50%; flex:none}
+  .calt .surf.none{background:rgba(140,165,220,.22)}
+  .calbadge{flex:none; font-size:9px; min-width:auto; padding:2px 7px}
+  .cat.finals{color:#e7c06a; background:rgba(226,186,82,.16); border-color:rgba(226,186,82,.4)}
+  .calfl{font-size:15px; line-height:1; flex:none}
+  .calnm{min-width:0; display:flex; flex-direction:column; line-height:1.22}
+  .calnm b{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .calw{font-size:10.5px; color:var(--muted-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .calp{display:flex; align-items:center; gap:5px; min-width:0; font-size:12px; color:var(--muted)}
+  .calp .cpfl{font-size:12.5px; flex:none} .calp .cpn{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .calp.win{color:var(--ink); font-weight:800}
+  .calp.win::before{content:"🏆"; font-size:11px; margin-right:1px; flex:none}
+  .calp.ru{color:var(--ink); font-weight:600}
+  .calp.sf{color:var(--muted-2)}
+  .calp.empty{opacity:0}
+  .calsoon{font-size:11px; color:var(--muted-2); font-weight:600; letter-spacing:.03em;
+    background:rgba(140,165,220,.08); padding:3px 11px; border-radius:999px}
   /* footnote + credit line on the finale card */
   .moneynote{max-width:820px; margin:clamp(12px,2vh,22px) auto 0; text-align:center;
     font-size:11px; line-height:1.55; color:var(--muted-2)}
@@ -462,6 +492,16 @@
     .chartcard .cxlab{transform:rotate(-45deg); transform-origin:top center; white-space:nowrap;
       text-align:center; max-width:none; overflow:visible; text-overflow:clip; margin-top:14px; font-size:11px}
     .chartcard .chart{padding-bottom:48px}
+    /* calendar cards: stack the final-four under the tournament (the 5-col table is too wide) */
+    .calhead{display:none}
+    .calcard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 2px}
+    .callist{max-height:none; overflow:visible}
+    .calrow{display:flex; flex-wrap:wrap; gap:7px 16px; align-items:center; padding:12px 2px}
+    .calt{flex:1 1 100%}
+    .calnm b{white-space:normal}
+    .calp{flex:0 0 auto; max-width:46%; font-size:12.5px}
+    .calp .cpn{font-weight:inherit}
+    .calp.soon{flex:1 1 100%; grid-column:auto !important}
     /* prize-money leaderboard: single column, scrolls with the card */
     .moneylist{column-count:1}
     .moneycard .chartwrap{height:auto; justify-content:flex-start; max-width:none; padding:0 4px}
@@ -796,11 +836,47 @@ function moneyCard(){
   </section>`;
 }
 
+// ---- season calendar cards: each row is a tournament with its final four ----
+const CAL_MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function calDates(s,e){const a=s.split("-"),b=e.split("-");const sd=+a[2],sm=+a[1],ed=+b[2],em=+b[1];
+  return sm===em?`${sd}–${ed} ${CAL_MO[em-1]}`:`${sd} ${CAL_MO[sm-1]} – ${ed} ${CAL_MO[em-1]}`;}
+function calBadge(cat){const m={"GS":["gs","GS"],"1000":["m1000","M1000"],"500":["a500","500"],"250":["a250","250"],"ATP Finals":["finals","Finals"]}[cat]||["a250",cat];
+  return `<span class="cat ${m[0]} calbadge">${esc(m[1])}</span>`;}
+function calPlayer(p,cls){ if(!p||!p.name) return `<span class="calp empty"></span>`;
+  return `<span class="calp ${cls}"><span class="cpfl">${flagOf(p.ioc)}</span><span class="cpn">${esc(p.name)}</span></span>`; }
+function calRow(e){
+  const played=e.winner&&e.winner.name;
+  const sf=e.sf||[];
+  const right = played
+    ? `${calPlayer(e.winner,"win")}${calPlayer(e.runner,"ru")}${calPlayer(sf[0],"sf")}${calPlayer(sf[1],"sf")}`
+    : `<span class="calp soon" style="grid-column:2 / 6"><span class="calsoon">${calDates(e.start,e.end)}</span></span>`;
+  return `<div class="calrow">
+    <div class="calt">
+      <span class="surf ${e.surface?esc(e.surface):"none"}" title="${esc(e.surface||"")}"></span>
+      ${calBadge(e.cat)}
+      <span class="calfl">${e.ctry?flagOf(e.ctry):(FLAG[e.country]||"")}</span>
+      <span class="calnm"><b>${esc(e.name)}</b><span class="calw">${esc(e.city)} · ${calDates(e.start,e.end)}</span></span>
+    </div>${right}
+  </div>`;
+}
+function calendarCard(cats,title,sub){
+  const evs=(DATA.calendar||[]).filter(e=>cats.includes(e.cat)).sort((a,b)=>a.start.localeCompare(b.start));
+  return `<section class="card calcard"><div class="card__bg"></div>
+    <div class="chartwrap calwrap">
+      <div class="charthead"><div class="ch-t">${esc(title)}</div><div class="ch-s">${esc(sub)}</div></div>
+      <div class="calhead"><span>Tournament</span><span>Champion</span><span>Runner-up</span><span>Semi-finalists</span><span></span></div>
+      <div class="callist">${evs.map(calRow).join("")}</div>
+    </div></section>`;
+}
+const calendarCards = calendarCard(["ATP Finals","GS","1000"],"Majors & Masters","Grand Slams · Masters 1000 · Nitto ATP Finals · 2026")
+  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500")
+  + calendarCard(["250"],"ATP 250","2026 Season · every ATP 250");
+
 const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p));
 const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
-track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + raceCard() + cardHtml.slice(splitAt).join("") + moneyCard();
+track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + raceCard() + cardHtml.slice(splitAt).join("") + moneyCard() + calendarCards;
 // per-card credit at the bottom of every page (shown on mobile only)
 const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a onclick="openCredits();return false;">Credits</a>';
 [...track.children].forEach(c=>{const host=c.querySelector(".inner")||c.querySelector(".chartwrap")||c;const d=document.createElement("div");d.className="pgcredit";d.innerHTML=CREDIT_HTML;host.appendChild(d);});
@@ -848,6 +924,9 @@ document.getElementById("fs").onclick=()=>{ document.fullscreenElement?document.
   if(fieldIdx>=0) items.push({label:"Leaders", idx:fieldIdx, spc:1});
   if(raceIdx>=0) items.push({label:"Race", idx:raceIdx, spc:1});
   if(moneyIdx>=0) items.push({label:"Prize $", idx:moneyIdx, spc:1});
+  const calIdx=[...track.children].map((c,i)=>c.classList.contains("calcard")?i:-1).filter(i=>i>=0);
+  const calLbl=["🗓 Majors","🗓 500","🗓 250"];
+  calIdx.forEach((idx,k)=>items.push({label:calLbl[k]||"🗓 Cal", idx, spc:1}));
   const grid=document.getElementById("jgrid"), pop=document.getElementById("jumppop"), counter=document.getElementById("counter");
   grid.innerHTML=items.map(it=>`<button class="jchip${it.spc?" spc":""}" data-idx="${it.idx}">${it.label}</button>`).join("");
   const chips=[...grid.querySelectorAll(".jchip")];
