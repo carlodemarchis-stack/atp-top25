@@ -522,10 +522,37 @@
     .pl{font-size:14.5px}
     .patp{font-size:12px}
   }
+
+  /* ===== ATP / WTA top-bar switch ===== */
+  .tourswitch{position:fixed; right:20px; top:14px; z-index:41; display:flex; gap:2px; padding:3px;
+    border-radius:999px; background:rgba(255,255,255,.05); border:1px solid var(--line);
+    font-size:11px; font-weight:800; letter-spacing:.14em; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px)}
+  .tourswitch a{padding:5px 13px; border-radius:999px; color:var(--muted-2); text-decoration:none; transition:color .2s,background .2s}
+  .tourswitch a:hover{color:var(--ink)}
+  body:not(.wta) .tourswitch .ts-atp{background:var(--gold); color:#241a05}
+  body.wta .tourswitch .ts-wta{background:var(--gold); color:#25073f}
+  @media (max-width:860px){ .tourswitch{top:10px; right:12px; font-size:10px} .tourswitch a{padding:5px 11px} }
+
+  /* ===== WTA twin: purple identity + bust-style cutout tuning ===== */
+  body.wta{
+    --navy-0:#17082b; --navy-1:#241043; --navy-2:#3a1c66; --navy-3:#5e2e9c;
+    --ink:#f3ecff; --muted:#c3a8e0; --muted-2:#9179b8;
+    --line:rgba(190,150,240,.18); --gold:#cf9dff;
+  }
+  body.wta .card__bg::after{background:radial-gradient(55% 75% at 15% 120%, rgba(180,110,255,.24), transparent 60%)}
+  body.wta .glow{background:radial-gradient(closest-side, rgba(200,140,255,.30), transparent 74%)}
+  body.wta .rankghost{color:rgba(255,255,255,.055)}
+  /* WTA cutouts are head+torso busts (~square), not full-body — size + bottom-anchor them onto the panel */
+  body.wta .gladiator{height:min(35vh,340px); object-position:bottom center}
+  body.wta .col.lead .figbar{filter:drop-shadow(0 0 24px rgba(207,157,255,.5)) drop-shadow(0 14px 16px rgba(0,0,0,.5))}
+  /* money-card avatar is cropped from the torso cutout — bias to the top so the face shows */
+  body.wta .pface{object-position:top center; background:rgba(255,255,255,.04)}
+  @media (max-width:860px){ body.wta .gladiator{height:29vh} }
 </style>
 </head>
 <body>
 <div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>
+<div class="tourswitch"><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a>  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
@@ -566,15 +593,51 @@
 <script>
 const DATA = /*__DATA__*/;
 const RANK_POINTS = {1:"13,450",2:"8,480",3:"8,160",4:"4,740",5:"3,760",6:"3,660",7:"3,620",8:"3,580",9:"3,420",10:"3,300"};
-const FLAG = {"Italy":"🇮🇹","Germany":"🇩🇪","Spain":"🇪🇸","Canada":"🇨🇦","Serbia":"🇷🇸","Australia":"🇦🇺","Russia":"🇷🇺","United States":"🇺🇸","Great Britain":"🇬🇧","France":"🇫🇷","Kazakhstan":"🇰🇿","Czechia":"🇨🇿","Norway":"🇳🇴","Monaco":"🇲🇨","Argentina":"🇦🇷","Greece":"🇬🇷","Denmark":"🇩🇰","Netherlands":"🇳🇱","Chile":"🇨🇱","Bulgaria":"🇧🇬","Poland":"🇵🇱","Switzerland":"🇨🇭","Austria":"🇦🇹","Hungary":"🇭🇺","Finland":"🇫🇮","Portugal":"🇵🇹","Belgium":"🇧🇪","Croatia":"🇭🇷","Japan":"🇯🇵","China":"🇨🇳","Brazil":"🇧🇷","Bahrain":"🇧🇭","Dominican Republic":"🇩🇴","Ecuador":"🇪🇨","Hong Kong":"🇭🇰","Mexico":"🇲🇽","Morocco":"🇲🇦","New Zealand":"🇳🇿","Paraguay":"🇵🇾","Qatar":"🇶🇦","Romania":"🇷🇴","Rwanda":"🇷🇼","Slovak Republic":"🇸🇰","South Korea":"🇰🇷","Sweden":"🇸🇪","United Arab Emirates":"🇦🇪","Peru":"🇵🇪","Bolivia":"🇧🇴","Georgia":"🇬🇪","Estonia":"🇪🇪","Jordan":"🇯🇴","Lebanon":"🇱🇧","Luxembourg":"🇱🇺","Jamaica":"🇯🇲","North Macedonia":"🇲🇰","Slovenia":"🇸🇮","Latvia":"🇱🇻","Lithuania":"🇱🇹","Ukraine":"🇺🇦","Moldova":"🇲🇩","Uruguay":"🇺🇾","India":"🇮🇳","South Africa":"🇿🇦","Bosnia and Herzegovina":"🇧🇦","Belarus":"🇧🇾","Chinese Taipei":"🇹🇼","Tunisia":"🇹🇳"};
+const FLAG = {"Italy":"🇮🇹","Germany":"🇩🇪","Spain":"🇪🇸","Canada":"🇨🇦","Serbia":"🇷🇸","Australia":"🇦🇺","Russia":"🇷🇺","United States":"🇺🇸","Great Britain":"🇬🇧","France":"🇫🇷","Kazakhstan":"🇰🇿","Czechia":"🇨🇿","Norway":"🇳🇴","Monaco":"🇲🇨","Argentina":"🇦🇷","Greece":"🇬🇷","Denmark":"🇩🇰","Netherlands":"🇳🇱","Chile":"🇨🇱","Bulgaria":"🇧🇬","Poland":"🇵🇱","Switzerland":"🇨🇭","Austria":"🇦🇹","Hungary":"🇭🇺","Finland":"🇫🇮","Portugal":"🇵🇹","Belgium":"🇧🇪","Croatia":"🇭🇷","Japan":"🇯🇵","China":"🇨🇳","Brazil":"🇧🇷","Bahrain":"🇧🇭","Dominican Republic":"🇩🇴","Ecuador":"🇪🇨","Hong Kong":"🇭🇰","Mexico":"🇲🇽","Morocco":"🇲🇦","New Zealand":"🇳🇿","Paraguay":"🇵🇾","Qatar":"🇶🇦","Romania":"🇷🇴","Rwanda":"🇷🇼","Slovak Republic":"🇸🇰","South Korea":"🇰🇷","Sweden":"🇸🇪","United Arab Emirates":"🇦🇪","Peru":"🇵🇪","Bolivia":"🇧🇴","Georgia":"🇬🇪","Estonia":"🇪🇪","Jordan":"🇯🇴","Lebanon":"🇱🇧","Luxembourg":"🇱🇺","Jamaica":"🇯🇲","North Macedonia":"🇲🇰","Slovenia":"🇸🇮","Latvia":"🇱🇻","Lithuania":"🇱🇹","Ukraine":"🇺🇦","Moldova":"🇲🇩","Uruguay":"🇺🇾","India":"🇮🇳","South Africa":"🇿🇦","Bosnia and Herzegovina":"🇧🇦","Belarus":"🇧🇾","Chinese Taipei":"🇹🇼","Tunisia":"🇹🇳","Colombia":"🇨🇴","Egypt":"🇪🇬","Indonesia":"🇮🇩","Philippines":"🇵🇭","Thailand":"🇹🇭","Turkey":"🇹🇷","Uzbekistan":"🇺🇿"};
 const CAT = {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 250",UC:"United Cup"};
+// ---- per-tour config: ATP defaults reproduce the original page; WTA overrides swap labels/theme/data ----
+const TOURS={
+  atp:{
+    imgBase:"img/full/", faceBase:"img/face/",
+    moneyNote:"The 25 biggest 2026 on-court earners among the ATP Top 100 — ranked by prize money, not by ATP ranking (shown as #). A big season can lift a lower-ranked player above higher-ranked ones: Hurkacz (#71), Fery (#37) and Etcheverry (#31) all out-earned much of the Top 25.",
+    neutral:["RUS"], neutralNames:["Russia"], neutralGlyph:'<span class="flagbox" title="Neutral flag"></span>',
+    catLabel:{GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 250",UC:"United Cup"},
+    catShort:{GS:"GS","1000":"M1000","500":"500","250":"250",UC:"UC"},
+    catKey:{GS:"gs","1000":"m1000","500":"a500","250":"a250",UC:"uc"},
+    wlTiers:{GS:1,"1000":1,"500":1,"250":1,UC:1,DC:1},
+    titleOrder:["GS","1000","500","250","UC"],
+    rankPoints:{1:"13,450",2:"8,480",3:"8,160",4:"4,740",5:"3,760",6:"3,660",7:"3,620",8:"3,580",9:"3,420",10:"3,300"},
+    leadersSub:"ATP Top 10 · Ranking Points · 2026",
+    raceTag:"Race to Turin", raceTitle:"Race to Turin", raceSub:"Nitto ATP Finals · Top 8 qualify · 2026",
+    calMaj:["GS","1000","ATP Finals"], calMajTitle:"Majors & Masters", calMajSub:"Grand Slams · Masters 1000 · Nitto ATP Finals · 2026", calMajOrder:["GS","1000","ATP Finals"],
+    cal500Title:"ATP 500", cal500Sub:"2026 Season · every ATP 500",
+    cal250Title:"ATP 250", cal250Sub:"2026 Season · every ATP 250"
+  },
+  wta:{
+    imgBase:"img/wta/", faceBase:"img/wta/",
+    moneyNote:"The 25 biggest 2026 on-court earners among the WTA Top 100 — ranked by prize money, not by WTA ranking (shown as #). A deep run at the majors and the WTA 1000s can lift a lower-ranked player well above higher-ranked ones.",
+    neutral:["RUS","BLR"], neutralNames:["Russia","Belarus"], neutralGlyph:"",   // WTA shows NO flag AND NO country for RUS/BLR (matches wtatennis.com)
+    catLabel:{GS:"Grand Slam","1000":"WTA 1000","500":"WTA 500","250":"WTA 250",WF:"WTA Finals",UC:"United Cup",BJK:"BJK Cup"},
+    catShort:{GS:"GS","1000":"1000","500":"500","250":"250",WF:"Finals",UC:"UC",BJK:"BJK"},
+    catKey:{GS:"gs","1000":"m1000","500":"a500","250":"a250",WF:"finals",UC:"uc",BJK:"uc"},
+    wlTiers:{GS:1,"1000":1,"500":1,"250":1,WF:1,UC:1,BJK:1},
+    titleOrder:["GS","1000","500","250","WF","UC","BJK"],
+    rankPoints:{},
+    leadersSub:"WTA Top 10 · Ranking Points · 2026",
+    raceTag:"Race to the Finals", raceTitle:"Race to the WTA Finals", raceSub:"WTA Finals · Indian Wells · Top 8 qualify · 2026",
+    calMaj:["GS","1000","WTA Finals"], calMajTitle:"Majors & 1000s", calMajSub:"Grand Slams · WTA 1000 · WTA Finals · 2026", calMajOrder:["GS","1000","WTA Finals"],
+    cal500Title:"WTA 500", cal500Sub:"2026 Season · every WTA 500",
+    cal250Title:"WTA 250", cal250Sub:"2026 Season · every WTA 250"
+  }
+};
+const T = TOURS[DATA.tour] || TOURS.atp;
 const MONTH=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const abbrMoney=s=>{const n=+String(s).replace(/[^0-9]/g,"");if(!n)return s||"";if(n>=1e6)return "$"+(n/1e6).toFixed(1).replace(/\.0$/,"")+"M";if(n>=1e3)return "$"+Math.round(n/1e3)+"K";return "$"+n;};
-const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX",BOL:"BO",DOM:"DO",EST:"EE",GEO:"GE",HKG:"HK",JAM:"JM",JOR:"JO",LBN:"LB",LUX:"LU",MAR:"MA",MKD:"MK",PAR:"PY",UAE:"AE",QAT:"QA"};
+const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX",BOL:"BO",DOM:"DO",EST:"EE",GEO:"GE",HKG:"HK",JAM:"JM",JOR:"JO",LBN:"LB",LUX:"LU",MAR:"MA",MKD:"MK",PAR:"PY",UAE:"AE",QAT:"QA",EGY:"EG",PHI:"PH",THA:"TH",INA:"ID",UZB:"UZ",KSA:"SA",SGP:"SG",ISR:"IL",IRL:"IE",PUR:"PR"};
 // Russians compete under a neutral (blank) flag in tennis — show a white box instead
 const NEUTRAL='<span class="flagbox" title="Neutral flag"></span>';
-const flagOf=code=>{ if((code||"").toUpperCase()==="RUS") return NEUTRAL; const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
+const flagOf=code=>{ if(T.neutral.includes((code||"").toUpperCase())) return T.neutralGlyph; const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
 const fmtScore=s=>esc(s||"").replace(/\((\d+)\)/g,'<span class="t">($1)</span>');
 const scoreCells=s=>(s||"").trim().split(/\s+/).filter(Boolean).map(tok=>{
   const m=tok.match(/^(\d+)-(\d+)(?:\((\d+)\))?/);
@@ -584,9 +647,9 @@ const scoreCells=s=>(s||"").trim().split(/\s+/).filter(Boolean).map(tok=>{
 
 function tag(rank){ if(rank===1)return "World No. 1"; if(rank<=4)return "Top 4"; return "Top 10"; }
 
-function catKey(type){return {GS:"gs","1000":"m1000","500":"a500","250":"a250","UC":"uc"}[type]||"a250";}
-function catLabel(type){return {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 250","UC":"United Cup"}[type]||type;}
-function catShort(type){return {GS:"GS","1000":"M1000","500":"500","250":"250",UC:"UC"}[type]||type;}
+function catKey(type){return T.catKey[type]||"a250";}
+function catLabel(type){return T.catLabel[type]||type;}
+function catShort(type){return T.catShort[type]||type;}
 function catChip(type){return `<span class="cat ${catKey(type)}"><span class="cf">${esc(catLabel(type))}</span><span class="cs">${esc(catShort(type))}</span></span>`;}
 // round depth → shade level: deeper rounds are brighter; qualifying (Q1/Q2/Q3) is faded (doesn't count for W-L)
 function roundLvl(r){ r=(r||"").toUpperCase(); if(/^Q[0-9]/.test(r)) return "q";
@@ -648,7 +711,7 @@ function oppList(p){
 // at Grand Slam / Masters 1000 / ATP 500 / ATP 250 / United Cup / Davis Cup — i.e. not a
 // bye, not a qualifying round (Q1/Q2/Q3), and not a Challenger. (Walkovers carry no score,
 // so they add no sets regardless.) This reproduces atptour.com's season W-L exactly.
-const WL_TIERS={GS:1,"1000":1,"500":1,"250":1,UC:1,DC:1};
+const WL_TIERS=T.wlTiers;
 const isQualRound=r=>/^Q[0-9]/.test((r||"").toUpperCase());
 const countsWL=(t,m)=>!m.bye && !!WL_TIERS[t.type] && !isQualRound(m.round);
 // sets from only the matches that count toward the official W-L
@@ -662,7 +725,7 @@ function seasonSets(p){
 function titleBreakdown(p){
   const c={};
   (p.tournaments||[]).forEach(t=>{ if(t.title) c[t.type]=(c[t.type]||0)+1; });
-  return ["GS","1000","500","250","UC"].filter(k=>c[k]).map(k=>({n:c[k], label:catLabel(k)}));
+  return T.titleOrder.filter(k=>c[k]).map(k=>({n:c[k], label:catLabel(k)}));
 }
 
 function rivalsList(p){
@@ -713,7 +776,7 @@ function frow(f){
 }
 
 function card(p,pi){
-  const flag=p.country==="Russia"?NEUTRAL:(FLAG[p.country]||"🎾");
+  const flag=T.neutralNames.includes(p.country)?T.neutralGlyph:(FLAG[p.country]||"🎾");
   const opp=oppList(p);
   const finals=finalsList(p);
   const showRivals=p.rank<=10;
@@ -753,14 +816,14 @@ function card(p,pi){
       <div class="col-id">
         <div class="stagephoto">
           <div class="glow"></div><div class="floor"></div>
-          <img class="gladiator" src="img/full/${p.id}.png" alt="${esc(p.first)} ${esc(p.last)}" loading="lazy">
+          <img class="gladiator" src="${T.imgBase}${p.id}.png" alt="${esc(p.first)} ${esc(p.last)}" loading="lazy">
           <button class="sh sh-l" data-d="-1" aria-label="Previous player">‹</button>
           <button class="sh sh-r" data-d="1" aria-label="Next player">›</button>
           <div class="topbar">
-            <div class="ctry"><span class="flag">${flag}</span>${p.country==="Russia"?"":esc(p.country.toUpperCase())}</div>
+            <div class="ctry"><span class="flag">${flag}</span>${T.neutralNames.includes(p.country)?"":esc(p.country.toUpperCase())}</div>
             <div class="raceinfo">
               ${p.raceRank?`<div class="pts-top${p.raceRank<=8?" qual":""}">${esc(p.racePoints)}<span>race pts</span></div>
-              <span class="tag race${p.raceRank<=8?" qual":""}">Race to Turin · #${p.raceRank}</span>`:""}
+              <span class="tag race${p.raceRank<=8?" qual":""}">${T.raceTag} · #${p.raceRank}</span>`:""}
             </div>
           </div>
         </div>
@@ -789,14 +852,14 @@ function chartCard(){
     const frac=(num(p.points)/max).toFixed(3);
     return `<div class="col${p.rank===1?" lead":""}">
       <div class="cpts">${esc(p.points)}</div>
-      <img class="figbar" src="img/full/${p.id}.png" alt="${esc(p.last)}" style="--frac:${frac}">
+      <img class="figbar" src="${T.imgBase}${p.id}.png" alt="${esc(p.last)}" style="--frac:${frac}">
       <div class="cxlab"><b>${p.rank}</b> ${esc(p.last)}</div>
     </div>`;
   }).join("");
   return `<section class="card chartcard">
     <div class="card__bg"></div>
     <div class="chartwrap">
-      <div class="charthead"><div class="ch-t">Leaders</div><div class="ch-s">ATP Top 10 · Ranking Points · 2026</div></div>
+      <div class="charthead"><div class="ch-t">Leaders</div><div class="ch-s">${T.leadersSub}</div></div>
       <div class="chart">${cols}</div>
     </div>
   </section>`;
@@ -810,14 +873,14 @@ function raceCard(){
     const frac=(num(p.racePoints)/max).toFixed(3);
     return `<div class="col${p.raceRank===1?" lead":""}${p.raceRank<=8?" qual":""}">
       <div class="cpts">${esc(p.racePoints)}</div>
-      <img class="figbar" src="img/full/${p.id}.png" alt="${esc(p.last)}" style="--frac:${frac}">
+      <img class="figbar" src="${T.imgBase}${p.id}.png" alt="${esc(p.last)}" style="--frac:${frac}">
       <div class="cxlab"><b>${p.raceRank}</b> ${esc(p.last)}</div>
     </div>`;
   }).join("");
   return `<section class="card chartcard racecard">
     <div class="card__bg"></div>
     <div class="chartwrap">
-      <div class="charthead"><div class="ch-t">Race to Turin</div><div class="ch-s">Nitto ATP Finals · Top 8 qualify · 2026</div></div>
+      <div class="charthead"><div class="ch-t">${T.raceTitle}</div><div class="ch-s">${T.raceSub}</div></div>
       <div class="chart">${cols}</div>
     </div>
   </section>`;
@@ -831,7 +894,7 @@ function moneyCard(){
     const pct=Math.max(4, Math.round(num(p.ytdPrize)/max*100));
     return `<div class="prow${i===0?" lead":""}">
       <span class="prank">${i+1}</span>
-      <img class="pface" src="img/face/${p.id}.png" alt="${esc(p.last)}" loading="lazy">
+      <img class="pface" src="${T.faceBase}${p.id}.png" alt="${esc(p.last)}" loading="lazy">
       <span class="pbar"><span class="pname"><span class="pl">${esc(p.last)}</span><span class="patp">#${p.rank}</span></span><span class="pfill" style="width:${pct}%"></span></span>
       <span class="pamt">${abbrMoney(p.ytdPrize)}</span>
     </div>`;
@@ -841,7 +904,7 @@ function moneyCard(){
     <div class="chartwrap">
       <div class="charthead"><div class="ch-t">Prize Money</div><div class="ch-s">Top 25 Earners · 2026 Season</div></div>
       <div class="moneylist">${list}</div>
-      <div class="moneynote">The 25 biggest 2026 on-court earners among the ATP Top 100 — ranked by prize money, not by ATP ranking (shown as #). A big season can lift a lower-ranked player above higher-ranked ones: Hurkacz (#71), Fery (#37) and Etcheverry (#31) all out-earned much of the Top 25.</div>
+      <div class="moneynote">${esc(T.moneyNote)}</div>
     </div>
   </section>`;
 }
@@ -850,7 +913,7 @@ function moneyCard(){
 const CAL_MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function calDates(s,e){const a=s.split("-"),b=e.split("-");const sd=+a[2],sm=+a[1],ed=+b[2],em=+b[1];
   return sm===em?`${sd}–${ed} ${CAL_MO[em-1]}`:`${sd} ${CAL_MO[sm-1]} – ${ed} ${CAL_MO[em-1]}`;}
-function calBadge(cat){const m={"GS":["gs","GS"],"1000":["m1000","M1000"],"500":["a500","500"],"250":["a250","250"],"ATP Finals":["finals","Finals"]}[cat]||["a250",cat];
+function calBadge(cat){const m={"GS":["gs","GS"],"1000":["m1000",T.catShort["1000"]||"M1000"],"500":["a500","500"],"250":["a250","250"],"ATP Finals":["finals","Finals"],"WTA Finals":["finals","Finals"]}[cat]||["a250",cat];
   return `<span class="cat ${m[0]} calbadge">${esc(m[1])}</span>`;}
 function calPlayer(p,cls){ if(!p||!p.name) return `<span class="calp empty"></span>`;
   return `<span class="calp ${cls}"><span class="cpfl">${flagOf(p.ioc)}</span><span class="cpn">${esc(p.name)}</span></span>`; }
@@ -890,11 +953,11 @@ function calendarCard(cats,title,sub,opt){
       <div class="callist${two?" twocol":""}">${inner}</div>
     </div></section>`;
 }
-const calendarCards = calendarCard(["GS","1000","ATP Finals"],"Majors & Masters","Grand Slams · Masters 1000 · Nitto ATP Finals · 2026",{order:["GS","1000","ATP Finals"]})
-  + calendarCard(["500"],"ATP 500","2026 Season · every ATP 500",{cols:2,sf:false})
-  + calendarCard(["250"],"ATP 250","2026 Season · every ATP 250",{cols:2,sf:false});
+const calendarCards = calendarCard(T.calMaj,T.calMajTitle,T.calMajSub,{order:T.calMajOrder})
+  + calendarCard(["500"],T.cal500Title,T.cal500Sub,{cols:2,sf:false})
+  + calendarCard(["250"],T.cal250Title,T.cal250Sub,{cols:2,sf:false});
 
-const players=DATA.players.map(p=>(p.points=RANK_POINTS[p.rank]||p.points||"",p));
+const players=DATA.players.map(p=>(p.points=T.rankPoints[p.rank]||p.points||"",p));
 const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
@@ -918,6 +981,7 @@ const saveState=()=>{ const v=document.body.dataset.view;
   try{ history.replaceState(null,"",h); }catch(e){} };
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
+  if(cur) requestAnimationFrame(()=>fitOneName(cur.querySelector(".nameline")));   // fit name once card is on-screen
   const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
   if(lc && cur && !cur.querySelector(lc)) document.body.dataset.view="tournaments";
   if(cur) cur.scrollTop=0;   // start each player at the top (mobile vertical scroll)
@@ -987,23 +1051,24 @@ function fitAll(){
   });
 }
 // smart name fit: largest size that keeps the name on one line; drop to two lines only when needed
-function fitNames(){
+// fit one card's name to its column. Off-screen cards (content-visibility) can't be measured,
+// so besides load/resize we also call this per-card from go() when a card scrolls into view.
+function fitOneName(nl){
   const MAX=56, MIN1=34, MIN2=25;
-  document.querySelectorAll('.nameline').forEach(nl=>{
-    const nm=nl.querySelector('.nm'); if(!nm) return;
-    nl.classList.add('nowrap'); nl.style.setProperty('--nm', MAX+'px');
-    const avail=nl.clientWidth, natural=nl.scrollWidth;
-    if(!avail) return;
-    if(natural<=avail) return;                              // already fits one line at full size
-    const s1=Math.floor(MAX*avail/natural);
-    if(s1>=MIN1){ nl.style.setProperty('--nm', s1+'px'); return; }   // shrink to fit one line
-    nl.classList.remove('nowrap');                         // very long → allow two lines
-    let size=MAX, guard=0;
-    do{ nl.style.setProperty('--nm', size+'px');
-        if(nl.scrollHeight <= size*0.95*2 + 4 || size<=MIN2) break;
-        size-=2; }while(++guard<40);
-  });
+  const nm=nl&&nl.querySelector('.nm'); if(!nm) return;
+  nl.classList.add('nowrap'); nl.style.setProperty('--nm', MAX+'px');
+  const avail=nl.clientWidth, natural=nl.scrollWidth;
+  if(!avail) return;
+  if(natural<=avail) return;                              // already fits one line at full size
+  const s1=Math.floor(MAX*avail/natural);
+  if(s1>=MIN1){ nl.style.setProperty('--nm', s1+'px'); return; }   // shrink to fit one line
+  nl.classList.remove('nowrap');                         // very long → allow two lines
+  let size=MAX, guard=0;
+  do{ nl.style.setProperty('--nm', size+'px');
+      if(nl.scrollHeight <= size*0.95*2 + 4 || size<=MIN2) break;
+      size-=2; }while(++guard<40);
 }
+function fitNames(){ document.querySelectorAll('.nameline').forEach(fitOneName); }
 function fitLayout(){ fitNames(); fitAll(); }
 addEventListener('load',fitLayout);
 let rt; addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(fitLayout,150);});
