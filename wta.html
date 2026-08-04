@@ -432,7 +432,7 @@
   @media (max-width:860px){
     /* step 1 — stacked view: the card scrolls vertically */
     .card{overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
-      align-items:flex-start; padding:54px 16px 40px}
+      align-items:flex-start; padding:54px 16px calc(76px + env(safe-area-inset-bottom))}
     /* gradient scrim behind the fixed brand header so scrolling content doesn't clash under it */
     body::before{content:""; position:fixed; top:0; left:0; right:0; height:60px; z-index:29;
       background:linear-gradient(180deg, var(--navy-0) 44%, rgba(5,10,26,0)); pointer-events:none}
@@ -464,8 +464,17 @@
     .statbar{grid-template-columns:repeat(4,1fr); gap:14px}
     /* lists flow into the page scroll instead of their own scrollbox */
     .tlist,.olist,.rlist,.flist{max-height:none; overflow:visible}
-    /* step 2 — hide the control bar on mobile for now */
-    .controls{display:none}
+    /* minimal, stocky control bar docked flush to the bottom (mobile) — like the F1 film */
+    .controls{display:flex; left:0; right:0; bottom:0; top:auto; transform:none; width:100%;
+      border-radius:0; border:0; border-top:1px solid var(--line); backdrop-filter:blur(14px);
+      background:rgba(6,12,28,.94); box-shadow:0 -8px 24px rgba(0,0,0,.5);
+      gap:2px; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:center}
+    .controls button{width:40px; height:40px}
+    .controls .play{width:44px; height:44px}
+    .controls .play svg{width:20px; height:20px}
+    .counter{padding:6px 12px}
+    #fs, .controls .sep{display:none}   /* no fullscreen on mobile */
+    .sh{display:none}   /* the docked bar handles prev/next now; swipe still works */
     /* 1 — short category labels (GS / M1000 / 500 / 250) */
     .cat .cf{display:none} .cat .cs{display:inline}
     /* 2 — tournament/finals rows may wrap to two lines instead of truncating */
