@@ -563,7 +563,7 @@
 <div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>
 <div class="tourswitch"><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
 <div class="updated" id="updated"></div>
-<div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a>  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
+<div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
 <div class="stage"><div class="track" id="track"></div></div>
 
@@ -972,7 +972,7 @@ const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
 track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + raceCard() + cardHtml.slice(splitAt).join("") + moneyCard() + calendarCards;
 // per-card credit at the bottom of every page (shown on mobile only)
-const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (Carlo De Marchis)  ·  <a onclick="openCredits();return false;">Credits</a>';
+const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a onclick="openCredits();return false;">Credits</a>';
 [...track.children].forEach(c=>{const host=c.querySelector(".inner")||c.querySelector(".chartwrap")||c;const d=document.createElement("div");d.className="pgcredit";d.innerHTML=CREDIT_HTML;host.appendChild(d);});
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
