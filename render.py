@@ -7,6 +7,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 WTA_REPLACEMENTS = [
     ("<title>ATP Top 100 — Player Film</title>", "<title>WTA Top 100 — Player Film</title>"),
+    ('content="ATP Top 100 — Player Film"', 'content="WTA Top 100 — Player Film"'),   # og:title + twitter:title
+    ('<link rel="canonical" href="https://tennis.aguywithascarf.com/">',
+     '<link rel="canonical" href="https://tennis.aguywithascarf.com/wta.html">'),
+    ('<meta property="og:url" content="https://tennis.aguywithascarf.com/">',
+     '<meta property="og:url" content="https://tennis.aguywithascarf.com/wta.html">'),
+    ("og-atp.png", "og-wta.png"),                                   # og:image + twitter:image
+    ("Jannik Sinner — ATP Top 100 Player Film", "Aryna Sabalenka — WTA Top 100 Player Film"),  # og:image:alt
     ("fill='%23c9e548'", "fill='%23b57bff'"),                       # favicon ball: green -> WTA violet
     ("<body>", '<body class="wta">'),
     ('<div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>',
