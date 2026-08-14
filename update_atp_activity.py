@@ -5,7 +5,7 @@ compact activity captured in-browser (window.__act) from a tool-results file."""
 import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ACT_FILE = "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1786690193125.txt"
+ACT_FILE = os.environ.get("ATP_ACTIVITY", "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1786690193125.txt")
 
 def load_act():
     parts = json.load(open(ACT_FILE))

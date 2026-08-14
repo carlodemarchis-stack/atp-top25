@@ -5,9 +5,10 @@ ranking date. Keeps retained players' match/tournament data from the prior snaps
 import json, re, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SCRATCH = "/private/tmp/claude-501/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/scratchpad/atp"
-ENTRANT_FILE = "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1786690076408.txt"
-NEW_DATE = "2026-08-10"
+# all three overridable by atp_update.py via env; defaults are the last run's values
+SCRATCH = os.environ.get("ATP_REFRESH_DIR", "/private/tmp/claude-501/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/scratchpad/atp")
+ENTRANT_FILE = os.environ.get("ATP_ENTRANTS", "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1786690076408.txt")
+NEW_DATE = os.environ.get("ATP_DATE", "2026-08-10")
 
 def load_entrants():
     parts = json.load(open(ENTRANT_FILE))
