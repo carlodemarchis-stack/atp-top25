@@ -188,6 +188,7 @@ def build_tournaments(matches):
         g["lost"] = sum(1 for x in ms if x["wl"] == "L" and not x["bye"])
         g["matches"] = ms[::-1]      # display final-first (F→…→R128), matching the ATP modal
         out.append(g)
+    out.sort(key=lambda g: g.get("start") or "", reverse=True)   # latest tournament first, like ATP
     return out
 
 def wl_split(s):
