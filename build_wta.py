@@ -2,24 +2,30 @@
 """WTA data pipeline — fetches the WTA top-100 singles from api.wtatennis.com +
 profile HTML (all plain-curl, no Cloudflare) and emits data/wta_players.json in the
 exact schema the shared template.html consumes (twin of the ATP players.json)."""
+import time
 import urllib.request, urllib.error, json, re, html, os, sys, unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-AT = "2026-07-27"                          # ranking issue date (matches ATP snapshot)
+AT = "2026-08-03"                          # ranking issue date (matches ATP snapshot); bump each Monday to refresh
 API = "https://api.wtatennis.com/tennis"
 HDRS = {"account": "wta", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 OUT = os.path.join(os.path.dirname(__file__), "data", "wta_players.json")
 
-def _get(url, as_json=True, tries=3):
+def _get(url, as_json=True, tries=6):
     last = None
-    for _ in range(tries):
+    for i in range(tries):
         try:
+            time.sleep(0.4)                       # gentle throttle so ~200 reqs don't trip the rate limit
             req = urllib.request.Request(url, headers=HDRS)
             with urllib.request.urlopen(req, timeout=40) as r:
                 data = r.read()
             return json.loads(data) if as_json else data.decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            last = e
+            time.sleep(10 * (i + 1) if e.code == 429 else 1.5)   # back off hard on 429
         except Exception as e:
             last = e
+            time.sleep(1.5)
     raise last
 
 # ---- 3-letter code -> full country name (must match template FLAG keys) ----
@@ -255,7 +261,7 @@ def main():
     print(f"  {len(ranked)} ranked", flush=True)
 
     players = [None] * len(ranked)
-    with ThreadPoolExecutor(max_workers=8) as ex:
+    with ThreadPoolExecutor(max_workers=2) as ex:   # gentle: avoid api.wtatennis.com 429 rate-limit
         futs = {ex.submit(build_player, row, None): i for i, row in enumerate(ranked)}
         done = 0
         for f in as_completed(futs):

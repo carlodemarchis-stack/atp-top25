@@ -6,8 +6,8 @@ import json, re, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRATCH = "/private/tmp/claude-501/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/scratchpad/atp"
-ENTRANT_FILE = "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1785761324397.txt"
-NEW_DATE = "2026-08-03"
+ENTRANT_FILE = "/Users/carlodemarchis/.claude/projects/-Users-carlodemarchis-Documents--cdm--carlo-FACTORY63-Claude-Code/6132c4a3-a142-471c-8e3b-545ddc53f416/tool-results/mcp-Claude_Browser-javascript_tool-1786690076408.txt"
+NEW_DATE = "2026-08-10"
 
 def load_entrants():
     parts = json.load(open(ENTRANT_FILE))
@@ -127,8 +127,9 @@ def main():
         r = new_rank.get(p["id"])
         if not r:                       # dropped out of the top 100
             continue
+        old_rank = p["rank"]            # move = positions gained vs last week (page no longer exposes it)
         p["rank"] = r["rank"]; p["sglRank"] = r["rank"]
-        p["points"] = r["pointsFmt"]; p["rankMove"] = r["move"]
+        p["points"] = r["pointsFmt"]; p["rankMove"] = old_rank - r["rank"]
         rc = new_race.get(p["id"])
         if rc:
             p["raceRank"] = rc["raceRank"]; p["racePoints"] = rc["racePoints"]
