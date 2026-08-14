@@ -174,6 +174,9 @@
   .oflag .cc{font-size:10px; font-weight:800; color:var(--muted-2)}
   .oname{font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
   .oname .orank{color:var(--muted-2); font-weight:700; font-size:12px; margin-left:7px}
+  /* opponent/rival names that are themselves in the top 100 → clickable link to their card */
+  .plink{cursor:pointer; text-decoration:none; color:inherit; border-bottom:1px solid transparent; transition:color .12s ease, border-color .12s ease}
+  .plink:hover,.plink:focus-visible{color:var(--gold); border-bottom-color:var(--gold); outline:none}
   .odots{display:inline-flex; gap:4px; align-items:center; justify-content:flex-end}
   .dot{width:7px; height:7px; border-radius:50%; flex:none}
   .dot.w{background:var(--green)} .dot.l{background:#ff6b6b}
@@ -631,7 +634,7 @@ const TOURS={
     catKey:{GS:"gs","1000":"m1000","500":"a500","250":"a250",UC:"uc"},
     wlTiers:{GS:1,"1000":1,"500":1,"250":1,UC:1,DC:1},
     titleOrder:["GS","1000","500","250","UC"],
-    rankPoints:{1:"13,450",2:"8,480",3:"8,160",4:"4,740",5:"3,760",6:"3,660",7:"3,620",8:"3,580",9:"3,420",10:"3,300"},
+    rankPoints:{}   /* points now come straight from the data for all 100 (was a stale top-10 map that broke on ranking shuffles) */,
     leadersSub:"ATP Top 10 · Ranking Points · 2026",
     raceTag:"Race to Turin", raceTitle:"Race to Turin", raceSub:"Nitto ATP Finals · Top 8 qualify · 2026",
     calMaj:["GS","1000","ATP Finals"], calMajTitle:"Majors & Masters", calMajSub:"Grand Slams · Masters 1000 · Nitto ATP Finals · 2026", calMajOrder:["GS","1000","ATP Finals"],
@@ -714,7 +717,7 @@ function orow(o){
   const dots=o.results.map(r=>`<i class="dot ${r==="W"?"w":"l"}"></i>`).join("");
   return `<div class="orow">
     <span class="oflag">${flagOf(o.oppC)}</span>
-    <span class="oname">${esc(o.name)}${o.oppR?`<span class="orank">#${o.oppR}</span>`:""}</span>
+    <span class="oname">${plink(o.name, esc(o.name))}${o.oppR?`<span class="orank">#${o.oppR}</span>`:""}</span>
     <span class="odots">${dots}</span>
     <span class="owl ${cls}">${o.won}–${o.lost}</span>
   </div>`;
@@ -727,7 +730,7 @@ function oppList(p){
   if(singles.length){
     out+=`<div class="odiv"><span>played once · ${singles.length}</span></div>`;
     out+=`<div class="osingles">`+singles.map(o=>
-      `<span class="osingle ${o.won?"w":"l"}">${esc(o.name)}${o.oppR?`<span class="osr">#${o.oppR}</span>`:""}<i class="dot ${o.won?"w":"l"}"></i></span>`).join("")+`</div>`;
+      `<span class="osingle ${o.won?"w":"l"}">${plink(o.name, esc(o.name))}${o.oppR?`<span class="osr">#${o.oppR}</span>`:""}<i class="dot ${o.won?"w":"l"}"></i></span>`).join("")+`</div>`;
   }
   return {html:out, count:opps.length};
 }
@@ -765,13 +768,13 @@ function rrow(r){
   const t=r.t, o=r.o, flag=FLAG[t.country]||"🎾", name=`${(t.first||"")[0]}. ${t.last}`;
   if(!o) return `<div class="orow notplayed">
     <span class="oflag">${flag}</span>
-    <span class="oname">${esc(name)}<span class="orank">#${t.rank}</span></span>
+    <span class="oname">${plink(name, esc(name))}<span class="orank">#${t.rank}</span></span>
     <span class="odots"></span><span class="owl np">— not played</span></div>`;
   const cls=o.won>o.lost?"pos":(o.lost>o.won?"neg":"");
   const dots=o.results.map(x=>`<i class="dot ${x==="W"?"w":"l"}"></i>`).join("");
   return `<div class="orow">
     <span class="oflag">${flag}</span>
-    <span class="oname">${esc(name)}<span class="orank">#${t.rank}</span></span>
+    <span class="oname">${plink(name, esc(name))}<span class="orank">#${t.rank}</span></span>
     <span class="odots">${dots}</span>
     <span class="owl ${cls}">${o.won}–${o.lost}</span></div>`;
 }
@@ -788,7 +791,7 @@ function frow(f){
   const t=f.t, m=f.m, won=t.result==="W";
   const city=t.loc&&(t.loc.EventCity||t.loc.EventLocation)||"";
   let sub=`<span class="fvs">${won?"Won":"Runner-up"}</span>`;
-  if(m) sub=`<span class="fvs">${won?"def.":"lost to"}</span> ${flagOf(m.oppC)} ${esc(m.opp)}${m.oppR?`<span class="fr">#${m.oppR}</span>`:""}${m.score?` · ${fmtScore(m.score)}`:""}`;
+  if(m) sub=`<span class="fvs">${won?"def.":"lost to"}</span> ${flagOf(m.oppC)} ${plink(m.opp, esc(m.opp))}${m.oppR?`<span class="fr">#${m.oppR}</span>`:""}${m.score?` · ${fmtScore(m.score)}`:""}`;
   return `<div class="frow${won?" won":""}">
     <span class="surf ${esc(t.surface)}"></span>
     ${catChip(t.type)}
@@ -982,7 +985,12 @@ const calendarCards = calendarCard(T.calMaj,T.calMajTitle,T.calMajSub,{order:T.c
   + calendarCard(["500"],T.cal500Title,T.cal500Sub,{cols:2,sf:false})
   + calendarCard(["250"],T.cal250Title,T.cal250Sub,{cols:2,sf:false});
 
-const players=DATA.players.map(p=>(p.points=T.rankPoints[p.rank]||p.points||"",p));
+const players=DATA.players.map(p=>(p.points=p.points||T.rankPoints[p.rank]||"",p));
+// clickable names: an opponent/rival who is themselves in the top 100 links to their own card
+const NAME2RANK={};
+players.forEach(p=>{ const k=`${(p.first||"")[0]}. ${p.last}`; if(NAME2RANK[k]==null) NAME2RANK[k]=p.rank; });
+function plink(name, inner){ const r=NAME2RANK[name]; return r ? `<a class="plink" onclick="jumpToPlayer(${r});return false;">${inner}</a>` : inner; }
+function jumpToPlayer(r){ if(typeof closeModal==="function") closeModal(); go(r<=10 ? r-1 : r+1); }
 const track=document.getElementById("track");
 const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
@@ -1123,7 +1131,7 @@ function renderTourn(){
     const champ=won && mi===0 && m.wl==="W";
     return `<div class="mrow${champ?" champ":""}">
       <span class="mround rl-${roundLvl(m.round)}" title="${esc(m.roundLong||"")}">${esc(m.round||"")}</span>
-      <span class="mopp">${m.bye?"":`<span class="mfl">${flagOf(m.oppC)}</span>`}<span class="on">${m.bye?"Bye":esc(m.opp)}</span>${m.bye||!m.oppR?"":`<span class="oi">#${m.oppR}</span>`}</span>
+      <span class="mopp">${m.bye?"":`<span class="mfl">${flagOf(m.oppC)}</span>`}<span class="on">${m.bye?"Bye":plink(m.opp, esc(m.opp))}</span>${m.bye||!m.oppR?"":`<span class="oi">#${m.oppR}</span>`}</span>
       <span class="sc">${scoreCells(m.score)}</span>
       <span class="wl ${wl}${champ?" champ":""}">${wl}</span>
     </div>`;
