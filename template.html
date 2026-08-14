@@ -196,6 +196,7 @@
     padding:var(--rpad,6px) 8px; margin:0 -8px; border-bottom:1px solid rgba(140,165,220,.09);
     cursor:pointer; border-radius:8px; transition:background .14s}
   .trow:hover{background:rgba(120,160,255,.1)}
+  .trow.tsel{background:rgba(120,160,255,.14); box-shadow:inset 3px 0 0 var(--gold)}   /* keyboard-selected tournament */
   .trow .surf{width:9px; height:9px; border-radius:50%; justify-self:center}
   .surf.Hard{background:var(--hard)} .surf.Clay{background:var(--clay)} .surf.Grass{background:var(--grass)}
   .cat{font-size:9.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; text-align:center;
@@ -1008,6 +1009,16 @@ const modal=document.getElementById("modal"), box=document.getElementById("modal
 const minihdr=document.getElementById("minihdr");
 
 let idx=0, playing=false, timer=null, SPEED=5000;
+// keyboard tournament nav: ↑/↓ move a selection through the current card's tournament rows, Enter opens it
+let tSel=-1;
+const atBody=()=> !document.activeElement || document.activeElement===document.body;
+const tRows=()=>{ const c=track.children[idx]; return c?[...c.querySelectorAll(".trow")]:[]; };
+function paintTSel(){ const rows=tRows(); rows.forEach((r,i)=>r.classList.toggle("tsel",i===tSel));
+  if(tSel>=0 && rows[tSel]) rows[tSel].scrollIntoView({block:"nearest"}); }
+function moveTSel(d){ const rows=tRows(); if(!rows.length) return;
+  tSel = tSel<0 ? (d>0?0:rows.length-1) : Math.max(0,Math.min(rows.length-1,tSel+d)); paintTSel(); }
+function openTSel(){ const rows=tRows(); if(tSel>=0 && rows[tSel]) rows[tSel].click(); }
+function resetTSel(){ document.querySelectorAll(".trow.tsel").forEach(r=>r.classList.remove("tsel")); tSel=-1; }
 const saveState=()=>{ const v=document.body.dataset.view;
   let h="#"+idx+(v&&v!=="tournaments"?"-"+v:"");
   if(modal && !modal.hidden) h+="~"+curPi+"."+curTi;   // include open tournament modal
@@ -1018,6 +1029,7 @@ const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*10
   const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
   if(lc && cur && !cur.querySelector(lc)) document.body.dataset.view="tournaments";
   if(cur) cur.scrollTop=0;   // start each player at the top (mobile vertical scroll)
+  resetTSel();               // clear keyboard tournament selection on card change
   if(minihdr) minihdr.classList.remove("show");
   document.body.classList.remove("mini-on");
   document.getElementById("cnum").textContent=idx+1; saveState(); };
@@ -1066,7 +1078,10 @@ addEventListener("keydown",e=>{
     else if(e.key==="ArrowLeft") navT(-1);
     return;
   }
-  if(e.key==="ArrowRight"){next();if(playing)setPlay(true);}
+  if(e.key==="ArrowDown" && atBody()){e.preventDefault();moveTSel(1);}
+  else if(e.key==="ArrowUp" && atBody()){e.preventDefault();moveTSel(-1);}
+  else if(e.key==="Enter" && atBody()){e.preventDefault();openTSel();}
+  else if(e.key==="ArrowRight"){next();if(playing)setPlay(true);}
   else if(e.key==="ArrowLeft"){prev();if(playing)setPlay(true);}
   else if(e.key===" "){e.preventDefault();setPlay(!playing);}
   else if(e.key==="Home"){go(0);}
