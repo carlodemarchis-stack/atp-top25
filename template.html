@@ -1137,9 +1137,10 @@ function renderTourn(){
   const flag=(t.loc&&FLAG[t.loc.EventCountry])||"";
   const dstr=t.date?new Date(t.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
   const won=!!(t.title || t.result==="W");
-  let setsW=0, setsL=0;
+  let setsW=0, setsL=0, gamesW=0, gamesL=0;
   (t.matches||[]).forEach(m=>{ if(!countsWL(t,m)) return; (m.score||"").split(/\s+/).forEach(tok=>{
     const mm=tok.match(/^(\d+)-(\d+)/); if(!mm) return; const a=+mm[1], b=+mm[2];
+    gamesW+=a; gamesL+=b;
     if(a>b) setsW++; else if(b>a) setsL++; }); });
   const matches=(t.matches||[]).map((m,mi)=>{
     const wl=m.wl==="W"?"W":"L";
@@ -1161,6 +1162,7 @@ function renderTourn(){
         <div class="m${won?" win":""}"><b>${won?"🏆 ":""}${esc(t.resultLong||t.result||"—")}</b><span>Result</span></div>
         <div class="m"><b>${t.won}–${t.lost}</b><span>Matches</span></div>
         <div class="m"><b>${setsW}–${setsL}</b><span>Sets</span></div>
+        <div class="m"><b>${gamesW}–${gamesL}</b><span>Games</span></div>
         <div class="m"><b>${t.points||0}</b><span>Points</span></div>
         <div class="m"><b>${t.prize?esc(t.cur||"$")+Number(t.prize).toLocaleString("en-US"):"—"}</b><span>Prize</span></div>
       </div>
