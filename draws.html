@@ -326,14 +326,19 @@ function draw(){
   const topId = selId || champ.id;             // draws on top; champ emphasised by default
   const conns=[];
   (function walk(n){ (n.c||[]).forEach(c=>{ conns.push([n,c]); walk(c); }); })(T);
-  conns.sort((a,b)=> (winnerId(a[1])===topId?1:0)-(winnerId(b[1])===topId?1:0));  // focused run on top
+  // draw order: dimmed first, then each beaten opponent's incoming line, then the selected run on top
+  const prio=e=>{ const a=winnerId(e[1]); if(a===topId) return 2; if(selId && winnerId(e[0])===selId && a!==selId) return 1; return 0; };
+  conns.sort((a,b)=> prio(a)-prio(b));
   for(const [par,ch] of conns){
     const [x1,y1]=polar(radiusFor(par.r),par.ang), [x2,y2]=polar(radiusFor(ch.r),ch.ang);
     const mr=(radiusFor(par.r)+radiusFor(ch.r))/2;
     const [mx,my]=polar(mr,ch.ang);   // elbow: go radial-out at child angle then arc in
     const aid=winnerId(ch), onTop=aid===topId;
     let sw = onTop?(selId?3:2.6):1.5, so = onTop?1:0.85;
-    if(selId && !onTop){ so=0.2; sw=1.4; }       // dim everything but the selected run
+    if(selId && !onTop){
+      if(winnerId(par)===selId){ sw=2.1; so=0.95; }  // the loser's line INTO each match the selected player won — thick-ish, own colour
+      else { so=0.2; sw=1.4; }                        // everything else dimmed
+    }
     svg.appendChild(el("path",{d:`M${x2},${y2} L${mx},${my} Q${CX()+mr*Math.cos(par.ang)},${CY()+mr*Math.sin(par.ang)} ${x1},${y1}`,
       fill:"none", stroke:colorOf[aid]||"#c3ccdb", "stroke-width":sw, "stroke-opacity":so, "stroke-linecap":"round"}));
   }
