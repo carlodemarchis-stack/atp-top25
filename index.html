@@ -560,6 +560,8 @@
   .tourswitch a:hover{color:var(--ink)}
   body:not(.wta) .tourswitch .ts-atp{background:var(--gold); color:#241a05}
   body.wta .tourswitch .ts-wta{background:var(--gold); color:#25073f}
+  .tourswitch .ts-draws:hover{color:var(--gold)}
+  .tourswitch .ts-div{align-self:stretch; width:1px; margin:3px 2px; padding:0; background:rgba(255,255,255,.16)}
   @media (max-width:860px){ .tourswitch{top:10px; right:12px; font-size:10px} .tourswitch a{padding:5px 11px} }
 
   /* ===== WTA twin: purple identity + bust-style cutout tuning ===== */
@@ -581,7 +583,7 @@
 </head>
 <body>
 <div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>
-<div class="tourswitch"><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
+<div class="tourswitch"><a class="ts-draws" href="draws.html">DRAWS</a><span class="ts-div"></span><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
