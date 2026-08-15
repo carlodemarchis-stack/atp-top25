@@ -92,6 +92,8 @@
   .pf-stats .st .k{color:var(--muted-2); text-transform:uppercase; letter-spacing:.09em; font-size:9.5px; font-weight:800}
   .pf-stats .st .v{font-size:13px; font-weight:800; font-variant-numeric:tabular-nums}
   .pf-stats .st .v.gold{color:var(--gold)}
+  .pf-stats .st .v a.lt{cursor:pointer; color:inherit; text-decoration:none; border-bottom:1px dotted var(--muted-2)}
+  .pf-stats .st .v a.lt:hover{color:var(--gold); border-bottom-color:var(--gold)}
   .pm-h{font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted-2); font-weight:800; margin-bottom:9px}
   .pm-row{display:flex; gap:8px; align-items:baseline; padding:3.5px 0; border-top:1px solid rgba(133,147,168,.2)}
   .pm-row:first-of-type{border-top:none}
@@ -229,14 +231,13 @@ function playerSummary(p){
   played.forEach(m=>{ const n=Math.max(m.my.length,m.os.length);
     for(let i=0;i<n;i++){ const a=parseInt(String(m.my[i]??"").charAt(0)), b=parseInt(String(m.os[i]??"").charAt(0));
       if(Number.isNaN(a)||Number.isNaN(b)) continue; gw+=a; gl+=b; if(a>b) sw++; else if(b>a) sl++; } });
+  const lost = p.id===champ.id ? null : p.matches.find(m=>!m.win);   // champion never loses
   let result;
-  if(p.id===champ.id) result={t:"Champion", gold:true};
-  else { const lost=p.matches.find(m=>!m.win);
-    let t="—";
-    if(lost){ const top=maxR-lost.r;
-      t = top===0?"Runner-up": top===1?"Semifinals": top===2?"Quarterfinals": "Round of "+Math.pow(2,top+1); }
-    result={t, gold:false}; }
-  return {w,l,played:played.length,sw,sl,gw,gl,result};
+  if(!lost) result={t:"Champion", gold:true};
+  else { const top=maxR-lost.r;
+    result={t: top===0?"Runner-up": top===1?"Semifinals": top===2?"Quarterfinals": "Round of "+Math.pow(2,top+1), gold:false}; }
+  const lostTo = (lost && lost.oppId) ? {name:lost.opp, id:lost.oppId} : null;
+  return {w,l,played:played.length,sw,sl,gw,gl,result,lostTo};
 }
 
 // ---- selection + side panels ----
@@ -253,6 +254,7 @@ function renderPanels(){
     </div>
     <div class="pf-stats">
       <div class="st"><span class="k">Result</span><span class="v ${s.result.gold?"gold":""}">${s.result.t}</span></div>
+      ${s.lostTo?`<div class="st"><span class="k">Lost to</span><span class="v"><a class="lt" onclick="selectPlayer('${s.lostTo.id}')">${surname(s.lostTo.name)}</a></span></div>`:""}
       <div class="st"><span class="k">Matches</span><span class="v">${s.w}&ndash;${s.l}</span></div>
       <div class="st"><span class="k">Sets</span><span class="v">${s.sw}&ndash;${s.sl}</span></div>
       <div class="st"><span class="k">Games</span><span class="v">${s.gw}&ndash;${s.gl}</span></div>
