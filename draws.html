@@ -63,6 +63,13 @@
     color:var(--muted-2); opacity:.9; text-align:left}
   .backnav a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
   .backnav a:hover{color:var(--gold)}
+  /* full-screen toggle */
+  .fsbtn{position:fixed; right:18px; bottom:36px; z-index:25; width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.62); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    color:var(--muted); cursor:pointer; padding:0; transition:color .15s, background .15s}
+  .fsbtn:hover{color:var(--ink); background:rgba(255,255,255,.9)}
+  .fsbtn svg{width:17px; height:17px; display:block}
+  .fsbtn .ic-exit{display:none} .fsbtn.on .ic-enter{display:none} .fsbtn.on .ic-exit{display:block}
   /* tutorial overlay */
   .help{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(20,34,56,.30); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
@@ -153,6 +160,10 @@
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div>
 <div class="backnav">&larr; <a href="index.html">ATP</a> &middot; <a href="wta.html">WTA</a> rankings</div>
+<button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
+  <svg class="ic-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+  <svg class="ic-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M8 21v-3a2 2 0 0 0-2-2H3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+</button>
 <div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>) &middot; <a onclick="openHelp();return false;">Guide</a></div>
 <div class="help" id="help">
   <div class="help-card">
@@ -466,6 +477,17 @@ function updateBar(){
 }
 document.getElementById("barPrev").addEventListener("click",()=>loadTournament(cur-1));
 document.getElementById("barNext").addEventListener("click",()=>loadTournament(cur+1));
+
+// ---- full-screen toggle ----
+const fsBtn = document.getElementById("fsBtn"), rootEl = document.documentElement;
+fsBtn.addEventListener("click", ()=>{
+  const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+  if(!fsEl){ (rootEl.requestFullscreen || rootEl.webkitRequestFullscreen || function(){}).call(rootEl); }
+  else { (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document); }
+});
+const syncFS = ()=> fsBtn.classList.toggle("on", !!(document.fullscreenElement || document.webkitFullscreenElement));
+document.addEventListener("fullscreenchange", syncFS);
+document.addEventListener("webkitfullscreenchange", syncFS);
 
 // ---- tutorial overlay ----
 const helpEl = document.getElementById("help");
