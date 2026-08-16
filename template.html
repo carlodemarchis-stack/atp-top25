@@ -157,9 +157,12 @@
   .slist{display:none}
   body[data-view="sets"] .tlist{display:none} body[data-view="sets"] .slist{display:block}
   .setswrap{padding-top:2px}
-  .sets-head{display:flex; align-items:baseline; gap:16px; font-size:12.5px; font-weight:800; letter-spacing:.03em; margin-bottom:4px}
+  .sets-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; font-size:12.5px; font-weight:800; letter-spacing:.03em; margin-bottom:4px}
+  .sets-head .shg{display:inline-flex; align-items:baseline; gap:9px}
+  .sets-head .shg.games{opacity:.58; font-size:11.5px}     /* games shown quieter than sets */
+  .sets-head .sh-k{color:var(--muted-2); font-size:10px; text-transform:uppercase; letter-spacing:.1em; font-weight:800}
   .sets-head .sh-w{color:var(--green)} .sets-head .sh-l{color:#ff8a8a}
-  .sets-head .sh-sub{margin-left:auto; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
+  .sets-head .sh-pct{color:var(--muted); font-weight:700; font-size:.85em}
   .setchart{width:100%; height:auto; display:block; max-height:calc(100vh - 240px)}
   .setchart .sc-n{fill:var(--ink); font-size:12px; font-weight:800; text-anchor:middle}
   .setchart .sc-n.lost{fill:var(--muted)}
@@ -772,15 +775,16 @@ function seasonSets(p){
 const SET_SCORES=["6-0","6-1","6-2","6-3","6-4","7-5","7-6"];
 function setDist(p){
   const won={}, lost={}; SET_SCORES.forEach(k=>{won[k]=0; lost[k]=0;});
+  let gw=0, gl=0;                                                 // games won / lost
   (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(!countsWL(t,m)) return;
     (m.score||"").split(/\s+/).forEach(tok=>{ const mm=tok.match(/^(\d+)-(\d+)/); if(!mm) return;
-      const a=+mm[1], b=+mm[2];
+      const a=+mm[1], b=+mm[2]; gw+=a; gl+=b;
       if(a>b){ const k=a+"-"+b; if(k in won) won[k]++; }          // player won this set
       else if(b>a){ const k=b+"-"+a; if(k in lost) lost[k]++; }   // player lost it — bucket by winner-first margin
     }); }));
   const wTot=SET_SCORES.reduce((s,k)=>s+won[k],0), lTot=SET_SCORES.reduce((s,k)=>s+lost[k],0);
   const max=Math.max(1,...SET_SCORES.map(k=>Math.max(won[k],lost[k])));
-  return {won,lost,wTot,lTot,max};
+  return {won,lost,wTot,lTot,max,gw,gl};
 }
 // one diverging bar chart: won sets up (green), lost sets down (red), shared scale (single axis)
 function setChart(p){
@@ -798,8 +802,12 @@ function setChart(p){
         `<text class="sc-n lost" x="${cx.toFixed(1)}" y="${(base+h+14).toFixed(1)}">${ls}</text></g>`; }
     body+=`<text class="sc-x" x="${cx.toFixed(1)}" y="${H-13}">${k}</text>`;
   });
+  const sPct=d.wTot+d.lTot?(d.wTot/(d.wTot+d.lTot)*100).toFixed(1):"0", gPct=d.gw+d.gl?(d.gw/(d.gw+d.gl)*100).toFixed(1):"0";
   return `<div class="setswrap">
-    <div class="sets-head"><span class="sh-w">&#9650; ${d.wTot} won</span><span class="sh-l">&#9660; ${d.lTot} lost</span><span class="sh-sub">sets by scoreline &middot; 2026</span></div>
+    <div class="sets-head">
+      <span class="shg"><span class="sh-k">Sets</span><span class="sh-w">&#9650; ${d.wTot} won <span class="sh-pct">${sPct}%</span></span><span class="sh-l">&#9660; ${d.lTot} lost</span></span>
+      <span class="shg games"><span class="sh-k">Games</span><span class="sh-w">&#9650; ${d.gw} won <span class="sh-pct">${gPct}%</span></span><span class="sh-l">&#9660; ${d.gl} lost</span></span>
+    </div>
     <svg class="setchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sets won and lost by scoreline in 2026">
       <line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="var(--line)"/>${body}
     </svg></div>`;
