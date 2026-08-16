@@ -158,8 +158,7 @@
   body[data-view="sets"] .tlist{display:none} body[data-view="sets"] .slist{display:block}
   .setswrap{padding-top:2px}
   .sets-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; font-size:12.5px; font-weight:800; letter-spacing:.03em; margin-bottom:4px}
-  .sets-head .shg{display:inline-flex; align-items:baseline; gap:9px}
-  .sets-head .shg.games{opacity:.58; font-size:11.5px}     /* games shown quieter than sets */
+  .sets-head .shg{display:inline-flex; align-items:baseline; gap:8px}
   .sets-head .sh-k{color:var(--muted-2); font-size:10px; text-transform:uppercase; letter-spacing:.1em; font-weight:800}
   .sets-head .sh-w{color:var(--green)} .sets-head .sh-l{color:#ff8a8a}
   .sets-head .sh-pct{color:var(--muted); font-weight:700; font-size:.85em}
@@ -802,12 +801,10 @@ function setChart(p){
         `<text class="sc-n lost" x="${cx.toFixed(1)}" y="${(base+h+14).toFixed(1)}">${ls}</text></g>`; }
     body+=`<text class="sc-x" x="${cx.toFixed(1)}" y="${H-13}">${k}</text>`;
   });
-  const sPct=d.wTot+d.lTot?(d.wTot/(d.wTot+d.lTot)*100).toFixed(1):"0", gPct=d.gw+d.gl?(d.gw/(d.gw+d.gl)*100).toFixed(1):"0";
+  const pct=(w,l)=>(w+l)?(w/(w+l)*100).toFixed(1):"0";
+  const grp=(label,w,l)=>`<span class="shg"><span class="sh-k">${label}</span><span class="sh-w">&#9650; ${w} <span class="sh-pct">${pct(w,l)}%</span></span><span class="sh-l">&#9660; ${l}</span></span>`;
   return `<div class="setswrap">
-    <div class="sets-head">
-      <span class="shg"><span class="sh-k">Sets</span><span class="sh-w">&#9650; ${d.wTot} won <span class="sh-pct">${sPct}%</span></span><span class="sh-l">&#9660; ${d.lTot} lost</span></span>
-      <span class="shg games"><span class="sh-k">Games</span><span class="sh-w">&#9650; ${d.gw} won <span class="sh-pct">${gPct}%</span></span><span class="sh-l">&#9660; ${d.gl} lost</span></span>
-    </div>
+    <div class="sets-head">${grp("Matches",p.ytdWon||0,p.ytdLost||0)}${grp("Sets",d.wTot,d.lTot)}${grp("Games",d.gw,d.gl)}</div>
     <svg class="setchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sets won and lost by scoreline in 2026">
       <line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="var(--line)"/>${body}
     </svg></div>`;
