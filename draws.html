@@ -58,6 +58,11 @@
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
   .credit a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
   .credit a:hover{color:var(--gold)}
+  /* back to the ranking / card pages (bottom-left, mirrors the credit line) */
+  .backnav{position:fixed; left:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
+    color:var(--muted-2); opacity:.9; text-align:left}
+  .backnav a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
+  .backnav a:hover{color:var(--gold)}
   /* tutorial overlay */
   .help{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(20,34,56,.30); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
@@ -147,6 +152,7 @@
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div>
+<div class="backnav">&larr; <a href="index.html">ATP</a> &middot; <a href="wta.html">WTA</a> rankings</div>
 <div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>) &middot; <a onclick="openHelp();return false;">Guide</a></div>
 <div class="help" id="help">
   <div class="help-card">
