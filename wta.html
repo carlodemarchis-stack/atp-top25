@@ -101,7 +101,7 @@
   .vit b{color:var(--muted-2); font-weight:700}
 
   /* big summary stat bar */
-  .statbar{display:grid; grid-template-columns:repeat(4,auto) 1fr; gap:clamp(20px,3vw,42px); align-items:end;
+  .statbar{display:grid; grid-template-columns:repeat(5,auto) 1fr; gap:clamp(16px,2.4vw,38px); align-items:end;
     padding:8px 0 12px; border-bottom:1px solid var(--line)}
   .stat .v{font-size:clamp(24px,3vw,36px); font-weight:800; letter-spacing:-.02em; line-height:1; white-space:nowrap}
   .stat .v small{font-size:15px; font-weight:700; color:var(--muted)}
@@ -869,6 +869,7 @@ function card(p,pi){
   const showRivals=p.rank<=10;
   const riv=showRivals?rivalsList(p):null;
   const [setW,setL]=seasonSets(p);
+  const _sd=setDist(p);   // season games W–L (same countsWL universe as sets)
   const tb=titleBreakdown(p);
   const titlesLine = p.ytdTitles>0
     ? `<span class="tt-n">${p.ytdTitles} Title${p.ytdTitles==1?"":"s"}</span>`+tb.map(x=>`<span class="tt-c"><b>${x.n}</b> ${esc(x.label)}</span>`).join("")
@@ -924,6 +925,7 @@ function card(p,pi){
             <div class="stat"><div class="v">${esc(p.points)}</div><div class="k">Points</div></div>
             <div class="stat"><div class="v">${p.ytdWon}<small>–${p.ytdLost}</small></div><div class="k">Matches</div></div>
             <div class="stat"><div class="v">${setW}<small>–${setL}</small></div><div class="k">Sets</div></div>
+            <div class="stat"><div class="v">${_sd.gw}<small>–${_sd.gl}</small></div><div class="k">Games</div></div>
             <div class="stat"><div class="v">${abbrMoney(p.ytdPrize)}</div><div class="k">Prize ’26</div></div>
           </div>
           <div class="titles"><span class="tt-yr">2026</span>${titlesLine}</div>
