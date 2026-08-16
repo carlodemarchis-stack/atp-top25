@@ -126,10 +126,12 @@
   body[data-view="tournaments"] .ltab[data-view="tournaments"],
   body[data-view="finals"] .ltab[data-view="finals"],
   body[data-view="opponents"] .ltab[data-view="opponents"],
+  body[data-view="sets"] .ltab[data-view="sets"],
   body[data-view="rivals"] .ltab[data-view="rivals"]{color:var(--ink); border-bottom-color:var(--gold)}
   body[data-view="tournaments"] .ltab[data-view="tournaments"] b,
   body[data-view="finals"] .ltab[data-view="finals"] b,
   body[data-view="opponents"] .ltab[data-view="opponents"] b,
+  body[data-view="sets"] .ltab[data-view="sets"] b,
   body[data-view="rivals"] .ltab[data-view="rivals"] b{color:var(--gold)}
   .lseason{margin-left:auto; font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--muted-2); padding-bottom:9px}
 
@@ -151,6 +153,19 @@
   .olist::-webkit-scrollbar-thumb,.rlist::-webkit-scrollbar-thumb{background:rgba(140,165,220,.25); border-radius:3px}
   body[data-view="opponents"] .tlist{display:none} body[data-view="opponents"] .olist{display:flex}
   body[data-view="rivals"] .tlist{display:none} body[data-view="rivals"] .rlist{display:flex}
+  /* sets: diverging scoreline chart */
+  .slist{display:none}
+  body[data-view="sets"] .tlist{display:none} body[data-view="sets"] .slist{display:block}
+  .setswrap{padding-top:2px}
+  .sets-head{display:flex; align-items:baseline; gap:16px; font-size:12.5px; font-weight:800; letter-spacing:.03em; margin-bottom:4px}
+  .sets-head .sh-w{color:var(--green)} .sets-head .sh-l{color:#ff8a8a}
+  .sets-head .sh-sub{margin-left:auto; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
+  .setchart{width:100%; height:auto; display:block; max-height:calc(100vh - 240px)}
+  .setchart .sc-n{fill:var(--ink); font-size:12px; font-weight:800; text-anchor:middle}
+  .setchart .sc-n.lost{fill:var(--muted)}
+  .setchart .sc-x{fill:var(--muted-2); font-size:12.5px; font-weight:800; letter-spacing:.03em; text-anchor:middle}
+  .setchart rect{transition:opacity .12s} .setchart g:hover rect{opacity:.82}
+  .setsempty{color:var(--muted-2); font-size:13px; padding:26px 2px}
   .orow.notplayed{opacity:.42}
   .owl.np{color:var(--muted-2); font-weight:700; font-size:11px}
   /* finals list */
@@ -753,6 +768,42 @@ function seasonSets(p){
       const a=+mm[1], b=+mm[2]; if(a>b) w++; else if(b>a) l++; }); }));
   return [w,l];
 }
+// set-score distribution: the 7 ways to win a set, and (mirrored) to lose one.
+const SET_SCORES=["6-0","6-1","6-2","6-3","6-4","7-5","7-6"];
+function setDist(p){
+  const won={}, lost={}; SET_SCORES.forEach(k=>{won[k]=0; lost[k]=0;});
+  (p.tournaments||[]).forEach(t=>(t.matches||[]).forEach(m=>{ if(!countsWL(t,m)) return;
+    (m.score||"").split(/\s+/).forEach(tok=>{ const mm=tok.match(/^(\d+)-(\d+)/); if(!mm) return;
+      const a=+mm[1], b=+mm[2];
+      if(a>b){ const k=a+"-"+b; if(k in won) won[k]++; }          // player won this set
+      else if(b>a){ const k=b+"-"+a; if(k in lost) lost[k]++; }   // player lost it — bucket by winner-first margin
+    }); }));
+  const wTot=SET_SCORES.reduce((s,k)=>s+won[k],0), lTot=SET_SCORES.reduce((s,k)=>s+lost[k],0);
+  const max=Math.max(1,...SET_SCORES.map(k=>Math.max(won[k],lost[k])));
+  return {won,lost,wTot,lTot,max};
+}
+// one diverging bar chart: won sets up (green), lost sets down (red), shared scale (single axis)
+function setChart(p){
+  const d=setDist(p);
+  if(d.wTot+d.lTot===0) return `<div class="setsempty">No completed sets in 2026 yet.</div>`;
+  const W=560,H=300, padT=22, padB=46, half=(H-padT-padB)/2, base=padT+half, colW=W/SET_SCORES.length, bw=Math.min(44,colW*0.5);
+  let body="";
+  SET_SCORES.forEach((k,i)=>{
+    const cx=colW*i+colW/2, x=cx-bw/2, [hi,lo]=k.split("-");
+    const wn=d.won[k]; if(wn>0){ const h=wn/d.max*half;
+      body+=`<g><title>Won ${k} · ${wn} set${wn==1?"":"s"}</title><rect x="${x.toFixed(1)}" y="${(base-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--green)"/>`+
+        `<text class="sc-n" x="${cx.toFixed(1)}" y="${(base-h-5).toFixed(1)}">${wn}</text></g>`; }
+    const ls=d.lost[k]; if(ls>0){ const h=ls/d.max*half;
+      body+=`<g><title>Lost ${lo}-${hi} · ${ls} set${ls==1?"":"s"}</title><rect x="${x.toFixed(1)}" y="${base.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="#ff6b6b"/>`+
+        `<text class="sc-n lost" x="${cx.toFixed(1)}" y="${(base+h+14).toFixed(1)}">${ls}</text></g>`; }
+    body+=`<text class="sc-x" x="${cx.toFixed(1)}" y="${H-13}">${k}</text>`;
+  });
+  return `<div class="setswrap">
+    <div class="sets-head"><span class="sh-w">&#9650; ${d.wTot} won</span><span class="sh-l">&#9660; ${d.lTot} lost</span><span class="sh-sub">sets by scoreline &middot; 2026</span></div>
+    <svg class="setchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sets won and lost by scoreline in 2026">
+      <line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="var(--line)"/>${body}
+    </svg></div>`;
+}
 function titleBreakdown(p){
   const c={};
   (p.tournaments||[]).forEach(t=>{ if(t.title) c[t.type]=(c[t.type]||0)+1; });
@@ -837,12 +888,14 @@ function card(p,pi){
           ${finals.length?`<button class="ltab" data-view="finals">Finals <b>${finals.length}</b></button>`:""}
           <button class="ltab" data-view="opponents">Opponents <b>${opp.count}</b></button>
           ${showRivals?`<button class="ltab" data-view="rivals">Rivals <b>${riv.played}</b></button>`:""}
+          <button class="ltab" data-view="sets">Sets <b>${setW+setL}</b></button>
           <span class="lseason">2026</span>
         </div>
         <div class="tlist">${p.tournaments.map((t,ti)=>trow(t,pi,ti)).join("")}</div>
         ${finals.length?`<div class="flist">${finals.map(frow).join("")}</div>`:""}
         <div class="olist">${opp.html}</div>
         ${showRivals?`<div class="rlist">${riv.rows.map(rrow).join("")}</div>`:""}
+        <div class="slist">${setChart(p)}</div>
       </div>
       <div class="col-id">
         <div class="stagephoto">
@@ -1028,7 +1081,7 @@ const saveState=()=>{ const v=document.body.dataset.view;
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
   if(cur) requestAnimationFrame(()=>fitOneName(cur.querySelector(".nameline")));   // fit name once card is on-screen
-  const lc={opponents:".olist",rivals:".rlist",finals:".flist"}[document.body.dataset.view];
+  const lc={opponents:".olist",rivals:".rlist",finals:".flist",sets:".slist"}[document.body.dataset.view];
   if(lc && cur && !cur.querySelector(lc)) document.body.dataset.view="tournaments";
   if(cur) cur.scrollTop=0;   // start each player at the top (mobile vertical scroll)
   resetTSel();               // clear keyboard tournament selection on card change
@@ -1209,7 +1262,7 @@ function updateMini(card){
 
 // restore card + view from the URL hash so a reload lands on the same place
 (function restore(){
-  const m=(location.hash||"").replace("#","").match(/^(\d+)(?:-(tournaments|opponents|rivals|finals))?(?:~(\d+)\.(\d+))?$/);
+  const m=(location.hash||"").replace("#","").match(/^(\d+)(?:-(tournaments|opponents|rivals|finals|sets))?(?:~(\d+)\.(\d+))?$/);
   if(!m) return;
   if(m[2]) document.body.dataset.view=m[2];
   const prev=track.style.transition; track.style.transition="none";
