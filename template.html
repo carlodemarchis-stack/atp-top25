@@ -580,6 +580,25 @@
   .tourswitch .ts-draws:hover{color:var(--gold)}
   .tourswitch .ts-div{align-self:stretch; width:1px; margin:3px 2px; padding:0; background:rgba(255,255,255,.16)}
   @media (max-width:860px){ .tourswitch{top:10px; right:12px; font-size:10px} .tourswitch a{padding:5px 11px} }
+  /* ===== top-bar player search (ATP only) ===== */
+  .psearch{position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:43; width:min(270px,38vw)}
+  body.wta .psearch{display:none}
+  .psearch .ps-ico{position:absolute; left:12px; top:17px; width:15px; height:15px; color:var(--muted-2); pointer-events:none}
+  .psearch input{width:100%; height:34px; padding:0 14px 0 34px; border-radius:999px; border:1px solid var(--line);
+    background:rgba(255,255,255,.06); color:var(--ink); font-size:13px; font-weight:600; letter-spacing:.01em;
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); outline:none; transition:border-color .15s, background .15s}
+  .psearch input::placeholder{color:var(--muted-2); font-weight:500}
+  .psearch input:focus{border-color:var(--gold); background:rgba(255,255,255,.1)}
+  .psearch-list{position:absolute; top:41px; left:0; right:0; display:none; padding:5px; border-radius:13px;
+    background:rgba(14,22,42,.97); border:1px solid var(--line); box-shadow:0 20px 50px rgba(0,0,0,.55); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px)}
+  .psearch-list.on{display:block}
+  .ps-item{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; cursor:pointer}
+  .ps-item .ps-rk{color:var(--muted-2); font-weight:800; font-size:11px; min-width:26px}
+  .ps-item .ps-fl{font-size:15px; line-height:1}
+  .ps-item .ps-nm{font-size:13px; font-weight:700; color:var(--ink)} .ps-item .ps-nm b{color:var(--gold)}
+  .ps-item.hl{background:rgba(120,170,255,.14)}
+  .ps-empty{padding:10px; color:var(--muted-2); font-size:12.5px}
+  @media (max-width:720px){ .psearch{display:none} }
 
   /* ===== WTA twin: purple identity + bust-style cutout tuning ===== */
   body.wta{
@@ -601,6 +620,11 @@
 <body>
 <div class="brand"><b>ATP</b> · TOP 100 · SINGLES</div>
 <div class="tourswitch"><a class="ts-draws" href="draws.html">DRAWS</a><span class="ts-div"></span><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
+<div class="psearch" id="psearch">
+  <svg class="ps-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+  <input id="psearchInput" type="text" placeholder="Search a player…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search a player">
+  <div class="psearch-list" id="psearchList"></div>
+</div>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
@@ -1064,6 +1088,39 @@ const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.subs
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
 document.getElementById("ctot").textContent=nCards;
+
+// ---- top-bar player search: smart candidates as you type (ATP) ----
+(function(){
+  const box=document.getElementById("psearch"); if(!box) return;
+  const inp=document.getElementById("psearchInput"), list=document.getElementById("psearchList");
+  const norm=s=>(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const IDX=players.map(p=>{ const full=`${p.first||""} ${p.last||""}`.trim();
+    return {rank:p.rank, full, flag:(FLAG[p.country]||"🎾"), ll:norm(p.last), lf:norm(p.first), lfull:norm(full)}; });
+  let hits=[], hl=-1;
+  function search(qraw){ const q=norm(qraw.trim()); if(!q) return [];
+    const out=[];
+    for(const e of IDX){ let s=-1;
+      if(e.ll.startsWith(q)) s=0; else if(e.lf.startsWith(q)) s=1; else if(e.lfull.includes(q)) s=2; else if(e.ll.includes(q)) s=3;
+      if(s>=0) out.push({e,s}); }
+    out.sort((a,b)=> a.s-b.s || a.e.rank-b.e.rank);
+    return out.slice(0,8).map(x=>x.e); }
+  function mark(full, qraw){ const q=norm(qraw.trim()); const i=norm(full).indexOf(q);
+    return i<0 ? esc(full) : esc(full.slice(0,i))+"<b>"+esc(full.slice(i,i+q.length))+"</b>"+esc(full.slice(i+q.length)); }
+  function render(){ if(!inp.value.trim()){ list.classList.remove("on"); return; }
+    if(!hits.length){ list.innerHTML=`<div class="ps-empty">No player found</div>`; list.classList.add("on"); return; }
+    list.innerHTML=hits.map((e,i)=>`<div class="ps-item${i===hl?" hl":""}" data-rank="${e.rank}"><span class="ps-rk">#${e.rank}</span><span class="ps-fl">${e.flag}</span><span class="ps-nm">${mark(e.full,inp.value)}</span></div>`).join("");
+    list.classList.add("on"); }
+  function pick(rank){ inp.value=""; hits=[]; hl=-1; list.classList.remove("on"); inp.blur(); jumpToPlayer(rank); }
+  inp.addEventListener("input", ()=>{ hits=search(inp.value); hl=hits.length?0:-1; render(); });
+  inp.addEventListener("keydown", e=>{ e.stopPropagation();       // don't let letters/space/arrows drive the carousel
+    if(e.key==="ArrowDown"){ e.preventDefault(); if(hits.length){ hl=(hl+1)%hits.length; render(); } }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); if(hits.length){ hl=(hl-1+hits.length)%hits.length; render(); } }
+    else if(e.key==="Enter"){ e.preventDefault(); if(hits[hl]) pick(hits[hl].rank); }
+    else if(e.key==="Escape"){ e.preventDefault(); inp.value=""; hits=[]; hl=-1; list.classList.remove("on"); inp.blur(); } });
+  list.addEventListener("mousedown", e=>{ const it=e.target.closest(".ps-item"); if(it){ e.preventDefault(); pick(+it.dataset.rank); } });
+  inp.addEventListener("focus", ()=>{ if(inp.value.trim()){ hits=search(inp.value); render(); } });
+  inp.addEventListener("blur", ()=>{ setTimeout(()=>list.classList.remove("on"), 130); });
+})();
 (function(){var rd=DATA.ranking_date; if(!rd){document.getElementById("updated").textContent="";return;}
   var d=new Date(rd+"T00:00:00");
   document.getElementById("updated").textContent="Rankings "+d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});})();
