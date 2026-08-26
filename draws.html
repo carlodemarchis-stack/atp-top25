@@ -147,6 +147,7 @@
     font-size:21px; font-weight:800; color:#fff; box-shadow:0 5px 16px rgba(30,50,90,.20)}
   .pf-photo img{position:absolute; inset:0; width:58px; height:58px; border-radius:50%; object-fit:cover; background:var(--panel); box-shadow:0 5px 16px rgba(30,50,90,.20)}
   .pf-id .nm{font-size:16px; font-weight:800; letter-spacing:-.01em; line-height:1.12}
+  .pf-id .nm .pf-fl{margin-right:6px; font-size:15px; vertical-align:baseline}
   .pf-id .sd{font-size:11px; color:var(--muted); font-weight:600; margin-top:3px}
   .pf-stats{margin-top:14px; display:flex; flex-direction:column; gap:8px}
   .pf-stats .st{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
@@ -250,6 +251,11 @@ const TOURNAMENTS = [
 // current-tournament state (rebuilt on every switch)
 let cur = 0, T, maxR, champ, colorOf, players, order;
 const winnerId = n => (n.p.find(p=>p.w)||{}).id;
+// ---- player country flags (ioc code per bracket player, scraped from the ATP draws pages) ----
+const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"BG",CAN:"CA",CHI:"CL",CHN:"CN",COL:"CO",CRO:"HR",CZE:"CZ",DEN:"DK",ECU:"EC",ESP:"ES",FIN:"FI",FRA:"FR",GBR:"GB",GER:"DE",GRE:"GR",HUN:"HU",IND:"IN",ITA:"IT",JPN:"JP",KAZ:"KZ",KOR:"KR",LAT:"LV",LTU:"LT",MDA:"MD",MON:"MC",NED:"NL",NOR:"NO",NZL:"NZ",PER:"PE",POL:"PL",POR:"PT",RSA:"ZA",ROU:"RO",RUS:"RU",SRB:"RS",SUI:"CH",SVK:"SK",SLO:"SI",SWE:"SE",TPE:"TW",TUN:"TN",TUR:"TR",UKR:"UA",USA:"US",URU:"UY",MEX:"MX",BOL:"BO",DOM:"DO",EST:"EE",GEO:"GE",HKG:"HK",JAM:"JM",JOR:"JO",LBN:"LB",LUX:"LU",MAR:"MA",MKD:"MK",PAR:"PY",UAE:"AE",QAT:"QA",EGY:"EG",PHI:"PH",THA:"TH",INA:"ID",UZB:"UZ",KSA:"SA",SGP:"SG",ISR:"IL",IRL:"IE",PUR:"PR"};
+const CC={"a0e2":"ESP","w09e":"AUS","h997":"GER","s0k7":"USA","z0bz":"USA","k0ah":"USA","s0n0":"AUS","mw02":"FRA","pl56":"USA","k0az":"USA","t0a1":"ARG","v832":"AUS","b0u4":"NOR","o522":"USA","m0jz":"AUT","dh50":"ESP","bk92":"KAZ","b0cd":"USA","u182":"ARG","f724":"HUN","ki95":"SRB","ea24":"ARG","f0dm":"GBR","c0e9":"ITA","td51":"USA","kb95":"AUS","k0a3":"USA","c0df":"ARG","n0bs":"ARG","m0jf":"SRB","mk66":"USA","dh58":"AUS","z355":"GER","d0f6":"CAN","p09z":"AUS","mp20":"FRA","n0am":"USA","j0az":"FRA","bm95":"FRA","n771":"GBR","c0au":"ARG","z371":"CHN","d0dp":"CAN","d923":"BIH","b0pg":"BEL","f0f2":"POR","a0fc":"ITA","re44":"RUS","mm58":"RUS","d0c1":"NED","hb64":"FRA","te30":"CHI","mq75":"POL","f0by":"GBR","m0ci":"HUN","rc91":"FRA","t0ha":"USA","gc88":"USA","y218":"SWE","s0h2":"KAZ","c0c8":"ARG","tc61":"AUS","bt72":"POR","ag37":"CAN","m0ej":"ITA","c0jp":"BEL","su87":"ITA","te16":"ESP","d875":"BUL","m0fh":"CZE","m0hu":"JPN","te51":"GRE","l0bv":"CZE","g0ix":"FRA","db63":"SRB","w367":"SUI","ki82":"CZE","sl28":"GER","r0eb":"FRA","fb98":"USA","m0ni":"CZE","cd85":"ESP","s0uv":"JPN","hb71":"POL","bu13":"BEL","q02l":"USA","gj37":"NED","n0ae":"USA","v812":"NED","s0re":"CHN","bd06":"ESP","a0gc":"FRA","m0if":"ITA","mo44":"ESP","d643":"SRB","s0s1":"USA","hh26":"FRA","s0ia":"AUS","mc65":"FRA","me82":"FRA","h0bh":"AUS","d0dt":"USA","va25":"MON","su55":"CAN","y09v":"CHN","ae14":"GER","c977":"CRO","mu94":"ESP","s0gd":"CZE","b0gg":"ITA","rh16":"NOR","ke29":"RUS","m0qi":"USA","o483":"AUS","b0nn":"USA","m0gz":"FRA","b0bi":"ARG","gd64":"CHI","d0fj":"ITA","f0fv":"BRA","s0ja":"USA","n0bg":"ITA","wb32":"CHN","d994":"AUS","p0hw":"CRO","g09o":"FRA","s0ag":"ITA","sy67":"JPN","d0co":"GBR","j0dz":"ESP","t0ap":"TPE","m0n7":"ESP","f0f1":"FRA","gk06":"CAN","bk40":"ITA","l0il":"ESP","k0o4":"FRA","bg23":"GEO","b0no":"USA","c0h0":"FRA","bs86":"CHI","b0id":"PER","d0dw":"FRA","m0k4":"DEN","c0nb":"ITA","l987":"SRB","o513":"AUT","ta29":"ARG","g0fw":"LTU","v0dp":"PAR","ph64":"ITA","b0fv":"ARG","c0nn":"ITA","l0cx":"ESP","t09x":"FRA","p0iy":"BOL","r09x":"AUT","v0dz":"FRA","f0ho":"FRA","d0cg":"ARG","s0tm":"GBR","w0bh":"HKG","sx50":"RUS","h996":"FRA","p0ay":"FRA","da31":"BOL","kd46":"AUS","b0ej":"USA","g0eu":"GBR","b0je":"GBR","kf17":"KOR","p0ht":"GBR","m0aw":"COL","t0gr":"GBR","hd68":"GBR","v0am":"FIN","ch12":"GBR","mv14":"SVK","w0ah":"GBR","c0of":"CAN","w09g":"USA","l0gh":"EST"};
+function flagEmoji(id){ const iso=IOC[CC[id]]; return iso ? iso.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())) : ""; }
+
 
 // round label from a node's depth r within a tree of max depth mx (final = mx)
 function roundLabel(r, mx, short){
@@ -347,7 +353,7 @@ function renderPanels(){
   L.innerHTML = `<div class="pf-top">
       <div class="pf-photo"><div class="pf-mono" style="background:${col}">${initials(p.name)}</div>
         <img alt="" src="https://www.atptour.com/-/media/alias/player-headshot/${p.id}" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'"></div>
-      <div class="pf-id"><div class="nm">${p.name}</div><div class="sd">${seedLabel(p.seed)}</div></div>
+      <div class="pf-id"><div class="nm">${(f=>f?`<span class="pf-fl">${f}</span>`:"")(flagEmoji(p.id))}${p.name}</div><div class="sd">${seedLabel(p.seed)}</div></div>
     </div>
     <div class="pf-stats">
       <div class="st"><span class="k">Result</span><span class="v ${s.result.gold?"gold":""}">${s.result.t}</span></div>
