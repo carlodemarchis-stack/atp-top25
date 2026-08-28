@@ -425,7 +425,7 @@ function layout(node){
 // a flag fits beside a name only where that ring gives each label enough lateral room
 function flagRoom(r){
   const S = radiusFor(r) * Math.PI / Math.pow(2, maxR - r);   // tangential px between adjacent labels
-  return S >= 34;
+  return S >= 15;   // includes the outer ring on a normal-width fan; hides only when truly cramped
 }
 // radius by round: r=0 is the outer rim, r=maxR is the Final at the hub. Larger radius for smaller r.
 function radiusFor(r){
@@ -510,15 +510,19 @@ function draw(){
     if(fill) t.style.fill=fill;
     if(id){ t.classList.add("click"); t.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(id); }); }
     t.textContent=txt; svg.appendChild(t);
-    // a small flag on the HUB-facing side of the name (so it reads toward the arc centre on
-    // both halves, never mirrored) — only where the ring has room, per flagRoom(r)
+    // a small flag inline with the name, on its HUB-facing end — rotated parallel to the name
+    // (same readability flip, so it's never mirrored on the right) and placed toward the arc centre
     if(id && flagRoom(r)){
       const fl=flagEmoji(id);
       if(fl){
-        const ux=CX()-px, uy=CY()-py, ul=Math.hypot(ux,uy)||1;   // unit vector toward the hub
-        const off=t.getComputedTextLength()/2 + 8.5;
-        const ft=el("text",{x:px+ux/ul*off, y:py+uy/ul*off, class:"mflag",
-          "text-anchor":"middle","dominant-baseline":"middle"});
+        const rot=(flip?deg+180:deg), rr=rot*Math.PI/180;
+        const ax=Math.cos(rr), ay=Math.sin(rr);                  // name's own axis
+        const off=t.getComputedTextLength()/2 + 7;
+        const e1x=px+ax*off, e1y=py+ay*off, e2x=px-ax*off, e2y=py-ay*off;
+        const hub1=(e1x-CX())**2+(e1y-CY())**2, hub2=(e2x-CX())**2+(e2y-CY())**2;
+        const fx=hub1<hub2?e1x:e2x, fy=hub1<hub2?e1y:e2y;        // the end nearer the hub
+        const ft=el("text",{x:fx,y:fy, class:"mflag", "text-anchor":"middle","dominant-baseline":"middle",
+          transform:`rotate(${rot} ${fx} ${fy})`});
         ft.textContent=fl; svg.appendChild(ft);
       }
     }
