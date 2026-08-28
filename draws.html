@@ -597,8 +597,8 @@ function draw(){
     img.addEventListener("error",()=>img.remove());
     img.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); });
     svg.appendChild(img);
-    // champion NAME below the final dot (in place of the old "Champion" label)
-    const nm=el("text",{x:CX(),y:fy+17,"text-anchor":"middle",class:"champ-name click"}); nm.textContent=champ.n;
+    // champion NAME clearly below the final dot (in place of the old "Champion" label)
+    const nm=el("text",{x:CX(),y:fy+34,"text-anchor":"middle",class:"champ-name click"}); nm.textContent=champ.n;
     nm.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); }); svg.appendChild(nm);
   } else {
     const fin=T.p.filter(p=>p.id);                    // final set (both players) but not played → show the match-up
