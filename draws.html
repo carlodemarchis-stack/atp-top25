@@ -38,6 +38,7 @@
   .node.champ .dot{stroke:var(--gold); fill:#fdf3dd}
   .dot.finaldot{fill:#fdf3dd; stroke:var(--gold); stroke-width:2.6}   /* the final-match dot, enlarged */
   .mname{font-size:8.5px; letter-spacing:.01em; paint-order:stroke; stroke:var(--ground); stroke-width:2.4px; stroke-linejoin:round}
+  .mflag{font-size:9px; pointer-events:none}
   .mname.win{fill:var(--ink); font-weight:700}
   .mname.loser{fill:var(--muted-2); font-weight:500}
   .mname.bye{fill:var(--muted-2); font-weight:500; font-style:italic; letter-spacing:.05em; opacity:.85}
@@ -421,6 +422,11 @@ function layout(node){
   node.ang = node.c.reduce((s,c)=>s+c.ang,0)/node.c.length;
 }
 
+// a flag fits beside a name only where that ring gives each label enough lateral room
+function flagRoom(r){
+  const S = radiusFor(r) * Math.PI / Math.pow(2, maxR - r);   // tangential px between adjacent labels
+  return S >= 34;
+}
 // radius by round: r=0 is the outer rim, r=maxR is the Final at the hub. Larger radius for smaller r.
 function radiusFor(r){
   const outer = Math.min(innerWidth/2 - 72, CY()-16);  // reserve side margin so rim names never clip
@@ -497,13 +503,25 @@ function draw(){
   }
 
   // label EVERY match (R64 → SF): winner just outward of the dot, loser just inward — dot in between
-  function mkName(px,py,txt,cls,deg,flip,fill,id){   // one radial-aligned name CENTERED at (px,py)
+  function mkName(px,py,txt,cls,deg,flip,fill,id,r){   // one radial-aligned name CENTERED at (px,py)
     if(id && id===(selId||(champ&&champ.id))) cls+=" sel";
     const t=el("text",{x:px,y:py, class:"mname "+cls, "text-anchor":"middle", "dominant-baseline":"middle",
       transform:`rotate(${flip?deg+180:deg} ${px} ${py})`});
     if(fill) t.style.fill=fill;
     if(id){ t.classList.add("click"); t.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(id); }); }
     t.textContent=txt; svg.appendChild(t);
+    // a small flag on the HUB-facing side of the name (so it reads toward the arc centre on
+    // both halves, never mirrored) — only where the ring has room, per flagRoom(r)
+    if(id && flagRoom(r)){
+      const fl=flagEmoji(id);
+      if(fl){
+        const ux=CX()-px, uy=CY()-py, ul=Math.hypot(ux,uy)||1;   // unit vector toward the hub
+        const off=t.getComputedTextLength()/2 + 8.5;
+        const ft=el("text",{x:px+ux/ul*off, y:py+uy/ul*off, class:"mflag",
+          "text-anchor":"middle","dominant-baseline":"middle"});
+        ft.textContent=fl; svg.appendChild(ft);
+      }
+    }
   }
   function addLabel(n){
     if(n.r>=maxR) return;                    // the Final (r=maxR) is the hub medallion
@@ -514,12 +532,12 @@ function draw(){
     const w=n.p.find(p=>p.w);
     if(w){                                              // decided match — winner (and R128 loser)
       const l=n.p.find(p=>!p.w && p.id);
-      mkName(bx + px*gap, by + py*gap, surname(w.n), "win", deg, flip, colorOf[w.id], w.id);
-      if(n.r===0) mkName(bx - px*gap, by - py*gap, l?surname(l.n):"bye", l?"loser":"loser bye", deg, flip, null, l?l.id:null);
+      mkName(bx + px*gap, by + py*gap, surname(w.n), "win", deg, flip, colorOf[w.id], w.id, n.r);
+      if(n.r===0) mkName(bx - px*gap, by - py*gap, l?surname(l.n):"bye", l?"loser":"loser bye", deg, flip, null, l?l.id:null, n.r);
     } else {                                            // un-played frontier match — show the pairing (grey), no winner yet
       const k=n.p.filter(p=>p.id);
-      if(k[0]) mkName(bx + px*gap, by + py*gap, surname(k[0].n), "pending", deg, flip, null, k[0].id);
-      if(k[1]) mkName(bx - px*gap, by - py*gap, surname(k[1].n), "pending", deg, flip, null, k[1].id);
+      if(k[0]) mkName(bx + px*gap, by + py*gap, surname(k[0].n), "pending", deg, flip, null, k[0].id, n.r);
+      if(k[1]) mkName(bx - px*gap, by - py*gap, surname(k[1].n), "pending", deg, flip, null, k[1].id, n.r);
     }
   }
 
