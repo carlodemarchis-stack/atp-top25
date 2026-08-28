@@ -127,14 +127,22 @@
   .champ-name{font-size:17px; font-weight:800; fill:var(--ink); paint-order:stroke; stroke:var(--ground); stroke-width:4px; stroke-linejoin:round}
   .champ-name.live{font-size:13px; fill:var(--muted); letter-spacing:.01em}
   .champ-label{font-size:9px; letter-spacing:.24em; fill:var(--gold); font-weight:800; text-transform:uppercase; paint-order:stroke; stroke:var(--ground); stroke-width:3.5px; stroke-linejoin:round}
+  .champ-mono{font-size:26px; font-weight:800; fill:#fff}
+  .champ-photo{cursor:pointer}
+  .champ-ring{filter:drop-shadow(0 4px 11px rgba(30,50,90,.24))}
   /* tooltip */
   /* removed: legacy .hint */
   #tip{position:fixed; z-index:9; pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity .12s;
     background:rgba(255,255,255,.97); border:1px solid var(--line); border-radius:12px; padding:11px 13px;
     box-shadow:0 18px 46px rgba(30,50,90,.20); min-width:200px; backdrop-filter:blur(8px)}
   #tip .rnd{font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted-2); font-weight:800; margin-bottom:7px}
-  #tip .row{display:flex; justify-content:space-between; gap:14px; align-items:baseline; padding:2px 0}
-  #tip .pn{font-size:13px; font-weight:700}
+  #tip .row{display:flex; justify-content:space-between; gap:10px; align-items:center; padding:2px 0}
+  #tip .pn{font-size:13px; font-weight:700; flex:1}
+  #tip .tav{position:relative; flex:0 0 22px; width:22px; height:22px; border-radius:50%; overflow:hidden;
+    display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:800; color:#fff}
+  #tip .tav img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  #tip .tav img.wtaface{object-position:top center}
+  #tip .tav-tbd{background:var(--muted-2)}
   #tip .pn.win{color:var(--gold)}
   #tip .pn.lose{color:var(--muted)}
   #tip .sc{font-variant-numeric:tabular-nums; font-size:13px; font-weight:700; letter-spacing:.06em}
@@ -292,6 +300,13 @@ Object.assign(CC, {"324261":"UKR","320408":"ROU","329393":"AUS","317683":"KAZ","
 Object.assign(IOC,{AND:"AD",ARM:"AM",CHE:"CH",DEU:"DE",DNK:"DK",HRV:"HR",IDN:"ID",LVA:"LV",MNE:"ME",NLD:"NL",SVN:"SI"});
 
 function flagEmoji(id){ const cc=CC[id]; if(!cc) return ""; if(tour==="wta" && (cc==="RUS"||cc==="BLR")) return ""; const iso=IOC[cc]; return iso ? iso.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())) : ""; }
+// player photo: ATP head-shot by id / WTA torso cutout (falls back to a coloured monogram)
+function photoURL(id){ return tour==="atp" ? "https://www.atptour.com/-/media/alias/player-headshot/"+id : "img/wta/"+id+".png"; }
+function avatarHTML(p){
+  if(!p||!p.id) return '<span class="tav tav-tbd">?</span>';
+  const col=colorOf[p.id]||"#8a94a6";
+  return `<span class="tav" style="background:${col}">${initials(p.n)}<img alt="" class="${tour==='wta'?'wtaface':''}" src="${photoURL(p.id)}" onerror="this.remove()"></span>`;
+}
 
 
 // round label from a node's depth r within a tree of max depth mx (final = mx)
@@ -451,19 +466,19 @@ function showTip(node, ev){
   if(node.bye){                                       // a first-round bye — the seed advanced without playing
     const s=node.p[0];
     tip.innerHTML = `<div class="rnd">${roundLabel(0,maxR,false)}</div>
-      <div class="row"><span class="pn win">${nm(s)}</span><span class="sc" style="color:var(--muted)">Bye</span></div>
+      <div class="row">${avatarHTML(s)}<span class="pn win">${nm(s)}</span><span class="sc" style="color:var(--muted)">Bye</span></div>
       <div class="dur">Seed &mdash; advanced to the second round</div>`;
   } else if(!winner){                                  // an un-played match (live-draw frontier)
     const k=node.p.filter(p=>p.id);
     tip.innerHTML = `<div class="rnd">${roundLabel(node.r,maxR,false)}</div>
-      <div class="row"><span class="pn">${nm(k[0])}</span><span class="sc" style="color:var(--muted-2)">—</span></div>
-      <div class="row"><span class="pn">${nm(k[1])}</span><span class="sc"></span></div>
+      <div class="row">${avatarHTML(k[0])}<span class="pn">${nm(k[0])}</span><span class="sc" style="color:var(--muted-2)">—</span></div>
+      <div class="row">${avatarHTML(k[1])}<span class="pn">${nm(k[1])}</span><span class="sc"></span></div>
       <div class="dur">Not played yet</div>`;
   } else {
     const {w,l,ws,ls} = scoreRows(node);
     tip.innerHTML = `<div class="rnd">${roundLabel(node.r,maxR,false)}</div>
-      <div class="row"><span class="pn win">${w.n}${w.s?` <span style="color:var(--muted-2);font-size:10px">(${w.s})</span>`:""}</span><span class="sc">${ws}</span></div>
-      <div class="row"><span class="pn lose">${l.n}${l.s?` <span style="color:var(--muted-2);font-size:10px">(${l.s})</span>`:""}</span><span class="sc" style="color:var(--muted)">${ls}</span></div>`+
+      <div class="row">${avatarHTML(w)}<span class="pn win">${w.n}${w.s?` <span style="color:var(--muted-2);font-size:10px">(${w.s})</span>`:""}</span><span class="sc">${ws}</span></div>
+      <div class="row">${avatarHTML(l)}<span class="pn lose">${l.n}${l.s?` <span style="color:var(--muted-2);font-size:10px">(${l.s})</span>`:""}</span><span class="sc" style="color:var(--muted)">${ls}</span></div>`+
       (/\d/.test(node.dur)?`<div class="dur">Time on court &middot; <b>${fmtDur(node.dur)}</b></div>`:"");
   }
   tip.style.opacity=1;
@@ -567,9 +582,22 @@ function draw(){
   // hub medallion: champion's name + "Champion" — or, on a live draw, the current stage
   const fy = CY() - radiusFor(maxR);   // the final-match dot's y (straight up from the hub)
   if(champ){
-    const nm=el("text",{x:CX(),y:fy-13,"text-anchor":"middle",class:"champ-name click"}); nm.textContent=champ.n;
+    // champion photo medallion in the empty middle, ABOVE the final dot (uses only empty space)
+    const pr=38, pcy=fy-58;
+    let defs=svg.querySelector("defs"); if(!defs){ defs=el("defs"); svg.insertBefore(defs, svg.firstChild); }
+    const cp=el("clipPath",{id:"champClip"}); cp.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr})); defs.appendChild(cp);
+    svg.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr,fill:colorOf[champ.id]||"#bd7d0a"}));   // gold fallback bg
+    const ini=el("text",{x:CX(),y:pcy,"text-anchor":"middle","dominant-baseline":"central",class:"champ-mono"}); ini.textContent=initials(champ.n); svg.appendChild(ini);
+    const img=el("image",{x:CX()-pr,y:pcy-pr,width:pr*2,height:pr*2,"clip-path":"url(#champClip)",
+      preserveAspectRatio: tour==="wta"?"xMidYMin slice":"xMidYMid slice", class:"champ-photo"});
+    img.setAttribute("href",photoURL(champ.id)); img.setAttributeNS("http://www.w3.org/1999/xlink","href",photoURL(champ.id));
+    img.addEventListener("error",()=>img.remove());
+    img.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); });
+    svg.appendChild(img);
+    svg.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr,fill:"none",stroke:"var(--gold)","stroke-width":3,class:"champ-ring"}));
+    // champion NAME below the final dot (in place of the old "Champion" label)
+    const nm=el("text",{x:CX(),y:fy+17,"text-anchor":"middle",class:"champ-name click"}); nm.textContent=champ.n;
     nm.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); }); svg.appendChild(nm);
-    const lbl=el("text",{x:CX(),y:fy+18,"text-anchor":"middle",class:"champ-label"}); lbl.textContent="Champion"; svg.appendChild(lbl);
   } else {
     const fin=T.p.filter(p=>p.id);                    // final set (both players) but not played → show the match-up
     const started=(function s(n){ return n.p.some(p=>p.w) || (n.c||[]).some(s); })(T);
