@@ -39,6 +39,7 @@
   .dot.finaldot{fill:#fdf3dd; stroke:var(--gold); stroke-width:2.6}   /* the final-match dot, enlarged */
   .mname{font-size:8.5px; letter-spacing:.01em; paint-order:stroke; stroke:var(--ground); stroke-width:2.4px; stroke-linejoin:round}
   .mflag{font-size:9px; pointer-events:none}
+  .mname .seed{font-size:.82em; font-weight:600; fill:var(--muted-2)}
   .mname.win{fill:var(--ink); font-weight:700}
   .mname.loser{fill:var(--muted-2); font-weight:500}
   .mname.bye{fill:var(--muted-2); font-weight:500; font-style:italic; letter-spacing:.05em; opacity:.85}
@@ -518,13 +519,18 @@ function draw(){
   }
 
   // label EVERY match (R64 → SF): winner just outward of the dot, loser just inward — dot in between
-  function mkName(px,py,txt,cls,deg,flip,fill,id,r){   // one radial-aligned name CENTERED at (px,py)
+  function mkName(px,py,txt,cls,deg,flip,fill,id,r,seed){   // one radial-aligned name CENTERED at (px,py)
     if(id && id===(selId||(champ&&champ.id))) cls+=" sel";
     const t=el("text",{x:px,y:py, class:"mname "+cls, "text-anchor":"middle", "dominant-baseline":"middle",
       transform:`rotate(${flip?deg+180:deg} ${px} ${py})`});
     if(fill) t.style.fill=fill;
     if(id){ t.classList.add("click"); t.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(id); }); }
-    t.textContent=txt; svg.appendChild(t);
+    t.textContent=txt;
+    // seed in parentheses after the name, muted — same lateral-room gate as the flag
+    if(flagRoom(r) && seed!=null && /^\d+$/.test(String(seed))){
+      const sp=el("tspan",{class:"seed"}); sp.textContent=" ("+seed+")"; t.appendChild(sp);
+    }
+    svg.appendChild(t);
     // a small flag inline with the name, on its HUB-facing end — rotated parallel to the name
     // (same readability flip, so it's never mirrored on the right) and placed toward the arc centre
     if(id && flagRoom(r)){
@@ -551,12 +557,12 @@ function draw(){
     const w=n.p.find(p=>p.w);
     if(w){                                              // decided match — winner (and R128 loser)
       const l=n.p.find(p=>!p.w && p.id);
-      mkName(bx + px*gap, by + py*gap, surname(w.n), "win", deg, flip, colorOf[w.id], w.id, n.r);
-      if(n.r===0) mkName(bx - px*gap, by - py*gap, l?surname(l.n):"bye", l?"loser":"loser bye", deg, flip, null, l?l.id:null, n.r);
+      mkName(bx + px*gap, by + py*gap, surname(w.n), "win", deg, flip, colorOf[w.id], w.id, n.r, w.s);
+      if(n.r===0) mkName(bx - px*gap, by - py*gap, l?surname(l.n):"bye", l?"loser":"loser bye", deg, flip, null, l?l.id:null, n.r, l?l.s:null);
     } else {                                            // un-played frontier match — show the pairing (grey), no winner yet
       const k=n.p.filter(p=>p.id);
-      if(k[0]) mkName(bx + px*gap, by + py*gap, surname(k[0].n), "pending", deg, flip, null, k[0].id, n.r);
-      if(k[1]) mkName(bx - px*gap, by - py*gap, surname(k[1].n), "pending", deg, flip, null, k[1].id, n.r);
+      if(k[0]) mkName(bx + px*gap, by + py*gap, surname(k[0].n), "pending", deg, flip, null, k[0].id, n.r, k[0].s);
+      if(k[1]) mkName(bx - px*gap, by - py*gap, surname(k[1].n), "pending", deg, flip, null, k[1].id, n.r, k[1].s);
     }
   }
 
