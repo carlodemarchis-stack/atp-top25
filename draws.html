@@ -155,6 +155,7 @@
   .pf-mono{width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:21px; font-weight:800; color:#fff; box-shadow:0 5px 16px rgba(30,50,90,.20)}
   .pf-photo img{position:absolute; inset:0; width:58px; height:58px; border-radius:50%; object-fit:cover; background:var(--panel); box-shadow:0 5px 16px rgba(30,50,90,.20)}
+  .pf-photo img.wtaface{object-position:top center}   /* torso cutout → crop to the face */
   .pf-id .nm{font-size:16px; font-weight:800; letter-spacing:-.01em; line-height:1.12}
   .pf-id .nm .pf-fl{margin-right:6px; font-size:15px; vertical-align:baseline}
   .pf-id .sd{font-size:11px; color:var(--muted); font-weight:600; margin-top:3px}
@@ -388,7 +389,9 @@ function renderPanels(){
   const col=colorOf[p.id]||"#2f6fd0", s=playerSummary(p);
   L.innerHTML = `<div class="pf-top">
       <div class="pf-photo"><div class="pf-mono" style="background:${col}">${initials(p.name)}</div>
-        ${tour==="atp" ? `<img alt="" src="https://www.atptour.com/-/media/alias/player-headshot/${p.id}" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'">` : ``}</div>
+        ${tour==="atp"
+            ? `<img alt="" src="https://www.atptour.com/-/media/alias/player-headshot/${p.id}" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'">`
+            : `<img alt="" class="wtaface" src="img/wta/${p.id}.png" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'">`}</div>
       <div class="pf-id"><div class="nm">${(f=>f?`<span class="pf-fl">${f}</span>`:"")(flagEmoji(p.id))}${p.name}</div><div class="sd">${seedLabel(p.seed)}</div></div>
     </div>
     <div class="pf-stats">
