@@ -582,19 +582,21 @@ function draw(){
   // hub medallion: champion's name + "Champion" — or, on a live draw, the current stage
   const fy = CY() - radiusFor(maxR);   // the final-match dot's y (straight up from the hub)
   if(champ){
-    // champion photo medallion in the empty middle, ABOVE the final dot (uses only empty space)
-    const pr=38, pcy=fy-58;
-    let defs=svg.querySelector("defs"); if(!defs){ defs=el("defs"); svg.insertBefore(defs, svg.firstChild); }
-    const cp=el("clipPath",{id:"champClip"}); cp.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr})); defs.appendChild(cp);
-    svg.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr,fill:colorOf[champ.id]||"#bd7d0a"}));   // gold fallback bg
-    const ini=el("text",{x:CX(),y:pcy,"text-anchor":"middle","dominant-baseline":"central",class:"champ-mono"}); ini.textContent=initials(champ.n); svg.appendChild(ini);
-    const img=el("image",{x:CX()-pr,y:pcy-pr,width:pr*2,height:pr*2,"clip-path":"url(#champClip)",
-      preserveAspectRatio: tour==="wta"?"xMidYMin slice":"xMidYMid slice", class:"champ-photo"});
-    img.setAttribute("href",photoURL(champ.id)); img.setAttributeNS("http://www.w3.org/1999/xlink","href",photoURL(champ.id));
+    // champion's cut-out standing in the empty middle, ABOVE the final dot — ATP full-body,
+    // WTA torso; scales down when the centre is short (the "smaller" version)
+    const aspect = tour==="wta" ? 1.07 : 0.63;         // w/h of the cut-out
+    const ceilingY = CY() - radiusFor(0)*0.66;         // keep the top of the fan for the upper rounds
+    const availH = (fy-14) - ceilingY;
+    const capH = tour==="wta" ? 122 : 190, maxW = tour==="wta" ? 130 : 120;
+    let H = Math.max(70, Math.min(availH, capH)), W = H*aspect;
+    if(W>maxW){ W=maxW; H=W/aspect; }
+    const src = tour==="wta" ? ("img/wta/"+champ.id+".png") : ("img/full/"+champ.id+".png");
+    const img=el("image",{x:CX()-W/2, y:(fy-14)-H, width:W, height:H,
+      preserveAspectRatio:"xMidYMax meet", class:"champ-photo"});
+    img.setAttribute("href",src); img.setAttributeNS("http://www.w3.org/1999/xlink","href",src);
     img.addEventListener("error",()=>img.remove());
     img.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); });
     svg.appendChild(img);
-    svg.appendChild(el("circle",{cx:CX(),cy:pcy,r:pr,fill:"none",stroke:"var(--gold)","stroke-width":3,class:"champ-ring"}));
     // champion NAME below the final dot (in place of the old "Champion" label)
     const nm=el("text",{x:CX(),y:fy+17,"text-anchor":"middle",class:"champ-name click"}); nm.textContent=champ.n;
     nm.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(champ.id); }); svg.appendChild(nm);
