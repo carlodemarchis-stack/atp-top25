@@ -87,6 +87,11 @@
   body.wta .tinfo-l .cat{color:#8b4fc4; border-color:rgba(139,79,196,.42); background:rgba(139,79,196,.1)}
   body.wta .tinfo-l .cat.gs{color:var(--gold); border-color:rgba(189,125,10,.45); background:rgba(189,125,10,.1)}
   .tbar-count{display:none}
+  .rankpill{margin-left:3px; font-size:10.5px; font-weight:800; letter-spacing:.02em; color:var(--blue); text-decoration:none;
+    padding:5px 11px; border-radius:9px; background:rgba(47,111,208,.1); border:1px solid rgba(47,111,208,.28); white-space:nowrap; line-height:1}
+  .rankpill:hover{background:rgba(47,111,208,.2)}
+  body.wta .rankpill{color:#8b4fc4; background:rgba(139,79,196,.1); border-color:rgba(139,79,196,.32)}
+  body.wta .rankpill:hover{background:rgba(139,79,196,.2)}
   /* credit line (matches the main site) + guide */
   .credit{position:fixed; right:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
@@ -204,12 +209,11 @@
   </div>
   <button class="arw" id="barNext" aria-label="Next tournament">&#8250;</button>
   <span class="tbar-count" id="barCount"></span>
+  <a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
 </div>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
-<div id="tip"></div>
-<div class="backnav">&larr; <a href="index.html">ATP</a> &middot; <a href="wta.html">WTA</a> rankings</div>
-<button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
+<div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
   <svg class="ic-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
   <svg class="ic-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M8 21v-3a2 2 0 0 0-2-2H3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
 </button>
@@ -678,6 +682,9 @@ function setTour(t){                                   // switch the whole draws
   tour = t; TOURNAMENTS = (t==="wta") ? WTA_TOURNAMENTS : ATP_TOURNAMENTS;
   document.body.classList.toggle("wta", t==="wta");
   document.querySelectorAll("#tourseg .tseg").forEach(b=>b.classList.toggle("on", b.dataset.tour===t));
+  const rp=document.getElementById("rankPill");
+  rp.textContent = t==="wta" ? "WTA Ranking" : "ATP Ranking";
+  rp.href = t==="wta" ? "wta.html" : "index.html";
   loadTournament(lastFinished());
 }
 document.querySelectorAll("#tourseg .tseg").forEach(b=>
