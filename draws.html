@@ -87,11 +87,13 @@
   body.wta .tinfo-l .cat{color:#8b4fc4; border-color:rgba(139,79,196,.42); background:rgba(139,79,196,.1)}
   body.wta .tinfo-l .cat.gs{color:var(--gold); border-color:rgba(189,125,10,.45); background:rgba(189,125,10,.1)}
   .tbar-count{display:none}
-  .rankpill{margin-left:3px; font-size:10.5px; font-weight:800; letter-spacing:.02em; color:var(--blue); text-decoration:none;
-    padding:5px 11px; border-radius:9px; background:rgba(47,111,208,.1); border:1px solid rgba(47,111,208,.28); white-space:nowrap; line-height:1}
-  .rankpill:hover{background:rgba(47,111,208,.2)}
-  body.wta .rankpill{color:#8b4fc4; background:rgba(139,79,196,.1); border-color:rgba(139,79,196,.32)}
-  body.wta .rankpill:hover{background:rgba(139,79,196,.2)}
+  /* standalone floating pill, positioned by JS just to the RIGHT of the centred control bar */
+  .rankpill{position:fixed; z-index:8; top:14px; left:0; display:inline-flex; align-items:center;
+    font-size:11px; font-weight:800; letter-spacing:.02em; color:var(--blue); text-decoration:none;
+    padding:8px 13px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
+    border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap; line-height:1}
+  .rankpill:hover{color:var(--ink)}
+  body.wta .rankpill{color:#8b4fc4}
   /* credit line (matches the main site) + guide */
   .credit{position:fixed; right:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
@@ -209,8 +211,8 @@
   </div>
   <button class="arw" id="barNext" aria-label="Next tournament">&#8250;</button>
   <span class="tbar-count" id="barCount"></span>
-  <a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
 </div>
+<a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
@@ -528,6 +530,8 @@ function draw(){
     const t=el("text",{x:px,y:py, class:"mname "+cls, "text-anchor":"middle", "dominant-baseline":"middle",
       transform:`rotate(${flip?deg+180:deg} ${px} ${py})`});
     if(fill) t.style.fill=fill;
+    const closeness = maxR>1 ? r/(maxR-1) : 0;    // 0 at the rim → 1 at the semifinal
+    t.style.fontSize = (8 + closeness*5.5).toFixed(2)+"px";   // names grow toward the final
     if(id){ t.classList.add("click"); t.addEventListener("click",e=>{ e.stopPropagation(); selectPlayer(id); }); }
     t.textContent=txt;
     // seed in parentheses after the name, muted — same lateral-room gate as the flag
@@ -548,6 +552,7 @@ function draw(){
         const fx=hub1<hub2?e1x:e2x, fy=hub1<hub2?e1y:e2y;        // the end nearer the hub
         const ft=el("text",{x:fx,y:fy, class:"mflag", "text-anchor":"middle","dominant-baseline":"middle",
           transform:`rotate(${rot} ${fx} ${fy})`});
+        ft.style.fontSize = (8.5 + closeness*4).toFixed(2)+"px";   // flag grows with the name
         ft.textContent=fl; svg.appendChild(ft);
       }
     }
@@ -648,7 +653,20 @@ function updateBar(){
   const one = n<2;                                   // hide arrows when there's only one card
   document.getElementById("barPrev").style.visibility = one?"hidden":"visible";
   document.getElementById("barNext").style.visibility = one?"hidden":"visible";
+  positionRankPill();
 }
+// keep the ranking pill just to the RIGHT of the centred control bar, whatever its width
+function positionRankPill(){
+  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill");
+  if(!bar||!rp) return;
+  const b=bar.getBoundingClientRect();
+  rp.style.left = (b.right + 12) + "px";
+  rp.style.top = (b.top + b.height/2) + "px";
+  rp.style.transform = "translateY(-50%)";
+  const tr=document.querySelector(".tinfo-r");                 // drop the (redundant) name only if the pill would hit it
+  if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (b.right+12+rp.offsetWidth+10 > t.left) ? "hidden" : "visible"; }
+}
+addEventListener("resize", positionRankPill);
 document.getElementById("barPrev").addEventListener("click",()=>loadTournament(cur-1));
 document.getElementById("barNext").addEventListener("click",()=>loadTournament(cur+1));
 
