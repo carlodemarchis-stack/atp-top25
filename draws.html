@@ -494,7 +494,10 @@ function draw(){
     const g=el("g",{class:"node"+(champIds.has(n)?" champ":"")});
     const isFinal = n.r===maxR;
     const rad = isFinal ? 12 : 2.4 + n.r*1.15;   // dots grow with each round: first round smallest → SF largest
-    g.appendChild(el("circle",{cx:x,cy:y,r:rad,class:"dot"+(isFinal?" finaldot":"")}));
+    const wc = colorOf[winnerId(n)];              // solid winner colour fills the match dot (grey until decided)
+    const dot = el("circle",{cx:x,cy:y,r:rad,class:"dot"+(isFinal?" finaldot":"")});
+    if(wc) dot.setAttribute("style","fill:"+wc+";stroke:#fff");
+    g.appendChild(dot);
     g.addEventListener("pointerenter",e=>showTip(n,e));
     g.addEventListener("pointermove",e=>showTip(n,e));
     g.addEventListener("pointerleave",()=>{ if(!tipPinned) tip.style.opacity=0; });   // stays if pinned
