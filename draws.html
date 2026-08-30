@@ -189,7 +189,8 @@
   .pm-rd{font-size:9px; font-weight:800; color:var(--muted-2); width:26px; flex:0 0 26px}
   .pm-op{font-size:12px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .pm-op .res{display:inline-block; width:11px; text-align:center; font-size:10px; font-weight:800; margin-right:6px}
-  .pm-op .res.w{color:var(--green)} .pm-op .res.l{color:var(--red)}
+  .pm-op .res.w{color:var(--green)} .pm-op .res.l{color:var(--red)} .pm-op .res.up{color:var(--muted-2); font-style:italic; font-weight:700}
+  .pm-sc.pm-up{color:var(--muted-2); font-style:italic}
   .pm-op a{cursor:pointer; text-decoration:none; color:inherit; border-bottom:1px dotted var(--muted-2)}
   .pm-op .bye{color:var(--muted-2); font-style:italic; font-weight:500}
   .pm-sc{font-size:11px; font-variant-numeric:tabular-nums; color:var(--muted); flex:0 0 auto; letter-spacing:.03em}
@@ -338,16 +339,19 @@ function rebuild(){
   leaves.forEach((m,mi)=>{ const base=mi*137.508%360;
     const w=m.p.find(p=>p.w)||{}, l=m.p.find(p=>!p.w)||{};
     if(w.id && colorOf[w.id]==null) colorOf[w.id]=`hsl(${Math.round(base)} 64% 45%)`;
-    if(l.id && colorOf[l.id]==null) colorOf[l.id]=`hsl(${Math.round((base+180)%360)} 58% 53%)`; });
+    if(l.id && colorOf[l.id]==null) colorOf[l.id]=`hsl(${Math.round((base+180)%360)} 58% 53%)`;
+    m.p.forEach((pl,pi)=>{ if(pl.id && colorOf[pl.id]==null) colorOf[pl.id]=`hsl(${Math.round((base+pi*180)%360)} 60% 48%)`; }); });  // colour un-played players too
   if(champ) colorOf[champ.id]="#bd7d0a";                 // no champion yet on a live/in-progress draw
-  // per-player index: only DECIDED matches (a live draw has un-played frontier matches — skip those)
+  // per-player index: decided matches AND the un-played frontier match (both players known) so any
+  // player in the draw is selectable and shows their upcoming game
   players = {};
   (function walk(n){
-    const decided = n.bye || n.p.some(p=>p.w);
-    if(decided) n.p.forEach(pl=>{ if(!pl.id) return;
+    const anyWin = n.p.some(p=>p.w), decided = n.bye || anyWin;
+    n.p.forEach(pl=>{ if(!pl.id) return;
+      const opp = n.p.find(q=>q!==pl && q.id), pending = !decided && !!opp;
+      if(!decided && !pending) return;                    // a TBD frontier slot — skip
       const rec = players[pl.id] || (players[pl.id]={id:pl.id, name:pl.n, seed:pl.s, matches:[]});
-      const opp = n.p.find(q=>q!==pl && q.id);
-      rec.matches.push({r:n.r, win:!!pl.w, bye:(!!n.bye || !opp),
+      rec.matches.push({r:n.r, win:!!pl.w, bye:(!!n.bye || !opp), pending,
         opp: opp?opp.n:null, oppId: opp?opp.id:null, my: pl.sc||[], os: opp?(opp.sc||[]):[], dur:n.dur});
     });
     (n.c||[]).forEach(walk);
@@ -379,15 +383,16 @@ function initials(name){ const p=name.trim().split(/\s+/); return (((p[0]||"")[0
 function scoreStr(my,os){ const cell=v=>{ if(v==null) return ""; const s=String(v); return s.length>1? s[0]+"<sup>"+s.slice(1)+"</sup>":s; };
   const n=Math.max(my.length,os.length), out=[]; for(let i=0;i<n;i++) out.push(cell(my[i])+"-"+cell(os[i])); return out.join(" "); }
 function playerSummary(p){
-  const played=p.matches.filter(m=>!m.bye), w=played.filter(m=>m.win).length, l=played.length-w;
+  const played=p.matches.filter(m=>!m.bye && !m.pending), w=played.filter(m=>m.win).length, l=played.length-w;
   let sw=0,sl=0,gw=0,gl=0;                         // sets & games won/lost (games = first digit of each set score)
   played.forEach(m=>{ const n=Math.max(m.my.length,m.os.length);
     for(let i=0;i<n;i++){ const a=parseInt(String(m.my[i]??"").charAt(0)), b=parseInt(String(m.os[i]??"").charAt(0));
       if(Number.isNaN(a)||Number.isNaN(b)) continue; gw+=a; gl+=b; if(a>b) sw++; else if(b>a) sl++; } });
   const isChamp = champ && p.id===champ.id;
-  const lost = isChamp ? null : p.matches.find(m=>!m.win);
+  const lost = isChamp ? null : played.find(m=>!m.win);
   let result;
   if(isChamp) result={t:"Champion", gold:true};
+  else if(!played.length) result={t: roundLabel(Math.min(...p.matches.map(m=>m.r)), maxR, false), gold:false};  // not played yet
   else if(!lost){                                        // still alive in a live draw — awaiting their next round
     const maxWon=Math.max(...p.matches.map(m=>m.r)), nxt=maxWon+1;
     result={t: nxt>maxR?"Champion":("Through to "+roundLabel(nxt,maxR,false)), gold:true, live:true};
@@ -430,11 +435,13 @@ function renderPanels(){
   const rows = p.matches.map(m=>{
     const rd=`<span class="pm-rd">${roundLabel(m.r, maxR, true)}</span>`;
     if(m.bye) return `<div class="pm-row">${rd}<span class="pm-op"><span class="bye">bye</span></span><span class="pm-sc"></span></div>`;
+    const opp=m.oppId?`<a onclick="selectPlayer('${m.oppId}')">${surname(m.opp)}</a>`:surname(m.opp||"TBD");
+    if(m.pending) return `<div class="pm-row">${rd}<span class="pm-op"><span class="res up">v</span>${opp}</span><span class="pm-sc pm-up">to play</span></div>`;
     const res=`<span class="res ${m.win?"w":"l"}">${m.win?"W":"L"}</span>`;
-    const opp=m.oppId?`<a onclick="selectPlayer('${m.oppId}')">${surname(m.opp)}</a>`:surname(m.opp||"");
     return `<div class="pm-row">${rd}<span class="pm-op">${res}${opp}</span><span class="pm-sc">${scoreStr(m.my,m.os)}</span></div>`;
   }).join("");
-  R.innerHTML = `<div class="pm-h">${surname(p.name)} &middot; the run</div>${rows}`;
+  const started = p.matches.some(m=>!m.pending && !m.bye);
+  R.innerHTML = `<div class="pm-h">${surname(p.name)} &middot; ${started?"the run":"first up"}</div>${rows}`;
   R.classList.add("on");
 }
 
