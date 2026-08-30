@@ -1164,7 +1164,7 @@ const saveState=()=>{ const v=document.body.dataset.view;
 // ---- country filter: prev/next cycle only that country's players ----
 let countryFilter=null;
 const playerCardIdx=p=> p.rank<=10 ? p.rank-1 : p.rank+1;   // rank -> card index (two charts after rank 10)
-const countryIdxs=()=> DATA.players.filter(p=>p.country===countryFilter).map(playerCardIdx).sort((a,b)=>a-b);
+const countryIdxs=()=> DATA.players.filter(p=> countryFilter==="__neutral__" ? T.neutralNames.includes(p.country) : p.country===countryFilter).map(playerCardIdx).sort((a,b)=>a-b);
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
   if(cur) requestAnimationFrame(()=>fitOneName(cur.querySelector(".nameline")));   // fit name once card is on-screen
@@ -1183,9 +1183,11 @@ const next=()=>{ if(countryFilter && stepCountry(1)) return; go(idx+1); };
 const prev=()=>{ if(countryFilter && stepCountry(-1)) return; go(idx-1); };
 (function(){ const sel=document.getElementById("countrySel"); if(!sel) return;   // populate + wire the filter
   const counts={}; DATA.players.forEach(p=>{ if(p.country) counts[p.country]=(counts[p.country]||0)+1; });
-  const cs=Object.keys(counts).sort();
-  sel.innerHTML=`<option value="">🌐 All countries (${DATA.players.length})</option>`+cs.map(c=>{
-    const fl=T.neutralNames.includes(c)?"":(FLAG[c]||""); return `<option value="${esc(c)}">${fl} ${esc(c)} (${counts[c]})</option>`; }).join("");
+  const neutralN=T.neutralNames.reduce((s,c)=>s+(counts[c]||0),0);   // Russia/Belarus grouped, names hidden (neutral policy)
+  const cs=Object.keys(counts).filter(c=>!T.neutralNames.includes(c)).sort();
+  sel.innerHTML=`<option value="">🌐 All countries (${DATA.players.length})</option>`
+    +cs.map(c=>`<option value="${esc(c)}">${FLAG[c]||""} ${esc(c)} (${counts[c]})</option>`).join("")
+    +(neutralN?`<option value="__neutral__">🏳️ Neutral (${neutralN})</option>`:"");
   sel.addEventListener("change", ()=>{ countryFilter=sel.value||null;
     if(countryFilter){ const a=countryIdxs(); if(a.length){ go(a[0]); if(playing) setPlay(true); } } });
 })();
