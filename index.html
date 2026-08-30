@@ -599,6 +599,19 @@
   .ps-item.hl{background:rgba(120,170,255,.14)}
   .ps-empty{padding:10px; color:var(--muted-2); font-size:12.5px}
   @media (max-width:720px){ .psearch{display:none} }
+  /* country filter — sits right of the search on ATP, centred when the search is hidden (WTA / mobile) */
+  .countrysel{position:fixed; top:12px; left:calc(50% + 150px); z-index:43; height:34px; max-width:190px;
+    padding:0 30px 0 13px; border-radius:999px; border:1px solid var(--line); color:var(--ink);
+    font-size:12.5px; font-weight:700; letter-spacing:.01em; outline:none; cursor:pointer;
+    -webkit-appearance:none; appearance:none; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center}
+  .countrysel:focus{border-color:var(--gold); background-color:rgba(255,255,255,.1)}
+  .countrysel option{color:#0e1428}
+  body.wta .countrysel{left:50%; transform:translateX(-50%)}
+  body.wta .countrysel:focus{border-color:#cf9dff}
+  @media (max-width:720px){ .countrysel{left:50%; transform:translateX(-50%)} }
+  /* ATP has the DRAWS|ATP|WTA switch top-right too — hide the (search-paired) selector when space is tight */
+  @media (max-width:980px){ body:not(.wta) .countrysel{display:none} }
 
   /* ===== WTA twin: purple identity + bust-style cutout tuning ===== */
   body.wta{
@@ -625,6 +638,7 @@
   <input id="psearchInput" type="text" placeholder="Search a player (Top 100)" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search a player">
   <div class="psearch-list" id="psearchList"></div>
 </div>
+<select class="countrysel" id="countrySel" aria-label="Filter players by country"></select>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
@@ -711,6 +725,13 @@ const IOC={ARG:"AR",AUS:"AU",AUT:"AT",BEL:"BE",BIH:"BA",BLR:"BY",BRA:"BR",BUL:"B
 const NEUTRAL='<span class="flagbox" title="Neutral flag"></span>';
 const flagOf=code=>{ if(T.neutral.includes((code||"").toUpperCase())) return T.neutralGlyph; const i=IOC[code]; return i?i.replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())):`<span class="cc">${esc(code||"")}</span>`;};
 const fmtScore=s=>esc(s||"").replace(/\((\d+)\)/g,'<span class="t">($1)</span>');
+// height in EU (metric) format: prefer heightCm, else pull the metres out of the ft string, else convert
+function heightEU(p){
+  if(p.heightCm) return (p.heightCm/100).toFixed(2)+" m";
+  const s=p.heightFt||""; let m=s.match(/([\d.]+)\s*m/); if(m) return (+m[1]).toFixed(2)+" m";
+  m=s.match(/(\d+)'\s*(\d+)/); if(m) return (Math.round(+m[1]*30.48+ +m[2]*2.54)/100).toFixed(2)+" m";
+  return s;
+}
 const scoreCells=s=>(s||"").trim().split(/\s+/).filter(Boolean).map(tok=>{
   const m=tok.match(/^(\d+)-(\d+)(?:\((\d+)\))?/);
   if(!m) return `<span class="set">${esc(tok)}</span>`;
@@ -901,7 +922,7 @@ function card(p,pi){
   const hiYear=p.hiRankDate?new Date(p.hiRankDate).getFullYear():"";
   const plays=(p.plays&&p.plays.Description||"").replace("-Handed","-handed");
   const coach=(p.coach||"").split(",")[0];
-  const vit=[p.age?`<b>${p.age}</b> yrs`:"",esc(p.heightFt),plays,p.proYear?`pro <b>${p.proYear}</b>`:"",coach?("coach "+esc(coach)):"",esc(p.birthCity)]
+  const vit=[p.age?`<b>${p.age}</b> yrs`:"",esc(heightEU(p)),plays,p.proYear?`pro <b>${p.proYear}</b>`:"",coach?("coach "+esc(coach)):"",esc(p.birthCity)]
     .filter(Boolean).join(" &nbsp;·&nbsp; ");
   const pills=[
     [`Career high`, `#${p.hiRank}${hiYear?" · "+hiYear:""}`, "gold"],
@@ -1142,6 +1163,10 @@ const saveState=()=>{ const v=document.body.dataset.view;
   let h="#"+idx+(v&&v!=="tournaments"?"-"+v:"");
   if(modal && !modal.hidden) h+="~"+curPi+"."+curTi;   // include open tournament modal
   try{ history.replaceState(null,"",h); }catch(e){} };
+// ---- country filter: prev/next cycle only that country's players ----
+let countryFilter=null;
+const playerCardIdx=p=> p.rank<=10 ? p.rank-1 : p.rank+1;   // rank -> card index (two charts after rank 10)
+const countryIdxs=()=> DATA.players.filter(p=>p.country===countryFilter).map(playerCardIdx).sort((a,b)=>a-b);
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
   if(cur) requestAnimationFrame(()=>fitOneName(cur.querySelector(".nameline")));   // fit name once card is on-screen
@@ -1152,7 +1177,20 @@ const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*10
   if(minihdr) minihdr.classList.remove("show");
   document.body.classList.remove("mini-on");
   document.getElementById("cnum").textContent=idx+1; saveState(); };
-const next=()=>go(idx+1), prev=()=>go(idx-1);
+const stepCountry=dir=>{ const a=countryIdxs(); if(!a.length) return false;
+  let t = dir>0 ? a.find(i=>i>idx) : [...a].reverse().find(i=>i<idx);
+  if(t===undefined) t = dir>0 ? a[0] : a[a.length-1];
+  go(t); return true; };
+const next=()=>{ if(countryFilter && stepCountry(1)) return; go(idx+1); };
+const prev=()=>{ if(countryFilter && stepCountry(-1)) return; go(idx-1); };
+(function(){ const sel=document.getElementById("countrySel"); if(!sel) return;   // populate + wire the filter
+  const counts={}; DATA.players.forEach(p=>{ if(p.country) counts[p.country]=(counts[p.country]||0)+1; });
+  const cs=Object.keys(counts).sort();
+  sel.innerHTML=`<option value="">🌐 All countries (${DATA.players.length})</option>`+cs.map(c=>{
+    const fl=T.neutralNames.includes(c)?"":(FLAG[c]||""); return `<option value="${esc(c)}">${fl} ${esc(c)} (${counts[c]})</option>`; }).join("");
+  sel.addEventListener("change", ()=>{ countryFilter=sel.value||null;
+    if(countryFilter){ const a=countryIdxs(); if(a.length){ go(a[0]); if(playing) setPlay(true); } } });
+})();
 const setPlay=on=>{ playing=on; document.getElementById("playIcon").innerHTML=on
   ? '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>' : '<path d="M7 5v14l12-7z"/>';
   clearInterval(timer); if(on) timer=setInterval(next,SPEED); };
