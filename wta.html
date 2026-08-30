@@ -581,8 +581,8 @@
   .tourswitch .ts-div{align-self:stretch; width:1px; margin:3px 2px; padding:0; background:rgba(255,255,255,.16)}
   @media (max-width:860px){ .tourswitch{top:10px; right:12px; font-size:10px} .tourswitch a{padding:5px 11px} }
   /* ===== top-bar player search (ATP only) ===== */
-  .psearch{position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:43; width:min(270px,38vw)}
-  body.wta .psearch{display:none}
+  .topfilter{position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:43; display:flex; gap:10px; align-items:center}
+  .psearch{position:relative; width:min(270px,38vw); flex:0 0 auto}
   .psearch .ps-ico{position:absolute; left:12px; top:17px; width:15px; height:15px; color:var(--muted-2); pointer-events:none}
   .psearch input{width:100%; height:34px; padding:0 14px 0 34px; border-radius:999px; border:1px solid var(--line);
     background:rgba(255,255,255,.06); color:var(--ink); font-size:13px; font-weight:600; letter-spacing:.01em;
@@ -598,20 +598,16 @@
   .ps-item .ps-nm{font-size:13px; font-weight:700; color:var(--ink)} .ps-item .ps-nm b{color:var(--gold)}
   .ps-item.hl{background:rgba(120,170,255,.14)}
   .ps-empty{padding:10px; color:var(--muted-2); font-size:12.5px}
-  @media (max-width:720px){ .psearch{display:none} }
+  @media (max-width:820px){ .topfilter{display:none} }
   /* country filter — sits right of the search on ATP, centred when the search is hidden (WTA / mobile) */
-  .countrysel{position:fixed; top:12px; left:calc(50% + 150px); z-index:43; height:34px; max-width:190px;
+  .countrysel{position:relative; flex:0 0 auto; height:34px; max-width:190px;
     padding:0 30px 0 13px; border-radius:999px; border:1px solid var(--line); color:var(--ink);
     font-size:12.5px; font-weight:700; letter-spacing:.01em; outline:none; cursor:pointer;
     -webkit-appearance:none; appearance:none; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
     background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center}
   .countrysel:focus{border-color:var(--gold); background-color:rgba(255,255,255,.1)}
   .countrysel option{color:#0e1428}
-  body.wta .countrysel{left:50%; transform:translateX(-50%)}
   body.wta .countrysel:focus{border-color:#cf9dff}
-  @media (max-width:720px){ .countrysel{left:50%; transform:translateX(-50%)} }
-  /* ATP has the DRAWS|ATP|WTA switch top-right too — hide the (search-paired) selector when space is tight */
-  @media (max-width:980px){ body:not(.wta) .countrysel{display:none} }
 
   /* ===== WTA twin: purple identity + bust-style cutout tuning ===== */
   body.wta{
@@ -633,12 +629,14 @@
 <body class="wta">
 <div class="brand"><b>WTA</b> · TOP 100 · SINGLES</div>
 <div class="tourswitch"><a class="ts-draws" href="draws.html">DRAWS</a><span class="ts-div"></span><a class="ts-atp" href="index.html">ATP</a><a class="ts-wta" href="wta.html">WTA</a></div>
+<div class="topfilter">
 <div class="psearch" id="psearch">
   <svg class="ps-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
   <input id="psearchInput" type="text" placeholder="Search a player (Top 100)" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search a player">
   <div class="psearch-list" id="psearchList"></div>
 </div>
 <select class="countrysel" id="countrySel" aria-label="Filter players by country"></select>
+</div>
 <div class="updated" id="updated"></div>
 <div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
