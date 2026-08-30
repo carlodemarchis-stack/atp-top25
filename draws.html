@@ -602,7 +602,7 @@ function draw(){
     const aspect = tour==="wta" ? 1.07 : 0.63;         // w/h of the cut-out
     const ceilingY = CY() - radiusFor(0)*0.66;         // keep the top of the fan for the upper rounds
     const availH = (fy-14) - ceilingY;
-    const capH = tour==="wta" ? 122 : 190, maxW = tour==="wta" ? 130 : 120;
+    const capH = tour==="wta" ? 168 : 190, maxW = tour==="wta" ? 158 : 120;
     let H = Math.max(70, Math.min(availH, capH)), W = H*aspect;
     if(W>maxW){ W=maxW; H=W/aspect; }
     const src = tour==="wta" ? ("img/wta/"+champ.id+".png") : ("img/full/"+champ.id+".png");
