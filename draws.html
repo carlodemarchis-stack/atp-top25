@@ -707,6 +707,7 @@ addEventListener("keydown", e=>{
 });
 
 function lastFinished(){ for(let i=TOURNAMENTS.length-1;i>=0;i--) if(!TOURNAMENTS[i].live) return i; return TOURNAMENTS.length-1; }
+function defaultCard(){ const i=TOURNAMENTS.findIndex(t=>t.live); return i>=0 ? i : lastFinished(); }  // land on the live event when there is one
 function setTour(t){                                   // switch the whole draws set between tours
   tour = t; TOURNAMENTS = (t==="wta") ? WTA_TOURNAMENTS : ATP_TOURNAMENTS;
   document.body.classList.toggle("wta", t==="wta");
@@ -714,7 +715,7 @@ function setTour(t){                                   // switch the whole draws
   const rp=document.getElementById("rankPill");
   rp.textContent = t==="wta" ? "WTA Ranking" : "ATP Ranking";
   rp.href = t==="wta" ? "wta.html" : "index.html";
-  loadTournament(lastFinished());
+  loadTournament(defaultCard());
 }
 document.querySelectorAll("#tourseg .tseg").forEach(b=>
   b.addEventListener("click", ()=>{ if(b.dataset.tour!==tour) setTour(b.dataset.tour); }));
