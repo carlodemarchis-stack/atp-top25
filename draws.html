@@ -401,7 +401,7 @@ function playerSummary(p){
   if(isChamp) result={t:"Champion", gold:true};
   else if(!played.length) result={t: roundLabel(Math.min(...p.matches.map(m=>m.r)), maxR, false), gold:false};  // not played yet
   else if(!lost){                                        // still alive in a live draw — awaiting their next round
-    const maxWon=Math.max(...p.matches.map(m=>m.r)), nxt=maxWon+1;
+    const maxWon=Math.max(...played.map(m=>m.r)), nxt=maxWon+1;   // only matches actually PLAYED (not the pending next one)
     result={t: nxt>maxR?"Champion":("Through to "+roundLabel(nxt,maxR,false)), gold:true, live:true};
   } else { const top=maxR-lost.r;
     result={t: top===0?"Runner-up": top===1?"Semifinals": top===2?"Quarterfinals": "Round of "+Math.pow(2,top+1), gold:false}; }
