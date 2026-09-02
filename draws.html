@@ -39,6 +39,8 @@
   .dot.finaldot{fill:#fdf3dd; stroke:var(--gold); stroke-width:2.6}   /* the final-match dot, enlarged */
   .mname{font-size:8.5px; letter-spacing:.01em; paint-order:stroke; stroke:var(--ground); stroke-width:2.4px; stroke-linejoin:round}
   .mflag{font-size:9px; pointer-events:none}
+  .mname.dim, .mflag.dim{opacity:.12}        /* seeds-highlight: fade the non-seeded */
+  .mname.seedhi{font-weight:800}
   .mname .seed{font-size:.82em; font-weight:600; fill:var(--muted-2)}
   .mname.win{fill:var(--ink); font-weight:700}
   .mname.loser{fill:var(--muted-2); font-weight:500}
@@ -94,6 +96,14 @@
     border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap; line-height:1}
   .rankpill:hover{color:var(--ink)}
   body.wta .rankpill{color:#8b4fc4}
+  /* seeds-highlight toggle pill */
+  .seedpill{position:fixed; z-index:8; top:14px; left:0; display:inline-flex; align-items:center; cursor:pointer;
+    font:800 11px/1 inherit; letter-spacing:.02em; color:var(--muted); font-family:inherit;
+    padding:8px 13px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
+    border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap}
+  .seedpill:hover{color:var(--ink)}
+  .seedpill.on{background:var(--gold); color:#fff; border-color:var(--gold)}
+  body.wta .seedpill.on{background:#8b4fc4; border-color:#8b4fc4}
   /* credit line (matches the main site) + guide */
   .credit{position:fixed; right:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
@@ -214,6 +224,7 @@
   <span class="tbar-count" id="barCount"></span>
 </div>
 <a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
+<button class="seedpill" id="seedPill" type="button" aria-pressed="false">Seeds</button>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
@@ -423,8 +434,10 @@ function liveStage(){
 }
 
 // ---- selection + side panels ----
-let selId = null, tipPinned = false;
-function selectPlayer(id){ if(!id||!players[id]) return; selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
+let selId = null, tipPinned = false, seedsMode = false;
+function setSeedsMode(on){ seedsMode=on; const p=document.getElementById("seedPill"); if(p) p.classList.toggle("on",on);
+  if(on){ selId=null; renderPanels(); } draw(); }
+function selectPlayer(id){ if(!id||!players[id]) return; if(seedsMode) setSeedsMode(false); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
 function renderPanels(){
   const p=players[selId||(champ&&champ.id)], L=document.getElementById("pinfo"), R=document.getElementById("pmatch");
   if(!p){ L.classList.remove("on"); R.classList.remove("on"); return; }
@@ -527,10 +540,12 @@ function draw(){
   // so every player's run is drawn in their colour and simply stops where they were beaten.
   // When a player is actively selected, spotlight their run and dim the rest.
   const topId = selId || (champ&&champ.id);    // draws on top; champ emphasised by default (none yet on a live draw)
+  const seeded = new Set();                    // seeds-highlight mode: every player carrying a numeric seed
+  if(seedsMode) (function w(n){ (n.p||[]).forEach(p=>{ if(p.id && /^\d+$/.test(String(p.s))) seeded.add(p.id); }); (n.c||[]).forEach(w); })(T);
   const conns=[];
   (function walk(n){ (n.c||[]).forEach(c=>{ conns.push([n,c]); walk(c); }); })(T);
   // draw order: dimmed first, then each beaten opponent's incoming line, then the selected run on top
-  const prio=e=>{ const a=winnerId(e[1]); if(a===topId) return 2; if(selId && winnerId(e[0])===selId && a!==selId) return 1; return 0; };
+  const prio=e=>{ const a=winnerId(e[1]); if(seedsMode) return seeded.has(a)?1:0; if(a===topId) return 2; if(selId && winnerId(e[0])===selId && a!==selId) return 1; return 0; };
   conns.sort((a,b)=> prio(a)-prio(b));
   for(const [par,ch] of conns){
     const [x1,y1]=polar(radiusFor(par.r),par.ang), [x2,y2]=polar(radiusFor(ch.r),ch.ang);
@@ -538,7 +553,8 @@ function draw(){
     const [mx,my]=polar(mr,ch.ang);   // elbow: go radial-out at child angle then arc in
     const aid=winnerId(ch), onTop=aid===topId;
     let sw = onTop?(selId?3:2.6):1.5, so = onTop?1:0.85;
-    if(selId && !onTop){
+    if(seedsMode){ const hot=seeded.has(aid); sw=hot?2.2:1.2; so=hot?1:0.1; }   // seeds pop, the rest fade
+    else if(selId && !onTop){
       if(winnerId(par)===selId){ sw=2.1; so=0.95; }  // the loser's line INTO each match the selected player won — thick-ish, own colour
       else { so=0.2; sw=1.4; }                        // everything else dimmed
     }
@@ -549,6 +565,7 @@ function draw(){
   // label EVERY match (R64 → SF): winner just outward of the dot, loser just inward — dot in between
   function mkName(px,py,txt,cls,deg,flip,fill,id,r,seed){   // one radial-aligned name CENTERED at (px,py)
     if(id && id===(selId||(champ&&champ.id))) cls+=" sel";
+    if(seedsMode) cls += (id && seeded.has(id)) ? " seedhi" : " dim";
     const t=el("text",{x:px,y:py, class:"mname "+cls, "text-anchor":"middle", "dominant-baseline":"middle",
       transform:`rotate(${flip?deg+180:deg} ${px} ${py})`});
     if(fill) t.style.fill=fill;
@@ -575,6 +592,7 @@ function draw(){
         const ft=el("text",{x:fx,y:fy, class:"mflag", "text-anchor":"middle","dominant-baseline":"middle",
           transform:`rotate(${rot} ${fx} ${fy})`});
         ft.style.fontSize = (8.5 + closeness*4).toFixed(2)+"px";   // flag grows with the name
+        if(seedsMode && !(id&&seeded.has(id))) ft.classList.add("dim");
         ft.textContent=fl; svg.appendChild(ft);
       }
     }
@@ -653,6 +671,7 @@ svg.addEventListener("click",()=>{        // click empty space: dismiss a pinned
   tipPinned=false; tip.style.opacity=0;
   if(selId){ selId=null; renderPanels(); draw(); }   // clear the spotlight, panels back to champion
 });
+document.addEventListener("click", e=>{ if(seedsMode && !e.target.closest("#seedPill")) setSeedsMode(false); });  // click anywhere clears seeds highlight
 
 // ---- chrome: corner identity + top-middle tournament switcher ----
 const catClass = c => c==="Grand Slam" ? "gs" : "m1000";
@@ -679,16 +698,17 @@ function updateBar(){
 }
 // keep the ranking pill just to the RIGHT of the centred control bar, whatever its width
 function positionRankPill(){
-  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill");
+  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill"), sp=document.getElementById("seedPill");
   if(!bar||!rp) return;
-  const b=bar.getBoundingClientRect();
-  rp.style.left = (b.right + 12) + "px";
-  rp.style.top = (b.top + b.height/2) + "px";
-  rp.style.transform = "translateY(-50%)";
-  const tr=document.querySelector(".tinfo-r");                 // drop the (redundant) name only if the pill would hit it
-  if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (b.right+12+rp.offsetWidth+10 > t.left) ? "hidden" : "visible"; }
+  const b=bar.getBoundingClientRect(), midY=b.top+b.height/2;
+  rp.style.left = (b.right+12)+"px"; rp.style.top = midY+"px"; rp.style.transform = "translateY(-50%)";
+  let rightEdge = b.right+12+rp.offsetWidth;
+  if(sp){ sp.style.left=(rightEdge+8)+"px"; sp.style.top=midY+"px"; sp.style.transform="translateY(-50%)"; rightEdge += 8+sp.offsetWidth; }
+  const tr=document.querySelector(".tinfo-r");                 // drop the (redundant) name only if the pills would hit it
+  if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
 }
 addEventListener("resize", positionRankPill);
+document.getElementById("seedPill").addEventListener("click", e=>{ e.stopPropagation(); setSeedsMode(!seedsMode); });
 document.getElementById("barPrev").addEventListener("click",()=>loadTournament(cur-1));
 document.getElementById("barNext").addEventListener("click",()=>loadTournament(cur+1));
 
