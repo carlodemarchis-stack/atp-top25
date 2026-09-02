@@ -97,17 +97,17 @@
   .rankpill:hover{color:var(--ink)}
   body.wta .rankpill{color:#8b4fc4}
   /* seeds-highlight toggle switch (bottom-left, on the hub-dot line) */
-  .seedsw{position:fixed; z-index:20; left:20px; bottom:34px; transform:translateY(50%);
-    display:inline-flex; align-items:center; gap:10px; cursor:pointer;
-    background:none; border:0; padding:6px; font-family:inherit; -webkit-appearance:none}
-  .seedsw-track{position:relative; width:38px; height:21px; border-radius:11px; background:var(--line);
+  .seedsw{position:fixed; z-index:20; left:25%; bottom:34px; transform:translateY(50%);
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+    background:none; border:0; padding:5px; font-family:inherit; -webkit-appearance:none}
+  .seedsw-track{position:relative; width:29px; height:16px; border-radius:8px; background:var(--line);
     transition:background .16s; flex:none; box-shadow:inset 0 1px 2px rgba(30,50,90,.12)}
-  .seedsw-knob{position:absolute; top:2px; left:2px; width:17px; height:17px; border-radius:50%;
+  .seedsw-knob{position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%;
     background:#fff; box-shadow:0 1px 3px rgba(30,50,90,.28); transition:left .16s}
-  .seedsw-lbl{font-size:14px; font-weight:600; color:var(--muted); letter-spacing:.01em; line-height:1}
+  .seedsw-lbl{font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.01em; line-height:1}
   .seedsw:hover .seedsw-lbl{color:var(--ink)}
   .seedsw.on .seedsw-track{background:var(--gold)}
-  .seedsw.on .seedsw-knob{left:19px}
+  .seedsw.on .seedsw-knob{left:15px}
   .seedsw.on .seedsw-lbl{color:var(--ink)}
   body.wta .seedsw.on .seedsw-track{background:#8b4fc4}
   /* credit line (matches the main site) + guide */
@@ -230,7 +230,7 @@
   <span class="tbar-count" id="barCount"></span>
 </div>
 <a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
-<button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">highlight seeds</span></button>
+<button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
