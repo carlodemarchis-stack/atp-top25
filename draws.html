@@ -98,7 +98,7 @@
   .tourtab.on{color:#fff; background:var(--blue)}
   .tdiv{width:1px; align-self:stretch; background:var(--line); margin:4px 0}   /* separator between the tour tab and the arrow */
   /* highlight toggles (Seeds / Others) — centred group on the hub-dot line, 25% from the left */
-  .hltoggles{position:fixed; z-index:20; left:25%; bottom:34px; transform:translate(-50%,50%);
+  .hltoggles{position:fixed; z-index:20; left:25%; bottom:48px; transform:translate(-50%,50%);
     display:flex; align-items:center; gap:16px}
   .seedsw{display:inline-flex; align-items:center; gap:7px; cursor:pointer;
     background:none; border:0; padding:5px; font-family:inherit; -webkit-appearance:none}
@@ -122,13 +122,6 @@
     color:var(--muted-2); opacity:.9; text-align:left}
   .backnav a{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer}
   .backnav a:hover{color:var(--gold)}
-  /* full-screen toggle */
-  .fsbtn{position:fixed; right:18px; bottom:36px; z-index:25; width:34px; height:34px; display:flex; align-items:center; justify-content:center;
-    border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.62); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
-    color:var(--muted); cursor:pointer; padding:0; transition:color .15s, background .15s}
-  .fsbtn:hover{color:var(--ink); background:rgba(255,255,255,.9)}
-  .fsbtn svg{width:17px; height:17px; display:block}
-  .fsbtn .ic-exit{display:none} .fsbtn.on .ic-enter{display:none} .fsbtn.on .ic-exit{display:block}
   /* tutorial overlay */
   .help{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(20,34,56,.30); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
@@ -149,13 +142,16 @@
   .help-x{position:absolute; top:13px; right:14px; width:28px; height:28px; border:none; background:none; cursor:pointer;
     font-size:20px; line-height:1; color:var(--muted-2); border-radius:8px}
   .help-x:hover{background:rgba(133,147,168,.15); color:var(--ink)}
-  /* tournament stats: trigger (mirrors the toggles, on the right) + landscape panel */
-  .statsbtn{position:fixed; z-index:20; left:75%; bottom:34px; transform:translate(-50%,50%);
-    display:inline-flex; align-items:center; gap:7px; cursor:pointer; font:700 11px/1 inherit; letter-spacing:.02em;
+  /* bottom-right action bar (Stats · Guide · Full screen), mirrors the left toggle group */
+  .botbar{position:fixed; z-index:20; left:75%; bottom:48px; transform:translate(-50%,50%); display:flex; align-items:center; gap:8px}
+  .botbtn{display:inline-flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; font:700 11px/1 inherit; letter-spacing:.02em;
     color:var(--muted); background:rgba(255,255,255,.72); -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
     border:1px solid var(--line); border-radius:12px; padding:7px 13px; box-shadow:0 8px 24px rgba(30,50,90,.12)}
-  .statsbtn:hover{color:var(--ink)}
-  .statsbtn svg{width:13px; height:13px; display:block}
+  .botbtn:hover{color:var(--ink)}
+  .botbtn svg{width:14px; height:14px; display:block}
+  .botbtn.ico{padding:0; width:32px; height:32px; flex:none; font-size:15px; font-weight:800}
+  .fs .ic-exit{display:none} .fs.on .ic-enter{display:none} .fs.on .ic-exit{display:block}
+  /* tournament stats panel */
   .stats{position:fixed; inset:0; z-index:62; display:none; align-items:center; justify-content:center;
     background:rgba(20,34,56,.34); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
   .stats.on{display:flex}
@@ -274,7 +270,14 @@
   <button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
   <button class="seedsw oth" id="othPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Others</span></button>
 </div>
-<button class="statsbtn" id="statsBtn" type="button" aria-label="Tournament stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M2 20h20"/></svg>Tournament stats</button>
+<div class="botbar">
+  <button class="botbtn" id="statsBtn" type="button" aria-label="Tournament stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M2 20h20"/></svg>Tournament stats</button>
+  <button class="botbtn ico" id="helpBtn" type="button" aria-label="Guide" title="Guide">?</button>
+  <button class="botbtn ico fs" id="fsBtn" type="button" aria-label="Toggle full screen" title="Full screen">
+    <svg class="ic-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+    <svg class="ic-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M8 21v-3a2 2 0 0 0-2-2H3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+  </button>
+</div>
 <div class="stats" id="statsOverlay"><div class="stats-card">
   <button class="stats-x" id="statsX" type="button" aria-label="Close">&times;</button>
   <h2 id="statsTitle"></h2><div class="sub" id="statsSub"></div>
@@ -283,11 +286,8 @@
 </div></div>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
-<div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
-  <svg class="ic-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-  <svg class="ic-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M8 21v-3a2 2 0 0 0-2-2H3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
-</button>
-<div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>) &middot; <a onclick="openHelp();return false;">Guide</a></div>
+<div id="tip"></div>
+<div class="credit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)</div>
 <div class="help" id="help">
   <div class="help-card">
     <button class="help-x" aria-label="Close" onclick="closeHelp()">&times;</button>
@@ -877,6 +877,7 @@ function renderStats(){
 function openStats(){ renderStats(); statsOverlay.classList.add("on"); }
 function closeStats(){ statsOverlay.classList.remove("on"); }
 document.getElementById("statsBtn").addEventListener("click", openStats);
+document.getElementById("helpBtn").addEventListener("click", openHelp);
 document.getElementById("statsX").addEventListener("click", closeStats);
 statsOverlay.addEventListener("click", e=>{ if(e.target===statsOverlay) closeStats(); });
 
