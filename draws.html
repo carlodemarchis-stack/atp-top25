@@ -96,14 +96,20 @@
     border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap; line-height:1}
   .rankpill:hover{color:var(--ink)}
   body.wta .rankpill{color:#8b4fc4}
-  /* seeds-highlight toggle pill */
-  .seedpill{position:fixed; z-index:8; top:14px; left:0; display:inline-flex; align-items:center; cursor:pointer;
-    font:800 11px/1 inherit; letter-spacing:.02em; color:var(--muted); font-family:inherit;
-    padding:8px 13px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
-    border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap}
-  .seedpill:hover{color:var(--ink)}
-  .seedpill.on{background:var(--gold); color:#fff; border-color:var(--gold)}
-  body.wta .seedpill.on{background:#8b4fc4; border-color:#8b4fc4}
+  /* seeds-highlight toggle switch (bottom-left, on the hub-dot line) */
+  .seedsw{position:fixed; z-index:20; left:20px; bottom:34px; transform:translateY(50%);
+    display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+    background:none; border:0; padding:6px; font-family:inherit; -webkit-appearance:none}
+  .seedsw-track{position:relative; width:38px; height:21px; border-radius:11px; background:var(--line);
+    transition:background .16s; flex:none; box-shadow:inset 0 1px 2px rgba(30,50,90,.12)}
+  .seedsw-knob{position:absolute; top:2px; left:2px; width:17px; height:17px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(30,50,90,.28); transition:left .16s}
+  .seedsw-lbl{font-size:14px; font-weight:600; color:var(--muted); letter-spacing:.01em; line-height:1}
+  .seedsw:hover .seedsw-lbl{color:var(--ink)}
+  .seedsw.on .seedsw-track{background:var(--gold)}
+  .seedsw.on .seedsw-knob{left:19px}
+  .seedsw.on .seedsw-lbl{color:var(--ink)}
+  body.wta .seedsw.on .seedsw-track{background:#8b4fc4}
   /* credit line (matches the main site) + guide */
   .credit{position:fixed; right:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
@@ -224,7 +230,7 @@
   <span class="tbar-count" id="barCount"></span>
 </div>
 <a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
-<button class="seedpill" id="seedPill" type="button" aria-pressed="false">Seeds</button>
+<button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">highlight seeds</span></button>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
@@ -698,12 +704,11 @@ function updateBar(){
 }
 // keep the ranking pill just to the RIGHT of the centred control bar, whatever its width
 function positionRankPill(){
-  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill"), sp=document.getElementById("seedPill");
+  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill");
   if(!bar||!rp) return;
   const b=bar.getBoundingClientRect(), midY=b.top+b.height/2;
   rp.style.left = (b.right+12)+"px"; rp.style.top = midY+"px"; rp.style.transform = "translateY(-50%)";
   let rightEdge = b.right+12+rp.offsetWidth;
-  if(sp){ sp.style.left=(rightEdge+8)+"px"; sp.style.top=midY+"px"; sp.style.transform="translateY(-50%)"; rightEdge += 8+sp.offsetWidth; }
   const tr=document.querySelector(".tinfo-r");                 // drop the (redundant) name only if the pills would hit it
   if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
 }
