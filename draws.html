@@ -97,9 +97,10 @@
   .tourtab:hover{color:var(--ink)}
   .tourtab.on{color:#fff; background:var(--blue)}
   .tdiv{width:1px; align-self:stretch; background:var(--line); margin:4px 0}   /* separator between the tour tab and the arrow */
-  /* seeds-highlight toggle switch (bottom-left, on the hub-dot line) */
-  .seedsw{position:fixed; z-index:20; left:25%; bottom:34px; transform:translateY(50%);
-    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  /* highlight toggles (Seeds / Others) — centred group on the hub-dot line, 25% from the left */
+  .hltoggles{position:fixed; z-index:20; left:25%; bottom:34px; transform:translate(-50%,50%);
+    display:flex; align-items:center; gap:16px}
+  .seedsw{display:inline-flex; align-items:center; gap:7px; cursor:pointer;
     background:none; border:0; padding:5px; font-family:inherit; -webkit-appearance:none}
   .seedsw-track{position:relative; width:29px; height:16px; border-radius:8px; background:var(--line);
     transition:background .16s; flex:none; box-shadow:inset 0 1px 2px rgba(30,50,90,.12)}
@@ -107,10 +108,10 @@
     background:#fff; box-shadow:0 1px 3px rgba(30,50,90,.28); transition:left .16s}
   .seedsw-lbl{font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.01em; line-height:1}
   .seedsw:hover .seedsw-lbl{color:var(--ink)}
-  .seedsw.on .seedsw-track{background:var(--gold)}
+  .seedsw.on .seedsw-track{background:var(--gold)}          /* Seeds = gold */
+  .seedsw.oth.on .seedsw-track{background:#48566f}          /* Others = slate, so the two read differently */
   .seedsw.on .seedsw-knob{left:15px}
   .seedsw.on .seedsw-lbl{color:var(--ink)}
-  body.wta .seedsw.on .seedsw-track{background:#8b4fc4}
   /* credit line (matches the main site) + guide */
   .credit{position:fixed; right:20px; bottom:13px; z-index:20; font-size:10.5px; font-weight:600; letter-spacing:.02em;
     color:var(--muted-2); opacity:.9; text-align:right; pointer-events:auto}
@@ -232,7 +233,10 @@
 </div>
 <a class="rankpill atp" id="atpRank" href="index.html">Ranking <span class="rk-arw">&#8599;</span></a>
 <a class="rankpill wta" id="wtaRank" href="wta.html">Ranking <span class="rk-arw">&#8599;</span></a>
-<button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
+<div class="hltoggles">
+  <button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
+  <button class="seedsw oth" id="othPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Others</span></button>
+</div>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
@@ -442,11 +446,14 @@ function liveStage(){
 }
 
 // ---- selection + side panels ----
-let selId = null, tipPinned = false, seedsMode = false;
-function setSeedsMode(on){ seedsMode=on; const p=document.getElementById("seedPill"); if(p) p.classList.toggle("on",on);
-  try{ localStorage.setItem("draws_seeds", on?"1":"0"); }catch(e){}   // sticky across draws + tours
-  if(on){ selId=null; renderPanels(); } draw(); }
-function selectPlayer(id){ if(!id||!players[id]) return; if(seedsMode) setSeedsMode(false); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
+let selId = null, tipPinned = false, hlMode = null;   // highlight mode: null | "seeds" | "others" (the two toggles are exclusive)
+function setHighlight(mode){
+  hlMode = mode;
+  document.getElementById("seedPill").classList.toggle("on", mode==="seeds");
+  document.getElementById("othPill").classList.toggle("on", mode==="others");
+  try{ localStorage.setItem("draws_hl", mode||""); }catch(e){}   // sticky across draws + tours
+  if(mode){ selId=null; renderPanels(); } draw(); }
+function selectPlayer(id){ if(!id||!players[id]) return; if(hlMode) setHighlight(null); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
 function renderPanels(){
   const p=players[selId||(champ&&champ.id)], L=document.getElementById("pinfo"), R=document.getElementById("pmatch");
   if(!p){ L.classList.remove("on"); R.classList.remove("on"); return; }
@@ -549,12 +556,13 @@ function draw(){
   // so every player's run is drawn in their colour and simply stops where they were beaten.
   // When a player is actively selected, spotlight their run and dim the rest.
   const topId = selId || (champ&&champ.id);    // draws on top; champ emphasised by default (none yet on a live draw)
-  const seeded = new Set();                    // seeds-highlight mode: every player carrying a numeric seed
-  if(seedsMode) (function w(n){ (n.p||[]).forEach(p=>{ if(p.id && /^\d+$/.test(String(p.s))) seeded.add(p.id); }); (n.c||[]).forEach(w); })(T);
+  const seeded = new Set();                    // highlight mode: every player carrying a numeric seed
+  if(hlMode) (function w(n){ (n.p||[]).forEach(p=>{ if(p.id && /^\d+$/.test(String(p.s))) seeded.add(p.id); }); (n.c||[]).forEach(w); })(T);
+  const hot = id => id ? (hlMode==="others" ? !seeded.has(id) : seeded.has(id)) : false;   // who the current toggle spotlights
   const conns=[];
   (function walk(n){ (n.c||[]).forEach(c=>{ conns.push([n,c]); walk(c); }); })(T);
   // draw order: dimmed first, then each beaten opponent's incoming line, then the selected run on top
-  const prio=e=>{ const a=winnerId(e[1]); if(seedsMode) return seeded.has(a)?1:0; if(a===topId) return 2; if(selId && winnerId(e[0])===selId && a!==selId) return 1; return 0; };
+  const prio=e=>{ const a=winnerId(e[1]); if(hlMode) return hot(a)?1:0; if(a===topId) return 2; if(selId && winnerId(e[0])===selId && a!==selId) return 1; return 0; };
   conns.sort((a,b)=> prio(a)-prio(b));
   for(const [par,ch] of conns){
     const [x1,y1]=polar(radiusFor(par.r),par.ang), [x2,y2]=polar(radiusFor(ch.r),ch.ang);
@@ -562,7 +570,7 @@ function draw(){
     const [mx,my]=polar(mr,ch.ang);   // elbow: go radial-out at child angle then arc in
     const aid=winnerId(ch), onTop=aid===topId;
     let sw = onTop?(selId?3:2.6):1.5, so = onTop?1:0.85;
-    if(seedsMode){ const hot=seeded.has(aid); sw=hot?2.2:1.2; so=hot?1:0.28; }   // seeds pop, the rest fade (but stay readable)
+    if(hlMode){ const h=hot(aid); sw=h?2.2:1.2; so=h?1:0.28; }   // highlighted pop, the rest fade (but stay readable)
     else if(selId && !onTop){
       if(winnerId(par)===selId){ sw=2.1; so=0.95; }  // the loser's line INTO each match the selected player won — thick-ish, own colour
       else { so=0.2; sw=1.4; }                        // everything else dimmed
@@ -574,7 +582,7 @@ function draw(){
   // label EVERY match (R64 → SF): winner just outward of the dot, loser just inward — dot in between
   function mkName(px,py,txt,cls,deg,flip,fill,id,r,seed){   // one radial-aligned name CENTERED at (px,py)
     if(id && id===(selId||(champ&&champ.id))) cls+=" sel";
-    if(seedsMode) cls += (id && seeded.has(id)) ? " seedhi" : " dim";
+    if(hlMode) cls += hot(id) ? " seedhi" : " dim";
     const t=el("text",{x:px,y:py, class:"mname "+cls, "text-anchor":"middle", "dominant-baseline":"middle",
       transform:`rotate(${flip?deg+180:deg} ${px} ${py})`});
     if(fill) t.style.fill=fill;
@@ -601,7 +609,7 @@ function draw(){
         const ft=el("text",{x:fx,y:fy, class:"mflag", "text-anchor":"middle","dominant-baseline":"middle",
           transform:`rotate(${rot} ${fx} ${fy})`});
         ft.style.fontSize = (8.5 + closeness*4).toFixed(2)+"px";   // flag grows with the name
-        if(seedsMode && !(id&&seeded.has(id))) ft.classList.add("dim");
+        if(hlMode && !hot(id)) ft.classList.add("dim");
         ft.textContent=fl; svg.appendChild(ft);
       }
     }
@@ -720,7 +728,8 @@ function positionBar(){
   if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
 }
 addEventListener("resize", positionBar);
-document.getElementById("seedPill").addEventListener("click", e=>{ e.stopPropagation(); setSeedsMode(!seedsMode); });
+document.getElementById("seedPill").addEventListener("click", e=>{ e.stopPropagation(); setHighlight(hlMode==="seeds"?null:"seeds"); });
+document.getElementById("othPill").addEventListener("click", e=>{ e.stopPropagation(); setHighlight(hlMode==="others"?null:"others"); });
 document.getElementById("barPrev").addEventListener("click",()=>loadTournament(cur-1));
 document.getElementById("barNext").addEventListener("click",()=>loadTournament(cur+1));
 
@@ -762,8 +771,10 @@ function setTour(t, keep){                             // switch the whole draws
 }
 document.getElementById("atpPill").addEventListener("click", ()=>{ if(tour!=="atp") setTour("atp", true); });
 document.getElementById("wtaPill").addEventListener("click", ()=>{ if(tour!=="wta") setTour("wta", true); });
-try{ seedsMode = localStorage.getItem("draws_seeds")==="1"; }catch(e){}   // restore the seeds toggle
-document.getElementById("seedPill").classList.toggle("on", seedsMode);
+try{ hlMode = localStorage.getItem("draws_hl") || null; }catch(e){}   // restore the highlight toggle
+if(hlMode!=="seeds" && hlMode!=="others") hlMode=null;
+document.getElementById("seedPill").classList.toggle("on", hlMode==="seeds");
+document.getElementById("othPill").classList.toggle("on", hlMode==="others");
 setTour("atp");   // boot on the ATP tour, most recent FINISHED card
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
