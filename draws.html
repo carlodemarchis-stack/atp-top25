@@ -149,6 +149,43 @@
   .help-x{position:absolute; top:13px; right:14px; width:28px; height:28px; border:none; background:none; cursor:pointer;
     font-size:20px; line-height:1; color:var(--muted-2); border-radius:8px}
   .help-x:hover{background:rgba(133,147,168,.15); color:var(--ink)}
+  /* tournament stats: trigger (mirrors the toggles, on the right) + landscape panel */
+  .statsbtn{position:fixed; z-index:20; left:75%; bottom:34px; transform:translate(-50%,50%);
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer; font:700 11px/1 inherit; letter-spacing:.02em;
+    color:var(--muted); background:rgba(255,255,255,.72); -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
+    border:1px solid var(--line); border-radius:12px; padding:7px 13px; box-shadow:0 8px 24px rgba(30,50,90,.12)}
+  .statsbtn:hover{color:var(--ink)}
+  .statsbtn svg{width:13px; height:13px; display:block}
+  .stats{position:fixed; inset:0; z-index:62; display:none; align-items:center; justify-content:center;
+    background:rgba(20,34,56,.34); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
+  .stats.on{display:flex}
+  .stats-card{position:relative; background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    max-width:820px; width:calc(100% - 48px); max-height:calc(100% - 40px); overflow:auto; padding:22px 26px 20px;
+    box-shadow:0 30px 90px rgba(30,50,90,.30); color:var(--ink)}
+  .stats-card h2{margin:0 0 2px; font-size:20px; font-weight:800; letter-spacing:-.015em}
+  .stats-card .sub{font-size:12px; color:var(--muted); margin-bottom:6px}
+  .stats-cols{display:grid; grid-template-columns:1.5fr 1fr; gap:22px; margin-top:12px}
+  @media (max-width:720px){ .stats-cols{grid-template-columns:1fr} }
+  .stats-sec{margin-top:16px}
+  .stats-sec:first-child{margin-top:0}
+  .stats-sec h3{margin:0 0 9px; font-size:10px; font-weight:800; letter-spacing:.09em; color:var(--muted-2); text-transform:uppercase}
+  .stats-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px}
+  .stile{background:var(--ground); border-radius:11px; padding:11px 12px}
+  .stile .v{font-size:19px; font-weight:800; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums}
+  .stile .k{font-size:10.5px; color:var(--muted); margin-top:5px; line-height:1.25}
+  .stbest{background:var(--gold-soft); border-radius:11px; padding:11px 13px; margin-top:9px}
+  .stbest .k{font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--gold); text-transform:uppercase; margin-bottom:4px}
+  .stbest .t{font-size:13px; line-height:1.35}
+  .sbars{display:flex; flex-direction:column; gap:7px}
+  .sbar{display:grid; grid-template-columns:32px 1fr 22px; align-items:center; gap:10px; font-size:11px}
+  .sbar .lab{font-variant-numeric:tabular-nums; font-weight:800; color:var(--ink)}
+  .sbar .track{height:9px; background:var(--ground); border-radius:5px; overflow:hidden; display:block}
+  .sbar .fill{display:block; height:100%; background:var(--blue); border-radius:5px; min-width:2px}
+  .sbar .n{text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); font-weight:700}
+  .stats-note{font-size:10px; color:var(--muted-2); margin-top:16px; line-height:1.4}
+  .stats-x{position:absolute; top:13px; right:14px; width:28px; height:28px; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted-2); border-radius:8px}
+  .stats-x:hover{background:rgba(133,147,168,.15); color:var(--ink)}
   /* center medallion */
   .champ-name{font-size:17px; font-weight:800; fill:var(--ink); paint-order:stroke; stroke:var(--ground); stroke-width:4px; stroke-linejoin:round}
   .champ-name.live{font-size:13px; fill:var(--muted); letter-spacing:.01em}
@@ -237,6 +274,13 @@
   <button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
   <button class="seedsw oth" id="othPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Others</span></button>
 </div>
+<button class="statsbtn" id="statsBtn" type="button" aria-label="Tournament stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M2 20h20"/></svg>Tournament stats</button>
+<div class="stats" id="statsOverlay"><div class="stats-card">
+  <button class="stats-x" id="statsX" type="button" aria-label="Close">&times;</button>
+  <h2 id="statsTitle"></h2><div class="sub" id="statsSub"></div>
+  <div id="statsBody"></div>
+  <div class="stats-note">Completed main-draw singles matches only. Tiebreak sets are counted as 7-6; per-set games are approximate for tiebreak sets.</div>
+</div></div>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div><button class="fsbtn" id="fsBtn" aria-label="Toggle full screen" title="Full screen">
@@ -750,7 +794,94 @@ function openHelp(){ helpEl.classList.add("on"); }
 function closeHelp(){ helpEl.classList.remove("on"); try{ localStorage.setItem("draws_guide_seen","1"); }catch(e){} }
 helpEl.addEventListener("click", e=>{ if(e.target===helpEl) closeHelp(); });   // click backdrop to dismiss
 
+// ---- tournament stats panel ----
+function tournamentStats(tree){
+  const nodes=[]; (function w(n){ nodes.push(n); (n.c||[]).forEach(w); })(tree);
+  let mR=0; nodes.forEach(n=>{ if(n.r>mR) mR=n.r; });
+  const isSeed = p => /^\d+$/.test(String(p&&p.s));
+  const played = nodes.filter(n=> !n.bye && n.p && n.p.length===2 && n.p.every(p=>p&&p.id) && n.p.some(p=>p.w));
+  const dist={}, distOrder=["6-0","6-1","6-2","6-3","6-4","7-5","7-6"];
+  let games=0, sets=0, straight=0, decider=0, tbSets=0, bagels=0, breadsticks=0, dblBagel=0, upsets=0, r1SeedOut=0;
+  const seedIds=new Set(), seen=new Set(), countries={};
+  nodes.forEach(n=> (n.p||[]).forEach(p=>{ if(p&&p.id){ if(isSeed(p)) seedIds.add(p.id);
+    if(!seen.has(p.id)){ seen.add(p.id); const c=CC[p.id]; if(c) countries[c]=(countries[c]||0)+1; } } }));
+  let bestWonR=-1, bestNames=[], unseededChamp=null;
+  const seedsInQF=new Set();
+  played.forEach(n=>{
+    const w=n.p.find(p=>p.w), l=n.p.find(p=>!p.w);
+    const nSets=Math.max(w.sc.length,l.sc.length); sets+=nSets;
+    let loserSets=0, mBagels=0;
+    for(let i=0;i<nSets;i++){
+      const wt=String(w.sc[i]??""), lt=String(l.sc[i]??""); if(!wt&&!lt) continue;
+      const tb = wt.length>1 || lt.length>1;
+      let gw, gl;
+      if(tb){ const wWon=wt.length>1; gw=wWon?7:6; gl=wWon?6:7; }
+      else { gw=parseInt(wt||"0",10)||0; gl=parseInt(lt||"0",10)||0; }
+      games+=gw+gl; if(tb) tbSets++; if(gl>gw) loserSets++;
+      const lab = tb? "7-6" : Math.max(gw,gl)+"-"+Math.min(gw,gl);
+      dist[lab]=(dist[lab]||0)+1;
+      if(lab==="6-0"){ bagels++; mBagels++; } if(lab==="6-1") breadsticks++;
+    }
+    if(mBagels>=2) dblBagel++;
+    const winnerSets=nSets-loserSets;
+    if(loserSets===0) straight++; else if(loserSets===winnerSets-1) decider++;
+    if(!isSeed(w) && isSeed(l)){ upsets++; if(n.r===0) r1SeedOut++; }
+    if(!isSeed(w)){ if(n.r>bestWonR){ bestWonR=n.r; bestNames=[w.n]; } else if(n.r===bestWonR && !bestNames.includes(w.n)) bestNames.push(w.n); }
+    if(n.r===mR && !isSeed(w)) unseededChamp=w.n;
+    if(n.r>=mR-2) n.p.forEach(p=>{ if(isSeed(p)) seedsInQF.add(p.id); });
+  });
+  let topC=null,topN=0; for(const c in countries) if(countries[c]>topN){ topN=countries[c]; topC=c; }
+  return { mR, matches:played.length, sets, games, avg: played.length? games/played.length : 0,
+    straight, decider, tbSets, bagels, breadsticks, dblBagel,
+    seeds:seedIds.size, upsets, r1SeedOut, seedsInQF:seedsInQF.size,
+    dist, distOrder, nCountries:Object.keys(countries).length, topC, topN,
+    bestUnseeded: bestWonR<0 ? null : { champ: !!unseededChamp, names: unseededChamp?[unseededChamp]:bestNames, stage: unseededChamp?"Champion":roundLabel(bestWonR+1,mR,false) } };
+}
+const statsOverlay=document.getElementById("statsOverlay");
+function renderStats(){
+  const t=TOURNAMENTS[cur], s=tournamentStats(t.tree);
+  document.getElementById("statsTitle").textContent = t.name;
+  document.getElementById("statsSub").textContent = (t.live?"Live so far · ":"") + s.matches+" matches · "+s.sets+" sets · "+s.games+" games";
+  const tile=(v,k)=>`<div class="stile"><div class="v">${v}</div><div class="k">${k}</div></div>`;
+  const pct=(a,b)=> b? Math.round(a/b*100)+"%" : "–";
+  const maxD=Math.max(1,...s.distOrder.map(l=>s.dist[l]||0));
+  const bars=s.distOrder.map(l=>{ const n=s.dist[l]||0;
+    return `<div class="sbar"><span class="lab">${l}</span><span class="track"><span class="fill" style="width:${n?Math.max(4,n/maxD*100):0}%"></span></span><span class="n">${n}</span></div>`; }).join("");
+  const bu=s.bestUnseeded;
+  const buT = bu ? (bu.champ ? `<b>${bu.names[0]}</b> won the title unseeded`
+    : bu.names.length>2 ? `<b>${bu.names.length} unseeded players</b> into the <b>${bu.stage}</b>`
+    : `<b>${bu.names.join(", ")}</b> — into the <b>${bu.stage}</b>`) : "—";
+  document.getElementById("statsBody").innerHTML = `
+   <div class="stats-cols">
+     <div>
+       <div class="stats-sec"><h3>Overview</h3><div class="stats-grid">
+         ${tile(s.matches,"Matches played")}${tile(s.sets,"Sets")}${tile(s.games,"Games")}
+         ${tile(s.avg.toFixed(1),"Avg games / match")}${tile(s.nCountries,"Countries")}${tile(s.topC||"–",`Most players (${s.topN})`)}
+       </div></div>
+       <div class="stats-sec"><h3>Dominance</h3><div class="stats-grid">
+         ${tile(pct(s.straight,s.matches),"Straight-set wins")}${tile(s.decider,"Deciding-set matches")}${tile(s.tbSets,"Tiebreak sets")}
+         ${tile(s.bagels,"Bagels (6-0)")}${tile(s.breadsticks,"Breadsticks (6-1)")}${tile(s.dblBagel,"Double bagels")}
+       </div></div>
+       <div class="stats-sec"><h3>Seeds &amp; upsets</h3><div class="stats-grid">
+         ${tile(s.seeds,"Seeds in the draw")}${tile(s.upsets,"Seeds beaten by unseeded")}${tile(s.r1SeedOut,"Seeds out in round 1")}
+         ${tile(s.seedsInQF,"Seeds reaching the QF")}
+       </div>
+       <div class="stbest"><div class="k">Best unseeded run</div><div class="t">${buT}</div></div>
+       </div>
+     </div>
+     <div>
+       <div class="stats-sec"><h3>Set scoreline distribution</h3><div class="sbars">${bars}</div></div>
+     </div>
+   </div>`;
+}
+function openStats(){ renderStats(); statsOverlay.classList.add("on"); }
+function closeStats(){ statsOverlay.classList.remove("on"); }
+document.getElementById("statsBtn").addEventListener("click", openStats);
+document.getElementById("statsX").addEventListener("click", closeStats);
+statsOverlay.addEventListener("click", e=>{ if(e.target===statsOverlay) closeStats(); });
+
 addEventListener("keydown", e=>{
+  if(statsOverlay.classList.contains("on")){ if(e.key==="Escape") closeStats(); return; }  // stats panel swallows keys while open
   if(helpEl.classList.contains("on")){ if(e.key==="Escape") closeHelp(); return; }  // guide swallows keys while open
   if(e.key==="ArrowLeft"){ e.preventDefault(); loadTournament(cur-1); }
   else if(e.key==="ArrowRight"){ e.preventDefault(); loadTournament(cur+1); }
