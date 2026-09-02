@@ -92,12 +92,11 @@
   .rankpill:hover{color:var(--ink)}
   .rankpill.atp{color:#2f6fd0} .rankpill.wta{color:#8b4fc4}
   .rankpill .rk-arw{font-size:12px; line-height:1}
-  .tourpill{position:fixed; z-index:8; top:14px; left:0; transform:translateY(-50%); display:inline-flex; align-items:center;
-    font:800 11px/1 inherit; letter-spacing:.06em; color:var(--muted-2); cursor:pointer;
-    padding:8px 14px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
-    border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap}
-  .tourpill:hover{color:var(--ink)}
-  .tourpill.on{color:#fff; background:var(--blue); border-color:var(--blue)}
+  .tourtab{border:none; background:none; cursor:pointer; font:800 11px/1 inherit; letter-spacing:.06em; color:var(--muted-2);
+    padding:7px 12px; border-radius:9px; display:flex; align-items:center; align-self:stretch}
+  .tourtab:hover{color:var(--ink)}
+  .tourtab.on{color:#fff; background:var(--blue)}
+  .tdiv{width:1px; align-self:stretch; background:var(--line); margin:4px 0}   /* separator between the tour tab and the arrow */
   /* seeds-highlight toggle switch (bottom-left, on the hub-dot line) */
   .seedsw{position:fixed; z-index:20; left:25%; bottom:34px; transform:translateY(50%);
     display:inline-flex; align-items:center; gap:7px; cursor:pointer;
@@ -219,16 +218,18 @@
 <div class="tinfo-l" id="tinfoL"></div>
 <div class="tinfo-r" id="tinfoR"></div>
 <div class="tbar">
+  <button class="tourtab on" id="atpPill" data-tour="atp" type="button">ATP</button>
+  <span class="tdiv"></span>
   <button class="arw" id="barPrev" aria-label="Previous tournament">&#8249;</button>
   <div class="tbar-mid">
     <div class="tbar-name" id="barName"></div>
     <div class="pips" id="pips"></div>
   </div>
   <button class="arw" id="barNext" aria-label="Next tournament">&#8250;</button>
+  <span class="tdiv"></span>
+  <button class="tourtab" id="wtaPill" data-tour="wta" type="button">WTA</button>
   <span class="tbar-count" id="barCount"></span>
 </div>
-<button class="tourpill on" id="atpPill" data-tour="atp" type="button">ATP</button>
-<button class="tourpill" id="wtaPill" data-tour="wta" type="button">WTA</button>
 <a class="rankpill atp" id="atpRank" href="index.html">Ranking <span class="rk-arw">&#8599;</span></a>
 <a class="rankpill wta" id="wtaRank" href="wta.html">Ranking <span class="rk-arw">&#8599;</span></a>
 <button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
@@ -707,18 +708,13 @@ function updateBar(){
 function positionBar(){
   const bar=document.querySelector(".tbar"); if(!bar) return;
   const b=bar.getBoundingClientRect(), midY=b.top+b.height/2, W=innerWidth;
-  const ap=document.getElementById("atpPill"), ar=document.getElementById("atpRank");
-  const wp=document.getElementById("wtaPill"), wr=document.getElementById("wtaRank");
-  [ap,ar,wp,wr].forEach(el=>{ el.style.top=midY+"px"; });
-  const G=6;   // small gap so the pills read as connected to the bar, but still separated from the ‹ › arrows
-  // left: ATP pill hugs the bar, its Ranking link sits further out (anchored by right edge, growing left)
-  ap.style.left="auto"; ap.style.right=(W-(b.left-G))+"px";
-  ar.style.left="auto"; ar.style.right=(W-(b.left-G)+ap.offsetWidth+8)+"px";
-  const leftEdge = (b.left-G) - ap.offsetWidth - 8 - ar.offsetWidth;
-  // right: WTA pill hugs the bar, its Ranking link sits further out
-  wp.style.right="auto"; wp.style.left=(b.right+G)+"px";
-  wr.style.right="auto"; wr.style.left=(b.right+G+wp.offsetWidth+8)+"px";
-  const rightEdge = b.right+G+wp.offsetWidth+8+wr.offsetWidth;
+  const ar=document.getElementById("atpRank"), wr=document.getElementById("wtaRank");
+  ar.style.top=midY+"px"; wr.style.top=midY+"px";
+  const G=10;   // the Ranking links float, disconnected, just outside the bar
+  ar.style.left="auto"; ar.style.right=(W-(b.left-G))+"px";
+  const leftEdge = (b.left-G) - ar.offsetWidth;
+  wr.style.right="auto"; wr.style.left=(b.right+G)+"px";
+  const rightEdge = b.right+G+wr.offsetWidth;
   const tl=document.querySelector(".tinfo-l"), tr=document.querySelector(".tinfo-r");   // hide side info if the clusters would collide
   if(tl){ const t=tl.getBoundingClientRect(); tl.style.visibility = (leftEdge-10 < t.right) ? "hidden" : "visible"; }
   if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
