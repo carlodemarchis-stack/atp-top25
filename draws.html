@@ -739,17 +739,19 @@ addEventListener("keydown", e=>{
 
 function lastFinished(){ for(let i=TOURNAMENTS.length-1;i>=0;i--) if(!TOURNAMENTS[i].live) return i; return TOURNAMENTS.length-1; }
 function defaultCard(){ const i=TOURNAMENTS.findIndex(t=>t.live); return i>=0 ? i : lastFinished(); }  // land on the live event when there is one
-function setTour(t){                                   // switch the whole draws set between tours
+function setTour(t, keep){                             // switch the whole draws set between tours
+  const prev = keep ? TOURNAMENTS[cur] : null;         // remember the current event to stay on it
   tour = t; TOURNAMENTS = (t==="wta") ? WTA_TOURNAMENTS : ATP_TOURNAMENTS;
   document.body.classList.toggle("wta", t==="wta");
   document.querySelectorAll("#tourseg .tseg").forEach(b=>b.classList.toggle("on", b.dataset.tour===t));
   const rp=document.getElementById("rankPill");
   rp.textContent = t==="wta" ? "WTA Ranking" : "ATP Ranking";
   rp.href = t==="wta" ? "wta.html" : "index.html";
-  loadTournament(defaultCard());
+  let i = prev ? TOURNAMENTS.findIndex(x=> x.short===prev.short || x.name===prev.name) : -1;  // same event on the other tour
+  loadTournament(i>=0 ? i : defaultCard());
 }
 document.querySelectorAll("#tourseg .tseg").forEach(b=>
-  b.addEventListener("click", ()=>{ if(b.dataset.tour!==tour) setTour(b.dataset.tour); }));
+  b.addEventListener("click", ()=>{ if(b.dataset.tour!==tour) setTour(b.dataset.tour, true); }));
 setTour("atp");   // boot on the ATP tour, most recent FINISHED card
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
