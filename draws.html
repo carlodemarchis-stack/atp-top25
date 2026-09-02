@@ -39,7 +39,7 @@
   .dot.finaldot{fill:#fdf3dd; stroke:var(--gold); stroke-width:2.6}   /* the final-match dot, enlarged */
   .mname{font-size:8.5px; letter-spacing:.01em; paint-order:stroke; stroke:var(--ground); stroke-width:2.4px; stroke-linejoin:round}
   .mflag{font-size:9px; pointer-events:none}
-  .mname.dim, .mflag.dim{opacity:.12}        /* seeds-highlight: fade the non-seeded */
+  .mname.dim, .mflag.dim{opacity:.32}        /* seeds-highlight: fade the non-seeded (still legible) */
   .mname.seedhi{font-weight:800}
   .mname .seed{font-size:.82em; font-weight:600; fill:var(--muted-2)}
   .mname.win{fill:var(--ink); font-weight:700}
@@ -561,7 +561,7 @@ function draw(){
     const [mx,my]=polar(mr,ch.ang);   // elbow: go radial-out at child angle then arc in
     const aid=winnerId(ch), onTop=aid===topId;
     let sw = onTop?(selId?3:2.6):1.5, so = onTop?1:0.85;
-    if(seedsMode){ const hot=seeded.has(aid); sw=hot?2.2:1.2; so=hot?1:0.1; }   // seeds pop, the rest fade
+    if(seedsMode){ const hot=seeded.has(aid); sw=hot?2.2:1.2; so=hot?1:0.28; }   // seeds pop, the rest fade (but stay readable)
     else if(selId && !onTop){
       if(winnerId(par)===selId){ sw=2.1; so=0.95; }  // the loser's line INTO each match the selected player won — thick-ish, own colour
       else { so=0.2; sw=1.4; }                        // everything else dimmed
@@ -710,14 +710,15 @@ function positionBar(){
   const ap=document.getElementById("atpPill"), ar=document.getElementById("atpRank");
   const wp=document.getElementById("wtaPill"), wr=document.getElementById("wtaRank");
   [ap,ar,wp,wr].forEach(el=>{ el.style.top=midY+"px"; });
+  const G=6;   // small gap so the pills read as connected to the bar, but still separated from the ‹ › arrows
   // left: ATP pill hugs the bar, its Ranking link sits further out (anchored by right edge, growing left)
-  ap.style.left="auto"; ap.style.right=(W-(b.left-12))+"px";
-  ar.style.left="auto"; ar.style.right=(W-(b.left-12)+ap.offsetWidth+8)+"px";
-  const leftEdge = (b.left-12) - ap.offsetWidth - 8 - ar.offsetWidth;
+  ap.style.left="auto"; ap.style.right=(W-(b.left-G))+"px";
+  ar.style.left="auto"; ar.style.right=(W-(b.left-G)+ap.offsetWidth+8)+"px";
+  const leftEdge = (b.left-G) - ap.offsetWidth - 8 - ar.offsetWidth;
   // right: WTA pill hugs the bar, its Ranking link sits further out
-  wp.style.right="auto"; wp.style.left=(b.right+12)+"px";
-  wr.style.right="auto"; wr.style.left=(b.right+12+wp.offsetWidth+8)+"px";
-  const rightEdge = b.right+12+wp.offsetWidth+8+wr.offsetWidth;
+  wp.style.right="auto"; wp.style.left=(b.right+G)+"px";
+  wr.style.right="auto"; wr.style.left=(b.right+G+wp.offsetWidth+8)+"px";
+  const rightEdge = b.right+G+wp.offsetWidth+8+wr.offsetWidth;
   const tl=document.querySelector(".tinfo-l"), tr=document.querySelector(".tinfo-r");   // hide side info if the clusters would collide
   if(tl){ const t=tl.getBoundingClientRect(); tl.style.visibility = (leftEdge-10 < t.right) ? "hidden" : "visible"; }
   if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
