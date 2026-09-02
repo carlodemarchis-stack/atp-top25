@@ -79,23 +79,25 @@
   .pip.live{background:#e5484d; opacity:1; position:relative}
   .pip.live::after{content:""; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid #e5484d; animation:livepulse 1.4s ease-in-out infinite}
   @media (prefers-reduced-motion:reduce){ .livetag i, .pip.live::after{animation:none} }
-  .tourseg{display:flex; gap:2px; background:rgba(20,40,80,.06); border-radius:8px; padding:2px}
-  .tseg{border:none; background:none; cursor:pointer; font:800 10px/1 inherit; letter-spacing:.06em; color:var(--muted-2); padding:3px 10px; border-radius:6px}
-  .tseg.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(30,50,90,.16)}
-  .tseg:not(.on):hover{color:var(--ink)}
-  body.wta .tseg.on{color:#7d3fb8}
   /* WTA identity: 1000-level accent shifts violet; champion gold stays gold */
   body.wta{--blue:#8b4fc4}
   body.wta .tinfo-l .cat{color:#8b4fc4; border-color:rgba(139,79,196,.42); background:rgba(139,79,196,.1)}
   body.wta .tinfo-l .cat.gs{color:var(--gold); border-color:rgba(189,125,10,.45); background:rgba(189,125,10,.1)}
   .tbar-count{display:none}
-  /* standalone floating pill, positioned by JS just to the RIGHT of the centred control bar */
-  .rankpill{position:fixed; z-index:8; top:14px; left:0; display:inline-flex; align-items:center;
+  /* tour pills (ATP left / WTA right) + ranking links, positioned by JS around the control bar */
+  .rankpill{position:fixed; z-index:8; top:14px; left:0; transform:translateY(-50%); display:inline-flex; align-items:center; gap:4px;
     font-size:11px; font-weight:800; letter-spacing:.02em; color:var(--blue); text-decoration:none;
-    padding:8px 13px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
+    padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
     border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap; line-height:1}
   .rankpill:hover{color:var(--ink)}
-  body.wta .rankpill{color:#8b4fc4}
+  .rankpill.atp{color:#2f6fd0} .rankpill.wta{color:#8b4fc4}
+  .rankpill .rk-arw{font-size:12px; line-height:1}
+  .tourpill{position:fixed; z-index:8; top:14px; left:0; transform:translateY(-50%); display:inline-flex; align-items:center;
+    font:800 11px/1 inherit; letter-spacing:.06em; color:var(--muted-2); cursor:pointer;
+    padding:8px 14px; border-radius:12px; background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
+    border:1px solid var(--line); box-shadow:0 8px 24px rgba(30,50,90,.12); white-space:nowrap}
+  .tourpill:hover{color:var(--ink)}
+  .tourpill.on{color:#fff; background:var(--blue); border-color:var(--blue)}
   /* seeds-highlight toggle switch (bottom-left, on the hub-dot line) */
   .seedsw{position:fixed; z-index:20; left:25%; bottom:34px; transform:translateY(50%);
     display:inline-flex; align-items:center; gap:7px; cursor:pointer;
@@ -219,17 +221,16 @@
 <div class="tbar">
   <button class="arw" id="barPrev" aria-label="Previous tournament">&#8249;</button>
   <div class="tbar-mid">
-    <div class="tourseg" id="tourseg">
-      <button class="tseg on" data-tour="atp" type="button">ATP</button>
-      <button class="tseg" data-tour="wta" type="button">WTA</button>
-    </div>
     <div class="tbar-name" id="barName"></div>
     <div class="pips" id="pips"></div>
   </div>
   <button class="arw" id="barNext" aria-label="Next tournament">&#8250;</button>
   <span class="tbar-count" id="barCount"></span>
 </div>
-<a class="rankpill" id="rankPill" href="index.html">ATP Ranking</a>
+<button class="tourpill on" id="atpPill" data-tour="atp" type="button">ATP</button>
+<button class="tourpill" id="wtaPill" data-tour="wta" type="button">WTA</button>
+<a class="rankpill atp" id="atpRank" href="index.html">Ranking <span class="rk-arw">&#8599;</span></a>
+<a class="rankpill wta" id="wtaRank" href="wta.html">Ranking <span class="rk-arw">&#8599;</span></a>
 <button class="seedsw" id="seedPill" type="button" aria-pressed="false"><span class="seedsw-track"><span class="seedsw-knob"></span></span><span class="seedsw-lbl">Seeds</span></button>
 <div id="pinfo" class="panel pinfo"></div>
 <div id="pmatch" class="panel pmatch"></div>
@@ -442,6 +443,7 @@ function liveStage(){
 // ---- selection + side panels ----
 let selId = null, tipPinned = false, seedsMode = false;
 function setSeedsMode(on){ seedsMode=on; const p=document.getElementById("seedPill"); if(p) p.classList.toggle("on",on);
+  try{ localStorage.setItem("draws_seeds", on?"1":"0"); }catch(e){}   // sticky across draws + tours
   if(on){ selId=null; renderPanels(); } draw(); }
 function selectPlayer(id){ if(!id||!players[id]) return; if(seedsMode) setSeedsMode(false); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
 function renderPanels(){
@@ -677,7 +679,6 @@ svg.addEventListener("click",()=>{        // click empty space: dismiss a pinned
   tipPinned=false; tip.style.opacity=0;
   if(selId){ selId=null; renderPanels(); draw(); }   // clear the spotlight, panels back to champion
 });
-document.addEventListener("click", e=>{ if(seedsMode && !e.target.closest("#seedPill")) setSeedsMode(false); });  // click anywhere clears seeds highlight
 
 // ---- chrome: corner identity + top-middle tournament switcher ----
 const catClass = c => c==="Grand Slam" ? "gs" : "m1000";
@@ -700,19 +701,28 @@ function updateBar(){
   const one = n<2;                                   // hide arrows when there's only one card
   document.getElementById("barPrev").style.visibility = one?"hidden":"visible";
   document.getElementById("barNext").style.visibility = one?"hidden":"visible";
-  positionRankPill();
+  positionBar();
 }
-// keep the ranking pill just to the RIGHT of the centred control bar, whatever its width
-function positionRankPill(){
-  const bar=document.querySelector(".tbar"), rp=document.getElementById("rankPill");
-  if(!bar||!rp) return;
-  const b=bar.getBoundingClientRect(), midY=b.top+b.height/2;
-  rp.style.left = (b.right+12)+"px"; rp.style.top = midY+"px"; rp.style.transform = "translateY(-50%)";
-  let rightEdge = b.right+12+rp.offsetWidth;
-  const tr=document.querySelector(".tinfo-r");                 // drop the (redundant) name only if the pills would hit it
+// flank the centred control bar: ATP pill + Ranking on the left, WTA pill + Ranking on the right
+function positionBar(){
+  const bar=document.querySelector(".tbar"); if(!bar) return;
+  const b=bar.getBoundingClientRect(), midY=b.top+b.height/2, W=innerWidth;
+  const ap=document.getElementById("atpPill"), ar=document.getElementById("atpRank");
+  const wp=document.getElementById("wtaPill"), wr=document.getElementById("wtaRank");
+  [ap,ar,wp,wr].forEach(el=>{ el.style.top=midY+"px"; });
+  // left: ATP pill hugs the bar, its Ranking link sits further out (anchored by right edge, growing left)
+  ap.style.left="auto"; ap.style.right=(W-(b.left-12))+"px";
+  ar.style.left="auto"; ar.style.right=(W-(b.left-12)+ap.offsetWidth+8)+"px";
+  const leftEdge = (b.left-12) - ap.offsetWidth - 8 - ar.offsetWidth;
+  // right: WTA pill hugs the bar, its Ranking link sits further out
+  wp.style.right="auto"; wp.style.left=(b.right+12)+"px";
+  wr.style.right="auto"; wr.style.left=(b.right+12+wp.offsetWidth+8)+"px";
+  const rightEdge = b.right+12+wp.offsetWidth+8+wr.offsetWidth;
+  const tl=document.querySelector(".tinfo-l"), tr=document.querySelector(".tinfo-r");   // hide side info if the clusters would collide
+  if(tl){ const t=tl.getBoundingClientRect(); tl.style.visibility = (leftEdge-10 < t.right) ? "hidden" : "visible"; }
   if(tr){ const t=tr.getBoundingClientRect(); tr.style.visibility = (rightEdge+10 > t.left) ? "hidden" : "visible"; }
 }
-addEventListener("resize", positionRankPill);
+addEventListener("resize", positionBar);
 document.getElementById("seedPill").addEventListener("click", e=>{ e.stopPropagation(); setSeedsMode(!seedsMode); });
 document.getElementById("barPrev").addEventListener("click",()=>loadTournament(cur-1));
 document.getElementById("barNext").addEventListener("click",()=>loadTournament(cur+1));
@@ -748,15 +758,15 @@ function setTour(t, keep){                             // switch the whole draws
   const prev = keep ? TOURNAMENTS[cur] : null;         // remember the current event to stay on it
   tour = t; TOURNAMENTS = (t==="wta") ? WTA_TOURNAMENTS : ATP_TOURNAMENTS;
   document.body.classList.toggle("wta", t==="wta");
-  document.querySelectorAll("#tourseg .tseg").forEach(b=>b.classList.toggle("on", b.dataset.tour===t));
-  const rp=document.getElementById("rankPill");
-  rp.textContent = t==="wta" ? "WTA Ranking" : "ATP Ranking";
-  rp.href = t==="wta" ? "wta.html" : "index.html";
+  document.getElementById("atpPill").classList.toggle("on", t==="atp");
+  document.getElementById("wtaPill").classList.toggle("on", t==="wta");
   let i = prev ? TOURNAMENTS.findIndex(x=> x.short===prev.short || x.name===prev.name) : -1;  // same event on the other tour
   loadTournament(i>=0 ? i : defaultCard());
 }
-document.querySelectorAll("#tourseg .tseg").forEach(b=>
-  b.addEventListener("click", ()=>{ if(b.dataset.tour!==tour) setTour(b.dataset.tour, true); }));
+document.getElementById("atpPill").addEventListener("click", ()=>{ if(tour!=="atp") setTour("atp", true); });
+document.getElementById("wtaPill").addEventListener("click", ()=>{ if(tour!=="wta") setTour("wta", true); });
+try{ seedsMode = localStorage.getItem("draws_seeds")==="1"; }catch(e){}   // restore the seeds toggle
+document.getElementById("seedPill").classList.toggle("on", seedsMode);
 setTour("atp");   // boot on the ATP tour, most recent FINISHED card
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
