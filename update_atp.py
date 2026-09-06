@@ -76,6 +76,16 @@ def transform_tournament(t):
 def transform_entrant(id_, blob, rankrow, racerow):
     h, a = blob["hero"], blob["act"]
     yr = next((x for x in (a.get("Activity") or []) if str(x.get("EventYear")) == "2026"), {})
+    # Career totals must come from the `/all` activity variant — the `/2026` response is
+    # year-scoped and its *Total fields just repeat that season (see WEEKLY_UPDATE.md 1c/1d).
+    all_s = blob.get("all")
+    if not all_s:
+        raise SystemExit(
+            f"entrant {id_}: missing the 'all' career blob.\n"
+            f"  Fetch /en/-/www/activity/sgl/{id_}/all (and .../dbl/{id_}/all) and add them to the\n"
+            f"  entrant payload as 'all' / 'allDbl'. Reading career stats from the /2026 response\n"
+            f"  silently yields career == YTD — see WEEKLY_UPDATE.md step 1c.")
+    all_d = blob.get("allDbl") or {}
     slug_m = re.search(r"/players/([^/]+)/", h.get("ScRelativeUrlPlayerProfile") or "")
     slug = slug_m.group(1) if slug_m else re.sub(r"[^a-z0-9]+", "-", f'{h.get("FirstName","")}-{h.get("LastName","")}'.lower()).strip("-")
     return {
@@ -106,10 +116,11 @@ def transform_entrant(id_, blob, rankrow, racerow):
         "ytdLost": yr.get("Lost", a.get("Lost", 0)),
         "ytdTitles": yr.get("Titles", a.get("Titles", 0)),
         "ytdPrize": money(yr.get("PrizeMoney", a.get("Prize", 0))),
-        "carWon": a.get("WonTotal", 0),
-        "carLost": a.get("LostTotal", 0),
-        "carTitles": a.get("TitlesTotal", 0),
-        "carPrize": money(a.get("PrizeMoneyTotal", 0)),
+        "carWon": all_s.get("Won", 0),
+        "carLost": all_s.get("Lost", 0),
+        "carTitles": all_s.get("Titles", 0),
+        # as atptour.com displays it: singles + doubles ("Singles & Doubles Combined")
+        "carPrize": money((all_s.get("Prize") or 0) + (all_d.get("Prize") or 0)),
         "social": h.get("SocialLinks") or h.get("Social") or [],
         "tournaments": [transform_tournament(t) for t in (yr.get("Tournaments") or [])],
         "raceRank": racerow["raceRank"] if racerow else None,

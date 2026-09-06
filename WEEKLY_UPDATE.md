@@ -24,8 +24,10 @@ Scrape `…/rankings/singles-race-to-turin?rankRange=0-100`. `raceRank` (cell 0)
 
 **c) Entrants** → a tool-result file
 Diff new vs current top-100 (`data/players.json`) for ids not already present. For each
-entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/2026`, return
-`{id:{hero,act}}`. Also grab their gladiator PNG (`/-/media/alias/player-gladiator-headshot/<id>`,
+entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/2026`, **plus
+`/en/-/www/activity/sgl/<id>/all` and `/en/-/www/activity/dbl/<id>/all`** for the career
+totals, and return `{id:{hero,act,all,allDbl}}`. (`update_atp.py` now hard-errors if `all`
+is missing rather than silently writing career == YTD.) Also grab their gladiator PNG (`/-/media/alias/player-gladiator-headshot/<id>`,
 base64 → `img/full/<id>.png`).
 
 **d) Activity (all 100)** → a tool-result file
