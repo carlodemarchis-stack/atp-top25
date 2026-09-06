@@ -1,0 +1,5 @@
+.claude/
+.DS_Store
+
+# scratch copies used for local render verification
+_*.html
