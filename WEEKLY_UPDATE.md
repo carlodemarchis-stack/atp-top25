@@ -33,6 +33,18 @@ For every id in the new top 100, fetch `/en/-/www/activity/sgl/<id>/2026` and tr
 the compact blob (see `update_atp_activity.py` schema). **Name = `EventDisplayName`** (sponsor
 name), NOT `EventName` (generic). Fetch in small batches to stay under the rate limit.
 
+> ⚠️ **Career stats are NOT in the `/2026` response.** That endpoint is *year-scoped*: its
+> `WonTotal` / `LostTotal` / `TitlesTotal` / `PrizeMoneyTotal` fields equal the season values,
+> so reading them yields career == YTD (this shipped as a bug until 2026-09-06 — every ATP card
+> showed its 2026 W-L/titles/prize as the career figures).
+> For the **career** blob (`cw`/`cl`/`ct`/`cp`) fetch the `all` variant instead:
+> * `/en/-/www/activity/sgl/<id>/all` → `Won`, `Lost`, `Titles` = career **singles** totals
+> * career prize money as ATP displays it = **`sgl.Prize` + `dbl.Prize`**, i.e. also fetch
+>   `/en/-/www/activity/dbl/<id>/all` and sum the two `Prize` fields ("Singles & Doubles
+>   Combined" on the player page). Verified: Vukic `v832` → 60-93, $4,087,355 (site: $4,087,354).
+>
+> `tools/fetch_atp_career.js` holds the ready-made in-browser snippet.
+
 ## Step 2 — One command
 
 ```bash
