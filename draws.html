@@ -211,8 +211,8 @@
   .ms-r .who{display:flex; align-items:center; gap:7px; font-size:13.5px; font-weight:700; color:var(--muted); min-width:0}
   .ms-r.w .who{color:var(--ink); font-weight:800}
   .ms-r .who .tick{color:var(--gold); font-size:12px; width:11px}
-  .ms-r .sv{text-align:center; font-size:15px; font-weight:700; color:var(--muted-2); position:relative}
-  .ms-r.w .sv{color:var(--ink); font-weight:800}
+  .ms-r .sv{text-align:center; font-size:15px; font-weight:600; color:var(--muted-2); position:relative}
+  .ms-r .sv.won{color:var(--ink); font-weight:800}          /* bold follows the SET winner */
   .ms-r .sv sup{position:absolute; top:-.2em; left:50%; margin-left:.34em; font-size:8px; font-weight:700; color:var(--muted-2)}
   .ms-dur{font-size:11px; color:var(--muted-2); font-weight:600; margin-top:10px; text-align:right}
   /* "+" — the other AGWAS sport experiences */
@@ -920,7 +920,7 @@ function tournamentStats(tree){
       const wt=String(w.sc[i]??""), lt=String(l.sc[i]??""); if(!wt&&!lt) continue;
       const tb = wt.length>1 || lt.length>1;
       let gw, gl;
-      if(tb){ const wWon=wt.length>1; gw=wWon?7:6; gl=wWon?6:7; }
+      if(tb){ const wWon=wt.length<=1; gw=wWon?7:6; gl=wWon?6:7; }   // the superscript sits on the breaker LOSER
       else { gw=parseInt(wt||"0",10)||0; gl=parseInt(lt||"0",10)||0; }
       games+=gw+gl; if(tb) tbSets++; if(gl>gw) loserSets++;
       const lab = tb? "7-6" : Math.max(gw,gl)+"-"+Math.min(gw,gl);
@@ -966,13 +966,21 @@ function openShowdown(node){
   if(played){
     const n = Math.max(w.sc.length, l.sc.length);
     const cols = `grid-template-columns:1fr repeat(${n},34px)`;
-    const cell = v => { if(v==null||v==="") return '<span class="sv">·</span>'; const s=String(v);
-      return `<span class="sv">${s[0]}${s.length>1?"<sup>"+s.slice(1)+"</sup>":""}</span>`; };
-    const row = (p,win)=>`<div class="ms-r${win?" w":""}" style="${cols}">`+
+    const tok = (p,i)=> (p.sc[i]==null ? "" : String(p.sc[i]));
+    const setWinner = (a,b)=>{                   // which side took this set
+      if(!a && !b) return null;
+      if(a.length>1 || b.length>1) return a.length>1 ? "b" : "a";   // tiebreak set: the superscript marks the LOSER of the breaker
+      const na=parseInt(a,10), nb=parseInt(b,10);
+      if(isNaN(na)||isNaN(nb)) return null;
+      return na>nb ? "a" : (nb>na ? "b" : null);
+    };
+    const cell = (v,won) => { if(!v) return '<span class="sv">·</span>';
+      return `<span class="sv${won?" won":""}">${v[0]}${v.length>1?"<sup>"+v.slice(1)+"</sup>":""}</span>`; };
+    const row = (p,which,win)=>`<div class="ms-r${win?" w":""}" style="${cols}">`+
       `<span class="who"><span class="tick">${win?"&#10003;":""}</span>${p.n}</span>`+
-      p.sc.slice(0,n).concat(Array(Math.max(0,n-p.sc.length)).fill("")).map(cell).join("")+`</div>`;
+      Array.from({length:n},(_,i)=>cell(tok(p,i), setWinner(tok(w,i),tok(l,i))===which)).join("")+`</div>`;
     board = `<div class="ms-board"><div class="ms-r hd" style="${cols}"><span></span>`+
-      Array.from({length:n},(_,i)=>`<span>${i+1}</span>`).join("")+`</div>${row(w,true)}${row(l,false)}</div>`+
+      Array.from({length:n},(_,i)=>`<span>${i+1}</span>`).join("")+`</div>${row(w,"a",true)}${row(l,"b",false)}</div>`+
       (node.dur && /\d/.test(node.dur) ? `<div class="ms-dur">${fmtDur(node.dur)}</div>` : "");
   } else {
     board = `<div class="ms-board"><div class="ms-r" style="grid-template-columns:1fr">`+
@@ -980,7 +988,7 @@ function openShowdown(node){
   }
   document.getElementById("msBody").innerHTML =
     `<div class="ms-round">${roundLabel(node.r, maxR, false)}</div>`+
-    `<div class="ms-when">${TOURNAMENTS[cur].short||TOURNAMENTS[cur].name} &middot; ${TOURNAMENTS[cur].loc}</div>`+
+    `<div class="ms-when">${TOURNAMENTS[cur].short||TOURNAMENTS[cur].name} &middot; ${TOURNAMENTS[cur].loc} &middot; ${TOURNAMENTS[cur].dates}</div>`+
     `<div class="ms-body">${side(w,played)}<div class="ms-vs">VS</div>${side(l,false)}</div>${board}`;
   msOverlay.classList.add("on");
 }
