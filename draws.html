@@ -505,7 +505,7 @@ function loadTournament(i){
   cur = (i + TOURNAMENTS.length) % TOURNAMENTS.length;
   T = TOURNAMENTS[cur].tree;
   rebuild();
-  selId = null; tipPinned = false; if(tip) tip.style.opacity = 0;
+  selId = null; tipPinned = false; openMatch = null; if(tip) tip.style.opacity = 0;
   updateHeader(); updateBar(); renderPanels(); draw(); writeHash();
 }
 function stepPlayer(delta){                              // ↑/↓ through the finishing order
@@ -750,10 +750,7 @@ function draw(){
     g.addEventListener("pointerenter",e=>showTip(n,e));
     g.addEventListener("pointermove",e=>showTip(n,e));
     g.addEventListener("pointerleave",()=>{ if(!tipPinned) tip.style.opacity=0; });   // stays if pinned
-    g.addEventListener("click",e=>{ e.stopPropagation();
-      const deep = n.r>=maxR-2 && n.p.filter(x=>x.id).length===2;     // QF, SF, Final -> the big card
-      if(deep){ tip.style.opacity=0; tipPinned=false; openShowdown(n); return; }
-      tipPinned=true; showTip(n,e); });  // pin the match box
+    g.addEventListener("click",e=>{ e.stopPropagation(); openMatchView(n); });  // remembered in the hash
     svg.appendChild(g);
     addLabel(n);
     (n.c||[]).forEach(drawNodes);
@@ -794,6 +791,7 @@ function surname(n){ const p=n.split(" "); if(p.length===1) return n;
   return /^(van|de|di|del|della|dos|da|von|le)$/i.test(p[p.length-2]) ? p.slice(-2).join(" ") : p[p.length-1]; }
 svg.addEventListener("click",()=>{        // click empty space: dismiss a pinned box AND reset to the champion
   tipPinned=false; tip.style.opacity=0;
+  if(openMatch){ openMatch=null; writeHash(); }
   if(selId){ selId=null; renderPanels(); draw(); writeHash(); }   // clear the spotlight, panels back to champion
 });
 
@@ -995,7 +993,7 @@ function openShowdown(node){
     `<div class="ms-body">${side(w,played)}<div class="ms-vs">VS</div>${side(l,false)}</div>${board}`;
   msOverlay.classList.add("on");
 }
-function closeShowdown(){ msOverlay.classList.remove("on"); }
+function closeShowdown(){ msOverlay.classList.remove("on"); if(openMatch){ openMatch=null; writeHash(); } }
 document.getElementById("msX").addEventListener("click", closeShowdown);
 msOverlay.addEventListener("click", e=>{ if(e.target===msOverlay) closeShowdown(); });
 const moreOverlay=document.getElementById("moreOverlay");
@@ -1073,6 +1071,25 @@ addEventListener("keydown", e=>{
 function lastFinished(){ for(let i=TOURNAMENTS.length-1;i>=0;i--) if(!TOURNAMENTS[i].live) return i; return TOURNAMENTS.length-1; }
 function defaultCard(){ const i=TOURNAMENTS.findIndex(t=>t.live); return i>=0 ? i : lastFinished(); }  // land on the live event when there is one
 // ---- shareable state in the URL hash: #<tour>/<event>, e.g. #wta/us-open ----
+let openMatch = null;                                  // the match currently shown (tooltip pinned or showdown)
+function roundNodes(){                                  // deterministic per-round ordering of the current tree
+  const byR={};
+  (function w(n){ (byR[n.r]=byR[n.r]||[]).push(n); (n.c||[]).forEach(w); })(T);
+  return byR;
+}
+function matchId(n){ const a=roundNodes()[n.r]||[]; const i=a.indexOf(n); return i<0?null:(n.r+"-"+i); }
+function matchById(id){
+  const m=/^(\d+)-(\d+)$/.exec(id||""); if(!m) return null;
+  const a=roundNodes()[+m[1]]||[]; return a[+m[2]]||null;
+}
+function nodeXY(n){ const [x,y]=polar(radiusFor(n.r), n.ang||0); return {clientX:x, clientY:y}; }
+function openMatchView(n){                              // the big card from the QF on, the pinned tooltip before that
+  if(!n) return;
+  openMatch = n;
+  if(n.r>=maxR-2 && n.p.filter(x=>x.id).length===2){ tip.style.opacity=0; tipPinned=false; openShowdown(n); }
+  else { tipPinned=true; showTip(n, nodeXY(n)); }
+  writeHash();
+}
 const tSlug = t => String((t&&(t.short||t.name))||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 function readHash(){                                   // #<tour>/<event>?hl=seeds&p=<playerId>
   const raw = (location.hash||"").replace(/^#/,"");
@@ -1081,13 +1098,14 @@ function readHash(){                                   // #<tour>/<event>?hl=see
   const q = new URLSearchParams(qi>=0 ? raw.slice(qi+1) : "");
   const t = (parts[0]||"").toLowerCase(), hl = (q.get("hl")||"").toLowerCase();
   return { tour: (t==="atp"||t==="wta") ? t : null, slug: (parts[1]||"").trim() || null,
-           hl: (hl==="seeds"||hl==="others") ? hl : null, p: q.get("p") || null };
+           hl: (hl==="seeds"||hl==="others") ? hl : null, p: q.get("p") || null, m: q.get("m") || null };
 }
 function writeHash(){                                  // replaceState: updates the URL without a history entry or a hashchange
   const t = TOURNAMENTS && TOURNAMENTS[cur]; if(!t) return;
   const q = [];                                        // hlMode and selId are mutually exclusive by design
   if(hlMode) q.push("hl="+hlMode);
   if(selId)  q.push("p="+encodeURIComponent(selId));
+  if(openMatch){ const id=matchId(openMatch); if(id) q.push("m="+id); }
   const want = "#"+tour+"/"+tSlug(t) + (q.length ? "?"+q.join("&") : "");
   if(location.hash !== want){ try{ history.replaceState(null, "", want); }catch(e){} }
 }
@@ -1113,6 +1131,7 @@ let bootTour = boot.tour;
 if(!bootTour){ try{ const st=localStorage.getItem("draws_tour"); if(st==="atp"||st==="wta") bootTour=st; }catch(e){} }
 setTour(bootTour||"atp", false, boot.slug);   // hash → last-used tour → ATP
 if(boot.p) selectPlayer(boot.p);              // a shared player link (unknown id is ignored)
+if(boot.m) requestAnimationFrame(()=>openMatchView(matchById(boot.m)));   // after layout, so the tooltip lands on its dot
 addEventListener("hashchange", ()=>{           // back/forward, or a hash pasted into the bar
   const hv = readHash(); if(!hv.tour && !hv.slug) return;
   const wantTour = hv.tour || tour;
@@ -1121,6 +1140,8 @@ addEventListener("hashchange", ()=>{           // back/forward, or a hash pasted
          if(i>=0 && i!==cur) loadTournament(i); }
   if(hv.p) selectPlayer(hv.p);
   else if(hv.hl !== hlMode) setHighlight(hv.hl);
+  if(hv.m) openMatchView(matchById(hv.m));
+  else if(openMatch){ openMatch=null; closeShowdown(); tipPinned=false; tip.style.opacity=0; }
 });
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
