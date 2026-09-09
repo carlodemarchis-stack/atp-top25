@@ -18,7 +18,9 @@
 <meta name="twitter:image" content="https://tennis.aguywithascarf.com/img/og-draws.png?v=2">
 <!-- AGWAS screenshot extension (not read by the browser) — kept in step with the shown draw by updateSocialMeta() -->
 <meta name="agwas:cta" content="ATP US Open — Get the full draw interactive experience at the url below!">
+<meta name="agwas:title" content="Tennis Interactive Experience">
 <meta name="agwas:tags" content="tennis atp dataviz">
+<meta name="agwas:bg" content="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/2019_USTA_NTC_Court_4_and_Ashe.jpg/1920px-2019_USTA_NTC_Court_4_and_Ashe.jpg">
 <meta name="agwas:mentions" content="atptour">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23c9e548'/><path d='M6.5 3.5C12 9 12 23 6.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/><path d='M25.5 3.5C20 9 20 23 25.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -749,12 +751,28 @@ function setMeta(name, content){
   if(!m){ m = document.createElement("meta"); m.setAttribute("name", name); document.head.appendChild(m); }
   m.setAttribute("content", content);
 }
+const COURT_BG = {                      // wide venue shots, Wikimedia Commons; slug matches tSlug()
+  "australian-open":"https://upload.wikimedia.org/wikipedia/commons/a/a8/Rod_Laver_Arena_%288984013705%29.jpg",
+  "canada":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Stade_Jarry.jpg/1920px-Stade_Jarry.jpg",
+  "cincinnati":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Lindner_Family_Tennis_Center_2025.jpg/1920px-Lindner_Family_Tennis_Center_2025.jpg",
+  "indian-wells":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/2013_Indian_Wells_Masters_tennis_court_-_002.jpg/1920px-2013_Indian_Wells_Masters_tennis_court_-_002.jpg",
+  "madrid":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Caja_M%C3%A1gica_exterior.jpg/1920px-Caja_M%C3%A1gica_exterior.jpg",
+  "miami":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Adam_Walton_at_2025_Miami_Open_01.jpg/1920px-Adam_Walton_at_2025_Miami_Open_01.jpg",
+  "monte-carlo":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Terrains_Monte-Carlo_Rolex_Masters_1000.JPG/1920px-Terrains_Monte-Carlo_Rolex_Masters_1000.JPG",
+  "montreal":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Stade_Jarry.jpg/1920px-Stade_Jarry.jpg",
+  "roland-garros":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/ChatrierVide.JPG/1920px-ChatrierVide.JPG",
+  "rome":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Foro_Italico-Campo_Centrale_-_panoramio.jpg/1920px-Foro_Italico-Campo_Centrale_-_panoramio.jpg",
+  "us-open":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/2019_USTA_NTC_Court_4_and_Ashe.jpg/1920px-2019_USTA_NTC_Court_4_and_Ashe.jpg",
+  "wimbledon":"https://upload.wikimedia.org/wikipedia/commons/b/b0/Centre_Court%2C_28_March_2012.jpg"
+};
 function updateSocialMeta(){            // read by the AGWAS screenshot extension, not by the browser
   const t = TOURNAMENTS[cur];
   const stage = (t.live && !champ) ? liveStage() : "";      // only while the event is still running
   setMeta("agwas:cta", `${tour.toUpperCase()} ${t.short||t.name}${stage?" — "+stage:""} — Get the full draw interactive experience at the url below!`);
   setMeta("agwas:tags", `tennis ${tour} dataviz`);
   setMeta("agwas:mentions", tour==="wta" ? "wta" : "atptour");
+  const bg = COURT_BG[tSlug(t)];
+  if(bg) setMeta("agwas:bg", bg);
 }
 function updateBar(){
   const t=TOURNAMENTS[cur], n=TOURNAMENTS.length;
