@@ -614,8 +614,10 @@ function fmtDur(d){ if(!/\d/.test(d)) return "walkover"; const [h,m]=d.split(":"
 function scoreRows(node){
   // pair set scores: winner[i] vs loser[i]; 2-digit like "64" = 6 + tiebreak 4
   const w = node.p.find(p=>p.w), l = node.p.find(p=>!p.w);
-  const sets = Math.max(w.sc.length, l.sc.length);
-  const cell = v => { if(v==null) return '<span class="st">·</span>'; const s=String(v);
+  let sets = Math.max(w.sc.length, l.sc.length);          // the scrape pads unplayed slots with ""
+  while(sets>0 && !String(w.sc[sets-1]??"") && !String(l.sc[sets-1]??"")) sets--;
+  const cell = v => { const s=String(v??"");
+    if(!s) return '<span class="st">·</span>';
     return '<span class="st">'+s[0]+(s.length>1?"<sup>"+s.slice(1)+"</sup>":"")+"</span>"; };
   let ws="", ls="";
   for(let i=0;i<sets;i++){ ws+=cell(w.sc[i]); ls+=cell(l.sc[i]); }
@@ -964,9 +966,10 @@ function openShowdown(node){
     `<div class="ms-nm">${flagEmoji(p.id)?flagEmoji(p.id)+" ":""}${p.n}${p.s?` <span class="sd">(${p.s})</span>`:""}</div></div>`;
   let board = "";
   if(played){
-    const n = Math.max(w.sc.length, l.sc.length);
+    let n = Math.max(w.sc.length, l.sc.length);            // ignore the padded, unplayed slots
+    while(n>0 && !String(w.sc[n-1]??"") && !String(l.sc[n-1]??"")) n--;
     const cols = `grid-template-columns:1fr repeat(${n},34px)`;
-    const tok = (p,i)=> (p.sc[i]==null ? "" : String(p.sc[i]));
+    const tok = (p,i)=> String(p.sc[i]??"");
     const setWinner = (a,b)=>{                   // which side took this set
       if(!a && !b) return null;
       if(a.length>1 || b.length>1) return a.length>1 ? "b" : "a";   // tiebreak set: the superscript marks the LOSER of the breaker
