@@ -228,8 +228,11 @@
   #tip .tav-tbd{background:var(--muted-2)}
   #tip .pn.win{color:var(--gold)}
   #tip .pn.lose{color:var(--muted)}
-  #tip .sc{font-variant-numeric:tabular-nums; font-size:13px; font-weight:700; letter-spacing:.06em}
-  #tip .sc sup{font-size:8px; color:var(--muted-2)}
+  #tip .sc{font-variant-numeric:tabular-nums; font-size:13px; font-weight:700}
+  /* one fixed-width cell per set: the two rows stay column-aligned even when a tiebreak
+     superscript is present, since the sup is taken out of the layout flow */
+  #tip .sc .st{display:inline-block; width:1.15em; text-align:center; position:relative}
+  #tip .sc .st sup{position:absolute; top:-.15em; left:50%; margin-left:.30em; font-size:8px; color:var(--muted-2); font-weight:700}
   #tip .dur{margin-top:7px; font-size:10.5px; color:var(--muted); border-top:1px solid var(--line); padding-top:6px}
   #tip .dur b{color:var(--green); font-variant-numeric:tabular-nums}
   /* clickable player names + selection highlight */
@@ -579,9 +582,10 @@ function scoreRows(node){
   // pair set scores: winner[i] vs loser[i]; 2-digit like "64" = 6 + tiebreak 4
   const w = node.p.find(p=>p.w), l = node.p.find(p=>!p.w);
   const sets = Math.max(w.sc.length, l.sc.length);
-  const cell = v => { if(v==null) return "·"; const s=String(v); return s.length>1 ? s[0]+"<sup>"+s.slice(1)+"</sup>" : s; };
+  const cell = v => { if(v==null) return '<span class="st">·</span>'; const s=String(v);
+    return '<span class="st">'+s[0]+(s.length>1?"<sup>"+s.slice(1)+"</sup>":"")+"</span>"; };
   let ws="", ls="";
-  for(let i=0;i<sets;i++){ ws+=cell(w.sc[i])+" "; ls+=cell(l.sc[i])+" "; }
+  for(let i=0;i<sets;i++){ ws+=cell(w.sc[i]); ls+=cell(l.sc[i]); }
   return {w,l,ws:ws.trim(),ls:ls.trim()};
 }
 function showTip(node, ev){
