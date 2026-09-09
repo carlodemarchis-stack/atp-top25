@@ -491,8 +491,8 @@ function setHighlight(mode){
   document.getElementById("seedPill").classList.toggle("on", mode==="seeds");
   document.getElementById("othPill").classList.toggle("on", mode==="others");
   try{ localStorage.setItem("draws_hl", mode||""); }catch(e){}   // sticky across draws + tours
-  if(mode){ selId=null; renderPanels(); } draw(); }
-function selectPlayer(id){ if(!id||!players[id]) return; if(hlMode) setHighlight(null); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); }
+  if(mode){ selId=null; renderPanels(); } draw(); writeHash(); }
+function selectPlayer(id){ if(!id||!players[id]) return; if(hlMode) setHighlight(null); selId=id; tipPinned=false; tip.style.opacity=0; renderPanels(); draw(); writeHash(); }
 function renderPanels(){
   const p=players[selId||(champ&&champ.id)], L=document.getElementById("pinfo"), R=document.getElementById("pmatch");
   if(!p){ L.classList.remove("on"); R.classList.remove("on"); return; }
@@ -725,7 +725,7 @@ function surname(n){ const p=n.split(" "); if(p.length===1) return n;
   return /^(van|de|di|del|della|dos|da|von|le)$/i.test(p[p.length-2]) ? p.slice(-2).join(" ") : p[p.length-1]; }
 svg.addEventListener("click",()=>{        // click empty space: dismiss a pinned box AND reset to the champion
   tipPinned=false; tip.style.opacity=0;
-  if(selId){ selId=null; renderPanels(); draw(); }   // clear the spotlight, panels back to champion
+  if(selId){ selId=null; renderPanels(); draw(); writeHash(); }   // clear the spotlight, panels back to champion
 });
 
 // ---- chrome: corner identity + top-middle tournament switcher ----
@@ -895,14 +895,21 @@ function lastFinished(){ for(let i=TOURNAMENTS.length-1;i>=0;i--) if(!TOURNAMENT
 function defaultCard(){ const i=TOURNAMENTS.findIndex(t=>t.live); return i>=0 ? i : lastFinished(); }  // land on the live event when there is one
 // ---- shareable state in the URL hash: #<tour>/<event>, e.g. #wta/us-open ----
 const tSlug = t => String((t&&(t.short||t.name))||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
-function readHash(){
-  const parts = decodeURIComponent((location.hash||"").replace(/^#/,"")).split("/");
-  const t = (parts[0]||"").toLowerCase();
-  return { tour: (t==="atp"||t==="wta") ? t : null, slug: (parts[1]||"").trim() || null };
+function readHash(){                                   // #<tour>/<event>?hl=seeds&p=<playerId>
+  const raw = (location.hash||"").replace(/^#/,"");
+  const qi = raw.indexOf("?");
+  const parts = (qi>=0 ? raw.slice(0,qi) : raw).split("/").map(s=>{ try{ return decodeURIComponent(s); }catch(e){ return s; } });
+  const q = new URLSearchParams(qi>=0 ? raw.slice(qi+1) : "");
+  const t = (parts[0]||"").toLowerCase(), hl = (q.get("hl")||"").toLowerCase();
+  return { tour: (t==="atp"||t==="wta") ? t : null, slug: (parts[1]||"").trim() || null,
+           hl: (hl==="seeds"||hl==="others") ? hl : null, p: q.get("p") || null };
 }
 function writeHash(){                                  // replaceState: updates the URL without a history entry or a hashchange
   const t = TOURNAMENTS && TOURNAMENTS[cur]; if(!t) return;
-  const want = "#"+tour+"/"+tSlug(t);
+  const q = [];                                        // hlMode and selId are mutually exclusive by design
+  if(hlMode) q.push("hl="+hlMode);
+  if(selId)  q.push("p="+encodeURIComponent(selId));
+  const want = "#"+tour+"/"+tSlug(t) + (q.length ? "?"+q.join("&") : "");
   if(location.hash !== want){ try{ history.replaceState(null, "", want); }catch(e){} }
 }
 function setTour(t, keep, wantSlug){                   // switch the whole draws set between tours
@@ -918,20 +925,23 @@ function setTour(t, keep, wantSlug){                   // switch the whole draws
 }
 document.getElementById("atpPill").addEventListener("click", ()=>{ if(tour!=="atp") setTour("atp", true); });
 document.getElementById("wtaPill").addEventListener("click", ()=>{ if(tour!=="wta") setTour("wta", true); });
-try{ hlMode = localStorage.getItem("draws_hl") || null; }catch(e){}   // restore the highlight toggle
-if(hlMode!=="seeds" && hlMode!=="others") hlMode=null;
+const boot = readHash();                                   // a shared link wins over what this browser remembers
+hlMode = boot.hl;                                          // highlight: hash first, then the sticky toggle
+if(!hlMode){ try{ const s=localStorage.getItem("draws_hl"); if(s==="seeds"||s==="others") hlMode=s; }catch(e){} }
 document.getElementById("seedPill").classList.toggle("on", hlMode==="seeds");
 document.getElementById("othPill").classList.toggle("on", hlMode==="others");
-const boot = readHash();                                   // a shared link wins over the remembered tour
 let bootTour = boot.tour;
 if(!bootTour){ try{ const st=localStorage.getItem("draws_tour"); if(st==="atp"||st==="wta") bootTour=st; }catch(e){} }
 setTour(bootTour||"atp", false, boot.slug);   // hash → last-used tour → ATP
+if(boot.p) selectPlayer(boot.p);              // a shared player link (unknown id is ignored)
 addEventListener("hashchange", ()=>{           // back/forward, or a hash pasted into the bar
   const hv = readHash(); if(!hv.tour && !hv.slug) return;
   const wantTour = hv.tour || tour;
-  if(wantTour !== tour){ setTour(wantTour, false, hv.slug); return; }
-  const i = hv.slug ? TOURNAMENTS.findIndex(x=> tSlug(x)===hv.slug) : -1;
-  if(i>=0 && i!==cur) loadTournament(i);
+  if(wantTour !== tour){ setTour(wantTour, false, hv.slug); }
+  else { const i = hv.slug ? TOURNAMENTS.findIndex(x=> tSlug(x)===hv.slug) : -1;
+         if(i>=0 && i!==cur) loadTournament(i); }
+  if(hv.p) selectPlayer(hv.p);
+  else if(hv.hl !== hlMode) setHighlight(hv.hl);
 });
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
