@@ -20,6 +20,7 @@
 <meta name="agwas:cta" content="ATP US Open — Get the full draw interactive experience at the url below!">
 <meta name="agwas:title" content="Tennis Interactive Experience">
 <meta name="agwas:tags" content="tennis atp dataviz">
+<meta name="agwas:bg_credit" content="Photo: Beyond My Ken / CC BY-SA 4.0 via Wikimedia Commons">
 <meta name="agwas:bg" content="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/2019_USTA_NTC_Court_4_and_Ashe.jpg/1920px-2019_USTA_NTC_Court_4_and_Ashe.jpg">
 <meta name="agwas:mentions" content="atptour">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23c9e548'/><path d='M6.5 3.5C12 9 12 23 6.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/><path d='M25.5 3.5C20 9 20 23 25.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/></svg>">
@@ -765,14 +766,28 @@ const COURT_BG = {                      // wide venue shots, Wikimedia Commons; 
   "us-open":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/2019_USTA_NTC_Court_4_and_Ashe.jpg/1920px-2019_USTA_NTC_Court_4_and_Ashe.jpg",
   "wimbledon":"https://upload.wikimedia.org/wikipedia/commons/b/b0/Centre_Court%2C_28_March_2012.jpg"
 };
+const COURT_CREDIT = {                  // CC BY / BY-SA require crediting the photographer where published
+  "australian-open":"Photo: Steve Collis from Melbourne, Australia / CC BY 2.0 via Wikimedia Commons",
+  "canada":"Photo: Dirac / Public domain via Wikimedia Commons",
+  "cincinnati":"Photo: RandyFitz / CC0 via Wikimedia Commons",
+  "indian-wells":"Photo: saimad / CC BY-SA 2.0 via Wikimedia Commons",
+  "madrid":"Photo: Alvaro Gandara Astray / CC BY 2.0 via Wikimedia Commons",
+  "miami":"Photo: Vbrunophotog / CC BY-SA 4.0 via Wikimedia Commons",
+  "monte-carlo":"Photo: Domaina / CC BY-SA 3.0 via Wikimedia Commons",
+  "montreal":"Photo: Dirac / Public domain via Wikimedia Commons",
+  "roland-garros":"Photo: Mamiejeanjean / CC BY-SA 3.0 via Wikimedia Commons",
+  "rome":"Photo: Itto Ogami / CC BY 3.0 via Wikimedia Commons",
+  "us-open":"Photo: Beyond My Ken / CC BY-SA 4.0 via Wikimedia Commons",
+  "wimbledon":"Photo: Daniel from United Kingdom / CC BY 2.0 via Wikimedia Commons"
+};
 function updateSocialMeta(){            // read by the AGWAS screenshot extension, not by the browser
   const t = TOURNAMENTS[cur];
   const stage = (t.live && !champ) ? liveStage() : "";      // only while the event is still running
   setMeta("agwas:cta", `${tour.toUpperCase()} ${t.short||t.name}${stage?" — "+stage:""} — Get the full draw interactive experience at the url below!`);
   setMeta("agwas:tags", `tennis ${tour} dataviz`);
   setMeta("agwas:mentions", tour==="wta" ? "wta" : "atptour");
-  const bg = COURT_BG[tSlug(t)];
-  if(bg) setMeta("agwas:bg", bg);
+  const slug = tSlug(t), bg = COURT_BG[slug];
+  if(bg){ setMeta("agwas:bg", bg); setMeta("agwas:bg_credit", COURT_CREDIT[slug]||""); }
 }
 function updateBar(){
   const t=TOURNAMENTS[cur], n=TOURNAMENTS.length;
