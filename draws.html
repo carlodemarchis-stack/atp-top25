@@ -443,7 +443,7 @@ function loadTournament(i){
   T = TOURNAMENTS[cur].tree;
   rebuild();
   selId = null; tipPinned = false; if(tip) tip.style.opacity = 0;
-  updateHeader(); updateBar(); renderPanels(); draw();
+  updateHeader(); updateBar(); renderPanels(); draw(); writeHash();
 }
 function stepPlayer(delta){                              // ↑/↓ through the finishing order
   const base = selId ? order.findIndex(p=>p.id===selId) : 0;
@@ -893,14 +893,27 @@ addEventListener("keydown", e=>{
 
 function lastFinished(){ for(let i=TOURNAMENTS.length-1;i>=0;i--) if(!TOURNAMENTS[i].live) return i; return TOURNAMENTS.length-1; }
 function defaultCard(){ const i=TOURNAMENTS.findIndex(t=>t.live); return i>=0 ? i : lastFinished(); }  // land on the live event when there is one
-function setTour(t, keep){                             // switch the whole draws set between tours
+// ---- shareable state in the URL hash: #<tour>/<event>, e.g. #wta/us-open ----
+const tSlug = t => String((t&&(t.short||t.name))||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+function readHash(){
+  const parts = decodeURIComponent((location.hash||"").replace(/^#/,"")).split("/");
+  const t = (parts[0]||"").toLowerCase();
+  return { tour: (t==="atp"||t==="wta") ? t : null, slug: (parts[1]||"").trim() || null };
+}
+function writeHash(){                                  // replaceState: updates the URL without a history entry or a hashchange
+  const t = TOURNAMENTS && TOURNAMENTS[cur]; if(!t) return;
+  const want = "#"+tour+"/"+tSlug(t);
+  if(location.hash !== want){ try{ history.replaceState(null, "", want); }catch(e){} }
+}
+function setTour(t, keep, wantSlug){                   // switch the whole draws set between tours
   const prev = keep ? TOURNAMENTS[cur] : null;         // remember the current event to stay on it
   tour = t; TOURNAMENTS = (t==="wta") ? WTA_TOURNAMENTS : ATP_TOURNAMENTS;
   document.body.classList.toggle("wta", t==="wta");
   try{ localStorage.setItem("draws_tour", t); }catch(e){}   // remember the tour across reloads
   document.getElementById("atpPill").classList.toggle("on", t==="atp");
   document.getElementById("wtaPill").classList.toggle("on", t==="wta");
-  let i = prev ? TOURNAMENTS.findIndex(x=> x.short===prev.short || x.name===prev.name) : -1;  // same event on the other tour
+  let i = wantSlug ? TOURNAMENTS.findIndex(x=> tSlug(x)===wantSlug) : -1;                      // event named in the hash
+  if(i<0 && prev) i = TOURNAMENTS.findIndex(x=> x.short===prev.short || x.name===prev.name);   // same event on the other tour
   loadTournament(i>=0 ? i : defaultCard());
 }
 document.getElementById("atpPill").addEventListener("click", ()=>{ if(tour!=="atp") setTour("atp", true); });
@@ -909,8 +922,17 @@ try{ hlMode = localStorage.getItem("draws_hl") || null; }catch(e){}   // restore
 if(hlMode!=="seeds" && hlMode!=="others") hlMode=null;
 document.getElementById("seedPill").classList.toggle("on", hlMode==="seeds");
 document.getElementById("othPill").classList.toggle("on", hlMode==="others");
-let bootTour="atp"; try{ const st=localStorage.getItem("draws_tour"); if(st==="atp"||st==="wta") bootTour=st; }catch(e){}
-setTour(bootTour);   // boot on the tour last used (defaults to ATP)
+const boot = readHash();                                   // a shared link wins over the remembered tour
+let bootTour = boot.tour;
+if(!bootTour){ try{ const st=localStorage.getItem("draws_tour"); if(st==="atp"||st==="wta") bootTour=st; }catch(e){} }
+setTour(bootTour||"atp", false, boot.slug);   // hash → last-used tour → ATP
+addEventListener("hashchange", ()=>{           // back/forward, or a hash pasted into the bar
+  const hv = readHash(); if(!hv.tour && !hv.slug) return;
+  const wantTour = hv.tour || tour;
+  if(wantTour !== tour){ setTour(wantTour, false, hv.slug); return; }
+  const i = hv.slug ? TOURNAMENTS.findIndex(x=> tSlug(x)===hv.slug) : -1;
+  if(i>=0 && i!==cur) loadTournament(i);
+});
 try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
 addEventListener("load", ()=>requestAnimationFrame(draw));
