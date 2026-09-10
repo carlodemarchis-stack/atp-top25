@@ -186,7 +186,7 @@
   .sbar .fill{display:block; height:100%; background:var(--blue); border-radius:5px; min-width:2px}
   .sbar .n{text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); font-weight:700}
   .stats-note{font-size:10px; color:var(--muted-2); margin-top:16px; line-height:1.4}
-  /* ---- showdown card: QF onward, standing cut-outs + a proper scoreboard ---- */
+  /* ---- showdown card: any match, standing cut-outs + a proper scoreboard ---- */
   .ms-card{position:relative; background:var(--panel); border:1px solid var(--line); border-radius:20px;
     width:min(680px, calc(100% - 40px)); max-height:calc(100% - 40px); overflow:auto; padding:20px 24px 22px;
     box-shadow:0 30px 90px rgba(30,50,90,.30); color:var(--ink)}
@@ -275,6 +275,11 @@
   .pinfo{top:80px; left:24px; width:158px}
   .pmatch{top:80px; right:24px; width:208px}
   .pf-top{display:flex; align-items:center; gap:12px}
+  a.pf-link{display:block; text-decoration:none; color:inherit; cursor:pointer}   /* top-100 player → their card */
+  a.pf-link .pf-photo img, a.pf-link .pf-mono{transition:transform .15s}
+  a.pf-link:hover .pf-photo img, a.pf-link:hover .pf-mono{transform:translateY(-2px)}
+  a.pf-link:hover .nm, a.pf-link:hover .pf-arw{color:var(--blue)}
+  .pf-arw{font-size:11px; font-weight:700; color:var(--muted-2); margin-left:5px; white-space:nowrap}
   .pf-photo{position:relative; width:58px; height:58px; flex:0 0 58px}
   .pf-mono{width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:21px; font-weight:800; color:#fff; box-shadow:0 5px 16px rgba(30,50,90,.20)}
@@ -368,7 +373,7 @@
       <li><span class="ic">SWITCH</span><span>Change tournament with the <b>&lsaquo; &rsaquo;</b> arrows, a <b>pip</b>, or the <b>&larr; &rarr;</b> keys. Gold pips are Grand Slams, blue are Masters 1000, in calendar order.</span></li>
       <li><span class="ic">COLOUR</span><span>Each player keeps one colour from their first match until they lose. The champion's run runs <b>gold</b> all the way to the centre.</span></li>
       <li><span class="ic">PLAYER</span><span>Click any <b>name</b> — or press <b>&uarr; &darr;</b> to step through the finishing order. Their run lights up; the panels show photo, seed, result, who they lost to, W&ndash;L for matches / sets / games, and every match played.</span></li>
-      <li><span class="ic">MATCH</span><span><b>Hover</b> a dot for the scoreline; <b>click</b> a dot to pin that box open.</span></li>
+      <li><span class="ic">MATCH</span><span><b>Hover</b> a dot for the scoreline; <b>click</b> it for the full match card.</span></li>
       <li><span class="ic">RESET</span><span>Click empty space to clear the selection and return to the champion.</span></li>
     </ul>
     <button class="gotit" onclick="closeHelp()">Got it</button>
@@ -560,13 +565,15 @@ function renderPanels(){
   const p=players[selId||(champ&&champ.id)], L=document.getElementById("pinfo"), R=document.getElementById("pmatch");
   if(!p){ L.classList.remove("on"); R.classList.remove("on"); return; }
   const col=colorOf[p.id]||"#2f6fd0", s=playerSummary(p);
-  L.innerHTML = `<div class="pf-top">
+  const rk = RANK[p.id];                                    // in the current top 100 → link the photo + name to their card
+  const href = rk ? (tour==="atp"?"index.html":"wta.html")+"#"+(rk<=10 ? rk-1 : rk+1) : null;   // card index: the chart + race cards sit after the top 10
+  L.innerHTML = `${href?`<a class="pf-link" href="${href}" title="Open ${p.name}&#39;s card">`:""}<div class="pf-top">
       <div class="pf-photo"><div class="pf-mono" style="background:${col}">${initials(p.name)}</div>
         ${tour==="atp"
             ? `<img alt="" src="https://www.atptour.com/-/media/alias/player-headshot/${p.id}" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'">`
             : `<img alt="" class="wtaface" src="img/wta/${p.id}.png" onerror="this.remove()" onload="this.previousElementSibling.style.visibility='hidden'">`}</div>
-      <div class="pf-id"><div class="nm">${(f=>f?`<span class="pf-fl">${f}</span>`:"")(flagEmoji(p.id))}${p.name}</div><div class="sd">${seedLabel(p.seed)}</div></div>
-    </div>
+      <div class="pf-id"><div class="nm">${(f=>f?`<span class="pf-fl">${f}</span>`:"")(flagEmoji(p.id))}${p.name}${href?`<span class="pf-arw">&#8599;</span>`:""}</div><div class="sd">${seedLabel(p.seed)}</div></div>
+    </div>${href?`</a>`:""}
     <div class="pf-stats">
       ${(TOURNAMENTS[cur].live && RANK[p.id]) ? `<div class="st"><span class="k">Ranking</span><span class="v">#${RANK[p.id]}</span></div>` : ""}
       <div class="st"><span class="k">Result</span><span class="v ${s.result.gold?"gold":""}">${s.result.t}</span></div>
@@ -1083,10 +1090,10 @@ function matchById(id){
   const a=roundNodes()[+m[1]]||[]; return a[+m[2]]||null;
 }
 function nodeXY(n){ const [x,y]=polar(radiusFor(n.r), n.ang||0); return {clientX:x, clientY:y}; }
-function openMatchView(n){                              // the big card from the QF on, the pinned tooltip before that
+function openMatchView(n){                              // the big card for any match with two named players, the pinned tooltip otherwise
   if(!n) return;
   openMatch = n;
-  if(n.r>=maxR-2 && n.p.filter(x=>x.id).length===2){ tip.style.opacity=0; tipPinned=false; openShowdown(n); }
+  if(n.p.filter(x=>x.id).length===2){ tip.style.opacity=0; tipPinned=false; openShowdown(n); }
   else { tipPinned=true; showTip(n, nodeXY(n)); }
   writeHash();
 }
