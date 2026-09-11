@@ -7,7 +7,7 @@ s = json.load(open("atp_sched.json"))
 pair = {}
 for m in s["matches"]:
     a, b = m["ids"]
-    pair[frozenset([a, b])] = f'{s["date"]} · {m["time"]} · {m["court"]}'
+    pair[frozenset([a, b])] = " · ".join(p for p in (s["date"], m["time"], m["court"]) if p)   # the site gives a time only to the first match on a court
 
 h = open(F).read()
 key = "const TREE_USO = "; i = h.index(key) + len(key)
