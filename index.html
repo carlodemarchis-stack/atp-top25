@@ -414,7 +414,13 @@
   .duel.top .dmeet{color:var(--gold)}
   /* two figures facing a central scoreline */
   .dbody{display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:2px}
-  .dside{display:flex; flex-direction:column; align-items:center; min-width:0; flex:1}
+  .dside{display:flex; flex-direction:column; align-items:center; min-width:0; flex:1;
+    cursor:pointer; text-decoration:none; color:inherit; border-radius:10px;
+    transition:transform .13s ease, filter .13s ease}
+  .dside:hover{transform:translateY(-3px)}
+  .dside:hover .dname{color:var(--gold)}
+  .dside:hover .dfig{filter:drop-shadow(0 0 18px rgba(242,193,78,.45)) drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+  .dside:focus-visible{outline:2px solid var(--gold); outline-offset:3px}
   .dfig{width:100%; aspect-ratio:var(--figAR,379/603); height:auto; max-height:clamp(120px,30vh,340px);
     object-fit:contain; object-position:bottom center; display:block;
     filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
@@ -1180,10 +1186,12 @@ function rivalryPairs(limit){
     });
 }
 function duelSide(p,won,lost){
-  return `<div class="dside${won?" win":(lost?" lose":"")}">
+  return `<a class="dside${won?" win":(lost?" lose":"")}" role="button" tabindex="0"
+     title="Go to ${esc(p.first?p.first+" "+p.last:p.last)}'s card"
+     onclick="jumpToPlayer(${p.rank});return false;">
     <img class="dfig" loading="lazy" alt="" src="${T.imgBase}${p.id}.png">
     <div class="dname">${esc(p.last)}<span class="dr">#${p.rank}</span></div>
-  </div>`;
+  </a>`;
 }
 function rivalryCard(){
   const rows=rivalryPairs(10);
