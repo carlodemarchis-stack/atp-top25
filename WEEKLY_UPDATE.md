@@ -103,3 +103,21 @@ player's card: a stale RANK map sends people to the wrong card (or drops the lin
 new entrant).
 
 GitHub Pages redeploys in ~1–2 min. Nothing else to touch.
+
+---
+
+## Dropping in a player photo by hand
+
+Five WTA players have no `full-body` cutout upstream (see `data/wta_images_kind.json`
+for who, and the URL of the head-only shot where one exists). To supply one yourself:
+
+* save it as **`img/wta/<playerId>.png`** — e.g. `img/wta/327845.png` for Snigur
+* **transparent background**, roughly 640px wide, torso crop (head to waist), subject centred
+
+`download_wta_images.py` will not overwrite it: it only writes the purple placeholder over
+nothing or over another placeholder, and reports `+ N hand-added kept`. Players who *do*
+have an upstream cutout are still refreshed each week, so replacing one of those by hand
+will not stick.
+
+ATP is the same idea — `img/full/<playerId>.png`, though there the gladiator cutouts are
+379x603 and three current entrants only have a 300x300 circular headshot.

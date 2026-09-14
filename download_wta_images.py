@@ -22,7 +22,18 @@ def placeholder():
     return im.filter(ImageFilter.GaussianBlur(1))
 
 ph = placeholder()
-ok = miss = 0
+_buf = io.BytesIO(); ph.save(_buf, format="PNG")
+PH_BYTES = _buf.getvalue()          # every generated placeholder is byte-identical
+
+def is_placeholder(path):
+    """True if the file on disk is one we generated (so it is safe to overwrite)."""
+    try:
+        with open(path, "rb") as fh:
+            return fh.read() == PH_BYTES
+    except OSError:
+        return False
+
+ok = miss = kept = 0
 for pid, url in imgs.items():
     dest = os.path.join(OUT, f"{pid}.png")
     if url:
@@ -36,6 +47,14 @@ for pid, url in imgs.items():
             continue
         except Exception as e:
             print(f"  ! {pid}: {e}")
+    # No cutout upstream. Never clobber a hand-sourced image dropped in here by
+    # someone — only (re)write the placeholder over nothing, or over another placeholder.
+    if os.path.exists(dest) and not is_placeholder(dest):
+        kept += 1
+        continue
     ph.save(dest)
     miss += 1
-print(f"✓ {ok} cutouts + {miss} placeholders -> {OUT}")
+msg = f"✓ {ok} cutouts + {miss} placeholders"
+if kept:
+    msg += f" + {kept} hand-added kept"
+print(f"{msg} -> {OUT}")
