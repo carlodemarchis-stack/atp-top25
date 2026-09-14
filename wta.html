@@ -20,6 +20,13 @@
 <meta name="twitter:title" content="WTA Top 100 — Player Film">
 <meta name="twitter:description" content="An interactive tennis experience by A guy with a scarf (Carlo De Marchis) — the Top 100, as player film.">
 <meta name="twitter:image" content="https://tennis.aguywithascarf.com/img/og-wta.png?v=1">
+<!-- social-capture metadata (the AGWAS Chrome extension reads these); filled per card by updateSocialMeta() -->
+<meta name="agwas:title" content="">
+<meta name="agwas:cta" content="">
+<meta name="agwas:tags" content="">
+<meta name="agwas:mentions" content="">
+<meta name="agwas:bg" content="">
+<meta name="agwas:bg_credit" content="">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23b57bff'/><path d='M6.5 3.5C12 9 12 23 6.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/><path d='M25.5 3.5C20 9 20 23 25.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/></svg>">
 <style>
   :root{
@@ -767,6 +774,9 @@ const CAT = {GS:"Grand Slam","1000":"Masters 1000","500":"ATP 500","250":"ATP 25
 const TOURS={
   atp:{
     imgBase:"img/full/", faceBase:"img/face/", figAR:"379/603",
+    socialTag:"atp", socialMention:"atptour", socialWhat:"Top 100 player film",
+    socialBg:"https://upload.wikimedia.org/wikipedia/commons/a/a8/Rod_Laver_Arena_%288984013705%29.jpg",
+    socialBgCredit:"Photo: Steve Collis from Melbourne, Australia / CC BY 2.0 via Wikimedia Commons",
     moneyNote:"The 25 biggest 2026 on-court earners among the ATP Top 100 — ranked by prize money, not by ATP ranking (shown as #). A big season can lift a lower-ranked player above higher-ranked ones: Hurkacz (#71), Fery (#37) and Etcheverry (#31) all out-earned much of the Top 25.",
     rivalSub:"Head to Head · Most Played · 2026 Season",
     rivalNote:"The pairs who met most often in 2026 among the ATP Top 100, with the head-to-head record between them. Ties on meetings are broken by combined ranking.",
@@ -785,6 +795,9 @@ const TOURS={
   },
   wta:{
     imgBase:"img/wta/", faceBase:"img/wta/", figAR:"790/740",
+    socialTag:"wta", socialMention:"wta", socialWhat:"Top 100 player film",
+    socialBg:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/ChatrierVide.JPG/1920px-ChatrierVide.JPG",
+    socialBgCredit:"Photo: Mamiejeanjean / CC BY-SA 3.0 via Wikimedia Commons",
     moneyNote:"The 25 biggest 2026 on-court earners among the WTA Top 100 — ranked by prize money, not by WTA ranking (shown as #). A deep run at the majors and the WTA 1000s can lift a lower-ranked player well above higher-ranked ones.",
     rivalSub:"Head to Head · Most Played · 2026 Season",
     rivalNote:"The pairs who met most often in 2026 among the WTA Top 100, with the head-to-head record between them. Ties on meetings are broken by combined ranking.",
@@ -1317,6 +1330,50 @@ const saveState=()=>{ const v=document.body.dataset.view;
 let countryFilter=null;
 const playerCardIdx=p=> p.rank<=10 ? p.rank-1 : p.rank+1;   // rank -> card index (two charts after rank 10)
 const countryIdxs=()=> DATA.players.filter(p=> countryFilter==="__neutral__" ? T.neutralNames.includes(p.country) : p.country===countryFilter).map(playerCardIdx).sort((a,b)=>a-b);
+
+// ---- social-capture metadata: keep agwas:* in step with the card on screen ----
+// go() is the one choke point every navigation passes through, so this hangs off it.
+const CARD_PLAYER = {};                       // card index -> player (inverse of playerCardIdx)
+players.forEach(p=>{ CARD_PLAYER[p.rank<=10 ? p.rank-1 : p.rank+1]=p; });
+const igHandle = p => {
+  const s=(p.social||[]).find(x=>x.SocialId==="IG");
+  const m=s && /instagram\.com\/([A-Za-z0-9._]+)/i.exec(s.SocialLink||"");
+  return m ? m[1] : "";
+};
+const setMeta = (name,val) => {
+  const el=document.querySelector(`meta[name="${name}"]`);
+  if(el) el.setAttribute("content", val||"");
+};
+function updateSocialMeta(){
+  const card=track.children[idx];
+  if(!card) return;
+  const TOUR=T.socialTag.toUpperCase();
+  const p=CARD_PLAYER[idx];
+  let title, cta, tags=["tennis", T.socialTag, "dataviz"], mentions=[T.socialMention];
+  if(p && card.querySelector(".nameline")){
+    const full=`${p.first||""} ${p.last}`.trim();
+    title = `${full} · ${TOUR} #${p.rank}`;
+    cta   = `${TOUR} #${p.rank} ${full} — Get the full ${T.socialWhat} at the url below!`;
+    const tag=(p.last||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    if(tag) tags.push(tag);
+    const ig=igHandle(p);
+    if(ig) mentions.push(ig);
+  } else {
+    // stat card — take its own headline rather than duplicating the copy here
+    const h=card.querySelector(".ch-t");
+    const head=(h&&h.textContent.trim())||"";
+    title = head ? `${head} · ${TOUR}` : `${TOUR} ${T.socialWhat}`;
+    cta   = `${TOUR} ${head||T.socialWhat} — Get the full ${T.socialWhat} at the url below!`;
+    const tag=head.toLowerCase().replace(/[^a-z0-9]+/g,"");
+    if(tag) tags.push(tag);
+  }
+  setMeta("agwas:title", title);
+  setMeta("agwas:cta", cta);
+  setMeta("agwas:tags", tags.join(" "));
+  setMeta("agwas:mentions", mentions.join(","));
+  setMeta("agwas:bg", T.socialBg);
+  setMeta("agwas:bg_credit", T.socialBgCredit);
+}
 const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*100}%)`;
   const cur=track.children[idx];
   if(cur) requestAnimationFrame(()=>fitOneName(cur.querySelector(".nameline")));   // fit name once card is on-screen
@@ -1326,7 +1383,7 @@ const go=i=>{ idx=(i+nCards)%nCards; track.style.transform=`translateX(${-idx*10
   resetTSel();               // clear keyboard tournament selection on card change
   if(minihdr) minihdr.classList.remove("show");
   document.body.classList.remove("mini-on");
-  document.getElementById("cnum").textContent=idx+1; saveState(); };
+  document.getElementById("cnum").textContent=idx+1; saveState(); updateSocialMeta(); };
 const stepCountry=dir=>{ const a=countryIdxs(); if(!a.length) return false;
   let t = dir>0 ? a.find(i=>i>idx) : [...a].reverse().find(i=>i<idx);
   if(t===undefined) t = dir>0 ? a[0] : a[a.length-1];
@@ -1544,6 +1601,7 @@ function updateMini(card){
   requestAnimationFrame(()=>{ track.style.transition=prev||""; });
   if(m[3]!==undefined && players[+m[3]] && (players[+m[3]].tournaments||[])[+m[4]]) openTourn(+m[3], +m[4]);
 })();
+updateSocialMeta();   // go() covers every later move; a plain load with no hash never calls it
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c01d46521c74402daf5c57d7a82bba9b"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
