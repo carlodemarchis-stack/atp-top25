@@ -1335,11 +1335,6 @@ const countryIdxs=()=> DATA.players.filter(p=> countryFilter==="__neutral__" ? T
 // go() is the one choke point every navigation passes through, so this hangs off it.
 const CARD_PLAYER = {};                       // card index -> player (inverse of playerCardIdx)
 players.forEach(p=>{ CARD_PLAYER[p.rank<=10 ? p.rank-1 : p.rank+1]=p; });
-const igHandle = p => {
-  const s=(p.social||[]).find(x=>x.SocialId==="IG");
-  const m=s && /instagram\.com\/([A-Za-z0-9._]+)/i.exec(s.SocialLink||"");
-  return m ? m[1] : "";
-};
 const setMeta = (name,val) => {
   const el=document.querySelector(`meta[name="${name}"]`);
   if(el) el.setAttribute("content", val||"");
@@ -1349,6 +1344,8 @@ function updateSocialMeta(){
   if(!card) return;
   const TOUR=T.socialTag.toUpperCase();
   const p=CARD_PLAYER[idx];
+  // mentions stay the tour account only — players are deliberately not auto-tagged,
+  // even though 93 of 100 ATP records carry an Instagram handle.
   let title, cta, tags=["tennis", T.socialTag, "dataviz"], mentions=[T.socialMention];
   if(p && card.querySelector(".nameline")){
     const full=`${p.first||""} ${p.last}`.trim();
@@ -1356,8 +1353,6 @@ function updateSocialMeta(){
     cta   = `${TOUR} #${p.rank} ${full} — Get the full ${T.socialWhat} at the url below!`;
     const tag=(p.last||"").toLowerCase().replace(/[^a-z0-9]/g,"");
     if(tag) tags.push(tag);
-    const ig=igHandle(p);
-    if(ig) mentions.push(ig);
   } else {
     // stat card — take its own headline rather than duplicating the copy here
     const h=card.querySelector(".ch-t");
