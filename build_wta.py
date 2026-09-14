@@ -111,11 +111,21 @@ def parse_profile(id_, full_name):
     out["coach"] = mc.group(1).strip() if mc else ""
     ma = re.search(r'"addressLocality":\s*"([^"]+)"', txt)
     out["birthCity"] = ma.group(1).strip() if ma else ""
-    # torso / hero cutout image
-    mi = re.search(r'https://photoresources\.wtatennis\.com/[^"\']*?(?:Torso|Headshot|Hero|Full)[^"\']*?_?%s[^"\']*\.png[^"\']*' % id_, txt)
-    if not mi:
-        mi = re.search(r'https://photoresources\.wtatennis\.com/photo-resources/[^"\']*%s[^"\']*\.png[^"\']*' % id_, txt)
-    out["img"] = mi.group(0) if mi else ""
+    # Hero image. Read the site's own header block rather than guessing at filenames: it
+    # classifies the asset for us — "full-body" is the transparent torso cutout the cards
+    # want, "head-only" is an opaque headshot photo, "has-placeholder" means none exists.
+    # (Filename patterns are unreliable: Claire Liu's cutout is "oxUnYHGH.png", no id, and
+    # several head-only shots are "<id>.jpg" — an id/.png rule gets both cases backwards.)
+    out["img"], out["imgKind"] = "", "none"
+    mb = re.search(r'class="profile-header__headshot-wrap player-headshot([^"]*)"', txt)
+    if mb:
+        cls = mb.group(1)
+        out["imgKind"] = ("full-body" if "full-body" in cls
+                          else "head-only" if "head-only" in cls else "none")
+        msrc = re.search(r'srcset="(https://photoresources\.wtatennis\.com/[^"\s,]+)',
+                         txt[mb.start():mb.start() + 1500])
+        if msrc and out["imgKind"] != "none":
+            out["img"] = msrc.group(1)
     return out
 
 def build_tournaments(matches):
@@ -244,6 +254,7 @@ def build_player(row, race):
         "_raceSum": race2026,
         "tournaments": tournaments,
         "_img": prof.get("img",""),
+        "_imgKind": prof.get("imgKind","none"),
     }
     return obj
 
@@ -288,7 +299,12 @@ def main():
         p.pop("_raceSum", None)
 
     # image url manifest (downloaded separately)
-    imgs = {p["id"]: p.pop("_img","") for p in players}
+    # Only the transparent "full-body" torso belongs on a card; keep the head-only URL in
+    # the manifest (as a {url, kind} pair) so it is there if we ever want it, but do not
+    # feed an opaque headshot to the downloader.
+    kinds = {p["id"]: p.pop("_imgKind", "none") for p in players}
+    raw   = {p["id"]: p.pop("_img", "") for p in players}
+    imgs  = {i: (raw[i] if kinds[i] == "full-body" else "") for i in raw}
     data = {"tour": "wta", "ranking_date": AT, "players": players}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as fh:
@@ -299,10 +315,16 @@ def main():
     # diagnostics
     miss_flag = sorted({p["country"] for p in players if p.get("country") and p["country"] not in FLAG_KEYS})
     miss_img = [p["id"] for p in players if not imgs.get(p["id"])]
+    head_only = [(p["rank"], p["last"]) for p in players if kinds.get(p["id"]) == "head-only"]
+    no_photo  = [(p["rank"], p["last"]) for p in players if kinds.get(p["id"]) == "none"]
     miss_bio = [(p["rank"], p["last"]) for p in players if not p.get("heightFt")]
     print(f"✓ wrote {OUT}  ({os.path.getsize(OUT)//1024} KB, {len(players)} players)")
     print(f"  countries not in FLAG map: {miss_flag}")
-    print(f"  players without image: {len(miss_img)} {miss_img[:12]}")
+    print(f"  players without a full-body cutout: {len(miss_img)}")
+    print(f"    head-only photo on wtatennis (usable, but opaque): {head_only}")
+    print(f"    no photo at all: {no_photo}")
+    with open(os.path.join(os.path.dirname(OUT), "wta_images_kind.json"), "w") as fh:
+        json.dump({i: {"url": raw[i], "kind": kinds[i]} for i in raw}, fh, indent=1)
     print(f"  players without bio height: {len(miss_bio)} {miss_bio[:12]}")
 
 # template FLAG keys (to flag any country needing a map addition)
