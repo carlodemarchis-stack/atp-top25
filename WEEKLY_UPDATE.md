@@ -14,13 +14,32 @@ four fetch files exist, **one command** does everything else.
 Run these in the browser console / `javascript_tool`. Save the outputs as noted.
 
 **a) Rankings** → `scratchpad/atp/new_rankings.json`
-Scrape `…/rankings/singles?rankRange=0-100`. Per row: `id` (from the player link), `rank`
-(cell 0), `pointsFmt` (cell 2 — **not** cell 3, that's "points dropping"), `cc` (flag `use`).
-Confirm the newest date option equals the target Monday.
+Scrape `table.desktop-table` on `…/rankings/singles?rankRange=0-100`. Per row: `id` (from the
+player link), plus these `td` indices — **read the header row first, the layout moves**:
+
+| td | column | use as |
+|----|--------|--------|
+| 0 | Rank | `rank` |
+| 1 | Player | name |
+| 2 | Age | — |
+| 3 | Official Points | `pointsFmt` |
+| 4 | +/- | `delta` → `ptsMove` (weekly points swing, e.g. `-1300`) |
+| 5 | Tourn Played | — |
+| 6 | Dropping | — |
+| 7 | Next Best | — |
+
+`cc` comes from the row's flag `use`. Confirm the `dateWeek-filter` select's newest option
+equals the target Monday.
+
+> ⚠️ **The table gained an `Age` column** at some point before 2026-09-14, shifting every
+> later index right by one. The old instruction ("points = cell 2") silently yielded *ages*
+> — Sinner 25, Djokovic 39 — which look plausible enough to ship. **Always dump the `thead`
+> and one row before trusting the indices**, and sanity-check that #1 has four figures.
 
 **b) Race** → `scratchpad/atp/new_race.json`
-Scrape `…/rankings/singles-race-to-turin?rankRange=0-100`. `raceRank` (cell 0), `racePoints`
-= **first token** of cell 2 (e.g. `"6,560 +10"` → 6560).
+Scrape `…/rankings/singles-race-to-turin?rankRange=0-100`. Same Age-column shift applies:
+`raceRank` = td 0, `racePoints` = **first token** of **td 4** (Live Points; td 2 is Age,
+td 3 is Current Tournament).
 
 **c) Entrants** → a tool-result file
 Diff new vs current top-100 (`data/players.json`) for ids not already present. For each
@@ -50,8 +69,14 @@ name), NOT `EventName` (generic). Fetch in small batches to stay under the rate 
 ## Step 2 — One command
 
 ```bash
-python3 atp_update.py 2026-08-17 <entrants_tool_result.txt> <activity_tool_result.txt>
+python3 atp_update.py 2026-09-14 <entrants_file> <activity_file>
 ```
+
+> Both files must **start with the JSON**. If the capture wrapped it in `|||S|||…|||E|||`
+> or padded it with `X`s to force a tool-result file, re-emit it first as
+> `[{"text": "<json>"}]` — `raw_decode` the tool-result text (it is a JSON-encoded string
+> with a trailing tab-context note), strip the markers, then dump. See
+> `scratchpad/atp/entrants_clean.json` / `activity_clean.json` from the 2026-09-14 run.
 
 This runs, in order:
 1. `update_atp.py` — overlay rankings + race, swap entrants/exits, set the ranking date.
@@ -69,7 +94,12 @@ Spot-check locally (points for a shuffled top-10 player, an entrant card + photo
 event's calendar winner, Cincinnati/whatever is in progress showing "upcoming"), then:
 
 ```bash
-git add data/players.json index.html img/full/*.png && git commit && git push
+python3 tools/build_ranks.py      # RANK map in draws.html — the draw panel links by rank
+git add data/players.json index.html wta.html draws.html img/full/*.png && git commit && git push
 ```
+
+`build_ranks.py` is **not** optional since the draw's player panel became a link to that
+player's card: a stale RANK map sends people to the wrong card (or drops the link for a
+new entrant).
 
 GitHub Pages redeploys in ~1–2 min. Nothing else to touch.

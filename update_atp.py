@@ -52,6 +52,14 @@ def transform_match(m):
         "stats": m.get("MatchStatsUrl"),
     }
 
+def pts_move(v):
+    """The rankings table's +/- column: weekly points change. "-" (no change) -> None."""
+    try:
+        return int(str(v).replace(",", "").replace("+", ""))
+    except (TypeError, ValueError):
+        return None
+
+
 def transform_tournament(t):
     return {
         "name": t.get("EventName"),
@@ -126,6 +134,7 @@ def transform_entrant(id_, blob, rankrow, racerow):
         "raceRank": racerow["raceRank"] if racerow else None,
         "racePoints": racerow["racePoints"] if racerow else None,
         "points": rankrow["pointsFmt"],
+        "ptsMove": pts_move(rankrow.get("delta")),
     }
 
 def main():
@@ -142,6 +151,7 @@ def main():
         old_rank = p["rank"]            # move = positions gained vs last week (page no longer exposes it)
         p["rank"] = r["rank"]; p["sglRank"] = r["rank"]
         p["points"] = r["pointsFmt"]; p["rankMove"] = old_rank - r["rank"]
+        p["ptsMove"] = pts_move(r.get("delta"))     # weekly points swing, kept for later use
         rc = new_race.get(p["id"])
         if rc:
             p["raceRank"] = rc["raceRank"]; p["racePoints"] = rc["racePoints"]
