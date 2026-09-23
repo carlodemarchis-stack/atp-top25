@@ -976,12 +976,13 @@ function tournamentStats(tree){
     bestUnseeded: bestWonR<0 ? null : { champ: !!unseededChamp, names: unseededChamp?[unseededChamp]:bestNames, stage: unseededChamp?"Champion":roundLabel(bestWonR+1,mR,false) } };
 }
 const OTHER_APPS = [                    // the sibling AGWAS experiences (tennis itself is the Ranking pill up top)
-  {name:"Formula 1", kicker:"A season read lap by lap",     url:"https://f1.aguywithascarf.com/",            acc:"#00d7b6"},
-  {name:"Football",  kicker:"Season towers, top 5 leagues", url:"https://top5.aguywithascarf.com/",          acc:"#2f9e58"},
-  {name:"NFL",       kicker:"Wins up, losses down",         url:"https://nfl.aguywithascarf.com/",           acc:"#4d94e0"},
-  {name:"World Cup", kicker:"Road to the Final",            url:"https://worldcupbracket.aguywithascarf.com/", acc:"#3fbe72"},
-  {name:"PGA TOUR",  kicker:"Season Film",                  url:"https://golf.aguywithascarf.com/",          acc:"#57a34a"},
-  {name:"Athletics", kicker:"World Record Film",            url:"https://athletics.aguywithascarf.com/",     acc:"#d98a3d"}
+  {name:"Formula 1", kicker:"A season read lap by lap", url:"https://f1.aguywithascarf.com/", acc:"#00d7b6"},
+  {name:"Football", kicker:"Season towers, top 5 leagues", url:"https://top5.aguywithascarf.com/", acc:"#2f9e58"},
+  {name:"NFL", kicker:"Wins up, losses down", url:"https://nfl.aguywithascarf.com/", acc:"#4d94e0"},
+  {name:"NBA", kicker:"Season film and towers", url:"https://nba.aguywithascarf.com/", acc:"#e0453f"},
+  {name:"World Cup", kicker:"Road to the Final", url:"https://worldcupbracket.aguywithascarf.com/", acc:"#3fbe72"},
+  {name:"PGA TOUR", kicker:"Season Film", url:"https://golf.aguywithascarf.com/", acc:"#57a34a"},
+  {name:"Athletics", kicker:"World Record Film", url:"https://athletics.aguywithascarf.com/", acc:"#d98a3d"}
 ];
 const msOverlay=document.getElementById("msOverlay");
 function cutoutHTML(p){                                  // standing cut-out, monogram if we have no photo

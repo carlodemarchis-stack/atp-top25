@@ -1412,12 +1412,13 @@ document.getElementById("prev").onclick=()=>{prev(); if(playing) setPlay(true);}
 document.getElementById("restart").onclick=()=>{go(0); if(playing) setPlay(true);};
 document.getElementById("play").onclick=()=>setPlay(!playing);
 const OTHER_APPS=[
-  {n:"Formula 1", k:"A season read lap by lap",     u:"https://f1.aguywithascarf.com/",              c:"#00d7b6"},
-  {n:"Football",  k:"Season towers, top 5 leagues", u:"https://top5.aguywithascarf.com/",            c:"#2f9e58"},
-  {n:"NFL",       k:"Wins up, losses down",         u:"https://nfl.aguywithascarf.com/",             c:"#4d94e0"},
-  {n:"World Cup", k:"Road to the Final",            u:"https://worldcupbracket.aguywithascarf.com/", c:"#3fbe72"},
-  {n:"PGA TOUR",  k:"Season Film",                  u:"https://golf.aguywithascarf.com/",            c:"#57a34a"},
-  {n:"Athletics", k:"World Record Film",            u:"https://athletics.aguywithascarf.com/",       c:"#d98a3d"}
+  {n:"Formula 1", k:"A season read lap by lap", u:"https://f1.aguywithascarf.com/", c:"#00d7b6"},
+  {n:"Football", k:"Season towers, top 5 leagues", u:"https://top5.aguywithascarf.com/", c:"#2f9e58"},
+  {n:"NFL", k:"Wins up, losses down", u:"https://nfl.aguywithascarf.com/", c:"#4d94e0"},
+  {n:"NBA", k:"Season film and towers", u:"https://nba.aguywithascarf.com/", c:"#e0453f"},
+  {n:"World Cup", k:"Road to the Final", u:"https://worldcupbracket.aguywithascarf.com/", c:"#3fbe72"},
+  {n:"PGA TOUR", k:"Season Film", u:"https://golf.aguywithascarf.com/", c:"#57a34a"},
+  {n:"Athletics", k:"World Record Film", u:"https://athletics.aguywithascarf.com/", c:"#d98a3d"}
 ];
 document.getElementById("moreList").innerHTML=OTHER_APPS.map(a=>
   `<a class="oa" href="${a.u}" target="_blank" rel="noopener noreferrer"><span class="dot" style="background:${a.c}"></span>`+
