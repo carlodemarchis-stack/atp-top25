@@ -717,7 +717,7 @@
 <select class="countrysel" id="countrySel" aria-label="Filter players by country"></select>
 </div>
 <div class="updated" id="updated"></div>
-<div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a></div>
+<div class="topcredit">Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a class="credit-link" onclick="openCredits();return false;">Credits</a><a class="agwas-ver" data-agwas-ver="tennis" href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener"></a></div>
 <div class="minihdr" id="minihdr"><span class="mh-rank"></span><span class="mh-flag"></span><span class="mh-name"></span></div>
 <div class="stage"><div class="track" id="track"></div></div>
 
@@ -748,7 +748,7 @@
   <div class="grow"><span class="k">LEFT</span><span>Every <b>2026 tournament</b> played &mdash; round reached and the points it earned. Click one for the full match-by-match run.</span></div>
   <div class="grow"><span class="k">RIGHT</span><span>The season in numbers, plus career pills: <b>career high</b>, <b>W&ndash;L</b>, <b>titles</b> and <b>prize money</b>.</span></div>
   <div class="grow"><span class="k">FIND</span><span><b>Search</b> a player or filter by <b>country</b> up top; switch <b>ATP / WTA</b>, or open <b>DRAWS</b> for the radial brackets.</span></div>
-</div></div>
+<p class="agwas-rel"><a href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener">Release notes</a> <a class="agwas-ver" data-agwas-ver="tennis" href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener"></a></p></div></div>
 
 <div class="modal" id="modal" hidden>
   <div class="modal__ov"></div>
@@ -1275,7 +1275,7 @@ const cardHtml=players.map((p,i)=>card(p,i));
 const splitAt=players.filter(p=>p.rank<=10).length;   // chart sits right after the top 10
 track.innerHTML=cardHtml.slice(0,splitAt).join("") + chartCard() + raceCard() + cardHtml.slice(splitAt).join("") + moneyCard() + rivalryCard() + calendarCards;
 // per-card credit at the bottom of every page (shown on mobile only)
-const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a onclick="openCredits();return false;">Credits</a>';
+const CREDIT_HTML='Produced with passion by <a href="https://aguywithascarf.substack.com/" target="_blank" rel="noopener noreferrer">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)  ·  <a onclick="openCredits();return false;">Credits</a><a class="agwas-ver" data-agwas-ver="tennis" href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener"></a>';
 [...track.children].forEach(c=>{const host=c.querySelector(".inner")||c.querySelector(".chartwrap")||c;const d=document.createElement("div");d.className="pgcredit";d.innerHTML=CREDIT_HTML;host.appendChild(d);});
 const nCards=track.children.length;
 document.body.dataset.view="tournaments";
@@ -1607,7 +1607,8 @@ function updateMini(card){
 })();
 updateSocialMeta();   // go() covers every later move; a plain load with no hash never calls it
 </script>
-<!-- Umami --><script defer src="https://m.aguywithascarf.com/k.js" data-website-id="b85add36-dd08-4ea0-a8c4-7b7cda112cb6"></script><!-- End Umami -->
+<!-- Umami --><script defer src="https://m.aguywithascarf.com/k.js" data-website-id="b85add36-dd08-4ea0-a8c4-7b7cda112cb6"></script>
+<script defer src="https://dataviz.aguywithascarf.com/ver.js"></script><!-- End Umami -->
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c01d46521c74402daf5c57d7a82bba9b"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
