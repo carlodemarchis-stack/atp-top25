@@ -6,7 +6,7 @@ import time
 import urllib.request, urllib.error, json, re, html, os, sys, unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-AT = "2026-09-21"                          # ranking issue date (matches ATP snapshot); bump each Monday to refresh
+AT = "2026-09-28"                          # ranking issue date; bump each Monday to refresh (the build checks it against rankedAt)
 API = "https://api.wtatennis.com/tennis"
 HDRS = {"account": "wta", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 OUT = os.path.join(os.path.dirname(__file__), "data", "wta_players.json")
@@ -271,6 +271,14 @@ def main():
     print("· rankings …", flush=True)
     ranked = fetch_ranked("rankSingles")[:100]
     print(f"  {len(ranked)} ranked", flush=True)
+    # `at=` does not validate: ask for a week the WTA has not published and the API quietly
+    # serves the latest issue it has. Trust its own rankedAt, never AT, for the label.
+    issued = sorted({(r.get("rankedAt") or "")[:10] for r in ranked if r.get("rankedAt")})
+    if len(issued) != 1:
+        sys.exit(f"! mixed or missing rankedAt in the ranking rows: {issued}")
+    if issued[0] != AT:
+        sys.exit(f"! AT={AT} but the API's latest issue is {issued[0]} — set AT = \"{issued[0]}\" "
+                 f"(the WTA skips Mondays that fall inside a two-week event)")
 
     players = [None] * len(ranked)
     with ThreadPoolExecutor(max_workers=2) as ex:   # gentle: avoid api.wtatennis.com 429 rate-limit
