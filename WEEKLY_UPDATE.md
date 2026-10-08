@@ -6,6 +6,9 @@ four fetch files exist, **one command** does everything else.
 
 > WTA is separate and much simpler — plain `python3 build_wta.py && build_wta_calendar.py &&
 > render.py` (bump `AT` to the Monday date first; it's a public API, no browser).
+> The WTA does **not** publish every Monday — it skips one inside a two-week event (e.g. no
+> 5 Oct 2026 issue, mid-Beijing), and the API answers a missing week with the previous issue.
+> `build_wta.py` checks the rows' `rankedAt` and exits with the real latest date if `AT` is wrong.
 
 ---
 
