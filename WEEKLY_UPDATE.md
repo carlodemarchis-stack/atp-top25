@@ -41,6 +41,13 @@ Scrape `…/rankings/singles-race-to-turin?rankRange=0-100`. Same Age-column shi
 `raceRank` = td 0, `racePoints` = **first token** of **td 4** (Live Points; td 2 is Age,
 td 3 is Current Tournament).
 
+> ⚠️ **This page is the *live* race, and there is no week selector.** If a tournament is
+> running when you scrape (td 3 is filled, td 5 `+/-` is non-zero), the live points already
+> include partial results from it, while the rankings snapshot does not. Store the race *as
+> of the ranking date*: `racePoints = live − td 5 (+/-)`, then re-rank on that. On
+> 2026-10-05 (Shanghai R128 underway) deltas were 10–50 pts; the top 8 was unchanged but 44
+> positions further down swapped. When nothing is running, td 5 is `-` and live = official.
+
 **c) Entrants** → a tool-result file
 Diff new vs current top-100 (`data/players.json`) for ids not already present. For each
 entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/2026`, **plus
