@@ -21,9 +21,16 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGE = os.path.join(HERE, "draws.html")
 
 def load_rounds(path):
-    t = json.load(open(path))[0]["text"]
-    s, _ = json.JSONDecoder().raw_decode(t)          # tool results wrap the JS return value
-    return json.loads(s.split("|||S|||", 1)[1].split("|||E|||", 1)[0])
+    # A single javascript_tool result is one part; a browser_batch result has one part per
+    # action (navigate, wait, …), so look for the part that carries the scrape.
+    for part in json.load(open(path)):
+        t = part.get("text", "")
+        k = t.find('"|||S|||')
+        if k < 0:
+            continue
+        s, _ = json.JSONDecoder().raw_decode(t, k)   # the JS return value, JSON-encoded
+        return json.loads(s.split("|||S|||", 1)[1].split("|||E|||", 1)[0])
+    sys.exit(f"! no |||S||| scrape found in {path}")
 
 def main():
     if len(sys.argv) != 3:
