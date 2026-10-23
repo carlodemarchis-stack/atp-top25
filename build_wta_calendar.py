@@ -3,6 +3,7 @@
 Schedule comes from the tournaments API; the final-four (champion / runner-up /
 semi-finalists) is reconstructed from the top-100 players' own match records
 (matched by tournamentGroup id), exactly like the ATP calendar."""
+import subprocess
 import json, os, re, urllib.request
 from build_wta import CC, fix_name          # reuse the 3-letter -> country-name map + acronym fixup
 
@@ -80,6 +81,17 @@ def reconstruct_final_four(players):
         out[gid] = {**f, "sf": sfs}
     return out
 
+def previous_calendar():
+    """The calendar as last committed. build_wta.py rewrites the data file without a calendar,
+    so by the time this runs the only copy of last week's is in git."""
+    try:
+        out = subprocess.run(["git", "show", "HEAD:data/wta_players.json"], cwd=os.path.dirname(DATA) + "/..",
+                             capture_output=True, text=True, check=True).stdout
+        return json.loads(out).get("calendar") or []
+    except Exception as exc:
+        print(f"  (no previous calendar to carry forward: {exc})")
+        return []
+
 def main():
     data = json.load(open(DATA, encoding="utf-8"))
     sched = fetch_schedule()
@@ -93,6 +105,16 @@ def main():
         if e["cat"] == "WTA Finals":
             e["name"] = "WTA Finals"                 # city shown separately; avoid redundant "… Indian Wells"
         e.pop("gid", None)
+    # The WTA's listing can drop a finished event outright (Oct 2026: Libéma Open and the HSBC
+    # Championships, both played in June, vanished from all 600+ rows). Results never change, so
+    # carry forward any completed event from the last committed calendar that the API forgot.
+    have = {(e["name"], e["start"]) for e in sched}
+    kept = []
+    for e in previous_calendar():
+        if e.get("winner") and (e["name"], e["start"]) not in have:
+            sched.append(e); kept.append(f'{e["name"]} ({e["start"]})')
+    if kept:
+        print(f"  kept {len(kept)} finished event(s) the API no longer lists: {kept}")
     sched.sort(key=lambda e: e["start"])
     data["calendar"] = sched
     json.dump(data, open(DATA, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))

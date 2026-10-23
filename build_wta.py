@@ -6,7 +6,7 @@ import time
 import urllib.request, urllib.error, json, re, html, os, sys, unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-AT = "2026-09-28"                          # ranking issue date; bump each Monday to refresh (the build checks it against rankedAt)
+AT = "2026-10-19"                          # ranking issue date; bump each Monday to refresh (the build checks it against rankedAt)
 API = "https://api.wtatennis.com/tennis"
 HDRS = {"account": "wta", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 OUT = os.path.join(os.path.dirname(__file__), "data", "wta_players.json")
@@ -36,7 +36,7 @@ CC = {
  "ROU":"Romania","COL":"Colombia","CRO":"Croatia","SUI":"Switzerland","GBR":"Great Britain",
  "AUS":"Australia","JPN":"Japan","SRB":"Serbia","SVK":"Slovak Republic","DEN":"Denmark",
  "NED":"Netherlands","BEL":"Belgium","EST":"Estonia","MEX":"Mexico","SLO":"Slovenia",
- "HUN":"Hungary","ARG":"Argentina","AUT":"Austria","POR":"Portugal","SWE":"Sweden",
+ "HUN":"Hungary","ARM":"Armenia","ARG":"Argentina","AUT":"Austria","POR":"Portugal","SWE":"Sweden",
  "NOR":"Norway","FIN":"Finland","BUL":"Bulgaria","LTU":"Lithuania","GEO":"Georgia",
  "IND":"India","THA":"Thailand","EGY":"Egypt","PUR":"Puerto Rico","SVN":"Slovenia","UZB":"Uzbekistan",
  "TPE":"Chinese Taipei","HKG":"Hong Kong","INA":"Indonesia","PHI":"Philippines","RSA":"South Africa",
