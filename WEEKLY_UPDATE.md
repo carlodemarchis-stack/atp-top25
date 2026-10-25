@@ -40,7 +40,8 @@ equals the target Monday.
 > and one row before trusting the indices**, and sanity-check that #1 has four figures.
 
 **b) Race** → `scratchpad/atp/new_race.json`
-Scrape `…/rankings/singles-race-to-turin?rankRange=0-100`. Same Age-column shift applies:
+Scrape `…/rankings/singles-race-to-turin` (plain URL — `?rankRange=0-100` stopped loading on
+2026-10-23; the plain page already lists 100+). Same Age-column shift applies:
 `raceRank` = td 0, `racePoints` = **first token** of **td 4** (Live Points; td 2 is Age,
 td 3 is Current Tournament).
 
@@ -53,17 +54,27 @@ td 3 is Current Tournament).
 
 **c) Entrants** → a tool-result file
 Diff new vs current top-100 (`data/players.json`) for ids not already present. For each
-entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/2026`, **plus
-`/en/-/www/activity/sgl/<id>/all` and `/en/-/www/activity/dbl/<id>/all`** for the career
-totals, and return `{id:{hero,act,all,allDbl}}`. (`update_atp.py` now hard-errors if `all`
+entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/?v=1` (used as
+both `act` and `all`) + `/en/-/www/activity/dbl/<id>/?v=1` (`allDbl`), and return
+`{id:{hero,act,all,allDbl}}` (see the endpoint note under d). (`update_atp.py` now hard-errors if `all`
 is missing rather than silently writing career == YTD.) Also grab their gladiator PNG (`/-/media/alias/player-gladiator-headshot/<id>`,
 base64 → `img/full/<id>.png`).
 
 **d) Activity (all 100)** → a tool-result file
-For every id in the new top 100, fetch `/en/-/www/activity/sgl/<id>/2026` and transform to
+For every id in the new top 100, fetch `/en/-/www/activity/sgl/<id>/?v=1`, take the
+`Activity[]` entry with `EventYear == 2026`, and transform to
 the compact blob (see `update_atp_activity.py` schema). **Name = `EventDisplayName`** (sponsor
 name), NOT `EventName` (generic). Fetch in small batches to stay under the rate limit.
 
+> ⚠️ **Endpoint moved in Oct 2026.** `/activity/sgl/<id>/2026` and `/all` now return the
+> literal `null`. The replacement (found via the network tab of a player's activity page) is
+> **`/en/-/www/activity/sgl/<id>/?v=1`**: one response with *all* years in `Activity[]`
+> (same per-tournament shape, `EventYear` on each year), and top-level `Won`/`Lost`/`Titles`/
+> `Prize` = career singles. Season W-L/titles/prize = that year's `Won`/`Lost`/`Titles`/
+> `PrizeMoney`. `/activity/dbl/<id>/?v=1` top-level `Prize` = career doubles prize.
+> Verified 2026-10-25: Vukic `v832` → 60-95, $4,252,121. The notes below describe the old
+> pair and still hold for the field meanings.
+>
 > ⚠️ **Career stats are NOT in the `/2026` response.** That endpoint is *year-scoped*: its
 > `WonTotal` / `LostTotal` / `TitlesTotal` / `PrizeMoneyTotal` fields equal the season values,
 > so reading them yields career == YTD (this shipped as a bug until 2026-09-06 — every ATP card
