@@ -6,7 +6,7 @@ import time
 import urllib.request, urllib.error, json, re, html, os, sys, unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-AT = "2026-10-19"                          # ranking issue date; bump each Monday to refresh (the build checks it against rankedAt)
+AT = "2026-10-26"                          # ranking issue date; bump each Monday to refresh (the build checks it against rankedAt)
 API = "https://api.wtatennis.com/tennis"
 HDRS = {"account": "wta", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 OUT = os.path.join(os.path.dirname(__file__), "data", "wta_players.json")
