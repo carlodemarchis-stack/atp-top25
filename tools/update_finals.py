@@ -68,7 +68,7 @@ def build_wta(gid=808, year=2026, start=dt.date(2026, 11, 8), utc=-8):
                     # dSeq is an order-of-play number, not always the day: use the local date it was played
                     t = dt.datetime.strptime(lm["MatchTimeStamp"][:19], "%Y-%m-%dT%H:%M:%S") + dt.timedelta(hours=utc)
                     rec["day"] = (t.date() - day0).days
-                elif rec["state"] == "P" and lm.get("ScoreString"):     # on court: player A's side first
+                elif rec["state"] not in ("F", "U", "N", "") and lm.get("ScoreString"):   # on court / suspended: player A's side first
                     rec["live"] = lm["ScoreString"].replace(",", " ")
                 matches.append(rec)
             else:
