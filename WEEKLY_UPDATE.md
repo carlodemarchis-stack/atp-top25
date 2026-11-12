@@ -142,3 +142,12 @@ will not stick.
 
 ATP is the same idea — `img/full/<playerId>.png`, though there the gladiator cutouts are
 379x603 and three current entrants only have a 300x300 circular headshot.
+
+## Year-end Finals card (draws.html → "Finals", both tours)
+
+`python3 tools/update_finals.py` rewrites the `const FINALS = …;` line in draws.html.
+WTA comes straight from api.wtatennis.com (groups, alternates, results, live score, semis, final).
+ATP groups are set in the script; ATP results go in `data/atp_finals_results.json`
+(read the atptour results page in the browser — Cloudflare blocks curl). The format is in the
+script's docstring: winner's score first, day 1 = Sun 15 Nov … 7 = SF, 8 = Final.
+Append `?demo` to the URL to preview the rest of the week played out by seeding.
