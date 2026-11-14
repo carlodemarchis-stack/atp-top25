@@ -88,6 +88,14 @@ def build_wta(gid=808, year=2026, start=dt.date(2026, 11, 8), utc=-8):
             alt = next((x for x in seats if players[x]["alt"]), None)
             if alt:
                 seats.remove(alt); seats.insert(order.index(o), alt)
+        # an alternate who came in mid-group shares the seat of the player they replaced
+        # (the one with fewer than three matches); `subs` maps alternate -> that seat
+        nplayed = lambda x: sum(1 for m in matches if m.get("g") == groups.index(g) and x in (m["a"], m["b"]))
+        for alt in [x for x in seats[4:] if players[x]["alt"]]:
+            orig = next((x for x in seats[:4] if nplayed(x) < 3), None)
+            if orig:
+                seats.remove(alt); g.setdefault("subs", {})[alt] = orig
+                g["note"] = f'{players[orig]["last"]} withdrew after {nplayed(orig)} matches · {players[alt]["last"]} in as alternate'
         g["ids"] = seats
     return {"tour": "wta", "short": "WTA Finals", "name": "WTA Finals", "loc": "Indian Wells", "flag": "🇺🇸",
             "dates": "8–15 Nov", "start": str(start), "utc": utc, "trophy": "Billie Jean King Trophy", "asof": NOW,
