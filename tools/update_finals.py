@@ -10,7 +10,7 @@ ATP  — groups below + seeds from data/players.json (Race order of the eight wh
          {"rr": [{"a": "z355", "b": "s0s1", "day": 1, "w": "a", "score": "6-4 7-6(3)", "dur": "1:32"}],
           "ko": [{"round": 2, "a": "z355", "b": "c0e9", "w": "a", "score": "6-3 6-4"},   # semi-finals
                  {"round": 1, "a": "...", "b": "...", "w": "b", "score": "..."}],         # final
-          "days": {"z355-s0s1": 1}}                                                        # order of play, optional
+          "days": {"z355-j0dz": {"day": 1, "time": "14:00"}}}                              # order of play (Turin time), optional
        day 1 = Sun 15 Nov … day 6 = Fri 20 (round robin), 7 = SF (Sat 21), 8 = Final (Sun 22).
 """
 import datetime as dt, itertools, json, os, re, sys, urllib.request
@@ -128,11 +128,26 @@ def build_atp():
         groups.append(g)
         for n, (a, b) in enumerate(itertools.combinations(ids, 2)):
             k = frozenset((a, b)); r = played.get(k)
-            rec = {"id": f"RR{gi + 1}{n + 1}", "day": (r or {}).get("day") or days.get(k), "state": "F" if r else "N",
+            sch = days.get(k); sch = sch if isinstance(sch, dict) else ({"day": sch} if sch else {})
+            rec = {"id": f"RR{gi + 1}{n + 1}", "day": (r or {}).get("day") or sch.get("day"), "state": "F" if r else "N",
                    "g": gi, "a": a, "b": b}
+            if sch.get("time") and not r:
+                rec["time"] = sch["time"]
             if r:                                        # keep our a/b orientation, map the winner onto it
                 rec.update(w="a" if r[r["w"]] == a else "b", score=r["score"], dur=r.get("dur", ""))
             matches.append(rec)
+        # not yet on the order of play: a group plays every other day and each player once per group day,
+        # so the open days of the two players narrow a match to its possible dates
+        gm = [m for m in matches if m["g"] == gi]
+        known = sorted({m["day"] for m in gm if m["day"]})
+        if known:
+            gdays = [known[0] + 2 * i for i in range(3)]
+            busy = lambda x: {m["day"] for m in gm if m["day"] and x in (m["a"], m["b"])}
+            for m in gm:
+                if not m["day"]:
+                    m["maybe"] = [d for d in gdays if d not in busy(m["a"]) | busy(m["b"])]
+                    if len(m["maybe"]) == 1:                       # only one date left: it is that one
+                        m["day"] = m.pop("maybe")[0]
     ko = [{"id": "SF1", "day": 7, "round": 2}, {"id": "SF2", "day": 7, "round": 2}, {"id": "F", "day": 8, "round": 1}]
     for r in res.get("ko", []):
         slot = next(k for k in ko if k["round"] == r["round"] and "w" not in k)
