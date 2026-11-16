@@ -52,6 +52,11 @@ td 3 is Current Tournament).
 > 2026-10-05 (Shanghai R128 underway) deltas were 10–50 pts; the top 8 was unchanged but 44
 > positions further down swapped. When nothing is running, td 5 is `-` and live = official.
 
+> ⚠️ **After Paris the page shows the *next* year's race** (2026-11-16: Fritz led the 2027
+> Race on 250 from Athens). The 2026 Race closed with Paris, so from then on write `[]` to
+> `new_race.json` — `update_atp.py` keeps every player's stored race, and an entrant simply
+> gets no race tag.
+
 **c) Entrants** → a tool-result file
 Diff new vs current top-100 (`data/players.json`) for ids not already present. For each
 entrant fetch `/en/-/www/players/hero/<id>` + `/en/-/www/activity/sgl/<id>/?v=1` (used as
@@ -86,6 +91,9 @@ name), NOT `EventName` (generic). Fetch in small batches to stay under the rate 
 >   Combined" on the player page). Verified: Vukic `v832` → 60-93, $4,087,355 (site: $4,087,354).
 >
 > `tools/fetch_atp_career.js` holds the ready-made in-browser snippet.
+
+**c + d in one go:** `tools/fetch_atp_week.js` is the ready-to-run capture (entrants + photos +
+all 100 activities), with the export and clean-up steps in its header.
 
 ## Step 2 — One command
 
