@@ -284,6 +284,8 @@ const film = EV.map((e,i)=>i).filter(i=>EV[i].matches.length);
 /* ---------- scene timeline (seconds at 1×) ---------- */
 const R_AT = .72;                // point in a match scene where the result lands
 const MATCH_D = {R128:1.8, R64:1.8, R32:1.8, R16:2.2, QF:2.2, RR:2.4, SF:2.8, F:2.8};
+const HOLD = .8;                 // pause on the final score before the next match
+const setAt = (k,n) => .2 + (n>1 ? k*(.44/(n-1)) : .2);   // when set k of n lands (fraction of the active part)
 const gdist = (a,b) => d3.geoDistance([a.lon,a.lat],[b.lon,b.lat])*6371;
 const scenes = []; let TOTAL = 0;
 const add = (k,d,o={}) => { scenes.push(Object.assign({k,d,t0:TOTAL},o)); TOTAL += d; };
@@ -292,7 +294,7 @@ film.forEach((i,n) => {
   const prev = n>0 ? EV[film[n-1]] : null, km = prev ? gdist(prev,EV[i]) : 0;
   add("fly", prev ? 1.6 + Math.min(2.6, km/3200) : 1.2, {e:i, km, from:n>0 ? film[n-1] : i});
   add("intro", 1.9, {e:i});
-  EV[i].matches.forEach((m,j) => add("match", MATCH_D[m.round]||2.2, {e:i, j}));
+  EV[i].matches.forEach((m,j) => { const a = MATCH_D[m.round]||2.2; add("match", a+HOLD, {e:i, j, a}); });
   add("status", EV[i].title ? 4.6 : EV[i].live ? 4.2 : 2.9, {e:i});
   // a new career-high No. 1 lands with the ranking published the Monday after this event
   const ch = D.careerHigh, nxt = ms(EV[i].end)+DAY, prevEnd = n>0 ? ms(EV[film[n-1]].end)+DAY : 0;
@@ -314,7 +316,7 @@ function statsAt(t){
   const s = Object.assign({}, BASE);
   for(const sc of scenes){
     if(sc.t0 > t) break;
-    const p = clamp((t-sc.t0)/sc.d), e = EV[sc.e];
+    const p = clamp((t-sc.t0)/(sc.a||sc.d)), e = EV[sc.e];
     if(sc.k==="intro") s.ev++;
     if(sc.k==="match"){ const f = clamp((p-R_AT)/.14); if(f>0) addMatch(s, e.matches[sc.j], ease(f)); }
     if(sc.k==="status"){ const f = clamp((p-.12)/.45); s.pz += e.prizeUSD*ease(f); if(e.title && p>.12) s.ti++; }
@@ -626,7 +628,7 @@ function buildSummary(){
 
 /* frame: everything that depends continuously on t */
 function frame(t){
-  const si = scenes.indexOf(sceneAt(t)), sc = scenes[si], p = clamp((t-sc.t0)/sc.d), e = EV[sc.e];
+  const si = scenes.indexOf(sceneAt(t)), sc = scenes[si], p = clamp((t-sc.t0)/(sc.a||sc.d)), e = EV[sc.e];
   if(si!==shownScene){ shownScene = si; enter(sc); }
   // opening title
   $("open").style.opacity = sc.k==="open" ? 1 - clamp((p-.72)/.28) : 0;
@@ -652,7 +654,7 @@ function frame(t){
     const m = e.matches[sc.j], n = m.sets.length, op = $("opp").style.display!=="none" ? $("opp") : $("oppPh");
     const q = eOut(clamp(p/.14)); op.style.opacity = q; op.style.transform = `translateX(${(1-q)*180}px)`;
     const b = $("board"); const bq = eOut(clamp((p-.08)/.12)); b.style.opacity = bq; b.style.transform = `translateX(-50%) translateY(${(1-bq)*30}px)`;
-    b.querySelectorAll(".st").forEach(c => { const k = +c.dataset.k, at = .2 + (n>1 ? k*(.44/(n-1)) : .2); c.classList.toggle("on", p>=at); });
+    b.querySelectorAll(".st").forEach(c => { const k = +c.dataset.k, at = setAt(k, n); c.classList.toggle("on", p>=at); });
     const res = p >= R_AT;
     b.querySelectorAll(".brow").forEach(r => { const me = r.dataset.side==="me", won = (m.wl==="W")===me;
       r.classList.toggle("win", res && won); r.classList.toggle("los", res && !won); });
@@ -693,7 +695,7 @@ const fmtT = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0"
 
 /* ================= sound: crowd bed + cues on scene beats ================= */
 const SND = (() => {
-  const NAMES = ["bed","whoosh","boom","hit","win","loss","roar","fanfare","closing"];
+  const NAMES = ["bed","whoosh","boom","hit","net","win","loss","roar","fanfare","closing"];
   const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return {tick(){}, run(){}, toggle(){}, on:false};
   const ac = new AC(), master = ac.createGain(), bedG = ac.createGain(), buf = {};
   master.gain.value = 0; bedG.gain.value = .3; bedG.connect(master); master.connect(ac.destination);
@@ -728,9 +730,10 @@ const SND = (() => {
     if(sc.k==="open") cues.push({t:sc.t0+.3, f:()=>play("boom",.55,{max:3.5})});
     if(sc.k==="fly" && sc.from!==sc.e) cues.push({t:sc.t0+.05, f:()=>play("whoosh",.6,{off:.8, max:2.4})});
     if(sc.k==="intro") cues.push({t:sc.t0+.05, f:()=>play("boom",.7,{max:3})});
-    if(sc.k==="match"){ const m = e.matches[sc.j];
-      cues.push({t:sc.t0+.18, f:()=>{ play("hit",.8,{off:.36, max:1}); play("hit",.55,{off:.36, max:1, delay:.42, rate:1.07}); }});
-      cues.push({t:sc.t0+sc.d*R_AT, f:()=>m.wl==="W" ? play("win",.7,{off:.75, max:3}) : play("loss",.85,{off:.4, max:3})}); }
+    if(sc.k==="match"){ const m = e.matches[sc.j], n = m.sets.length;
+      m.sets.forEach(([a,b],k) => cues.push({t:sc.t0+sc.a*setAt(k,n),
+        f: a>b ? ()=>play("hit",.85,{off:.39, max:.9}) : ()=>play("net",.9,{off:.49, max:1.2})}));
+      cues.push({t:sc.t0+sc.a*R_AT, f:()=>m.wl==="W" ? play("win",.75,{off:1.6, max:3}) : play("loss",.85,{off:.35, max:3})}); }
     if(sc.k==="status" && e.title) cues.push({t:sc.t0+sc.d*.12, f:()=>{ play("roar",.9,{off:.3, max:4.6}); play("fanfare",.55); }});
     if(sc.k==="no1") cues.push({t:sc.t0+.1, f:()=>{ play("boom",.8,{max:4}); play("fanfare",.7); play("roar",.9,{off:.3, max:4.6}); }});
     if(sc.k==="summary") cues.push({t:sc.t0+.2, f:()=>play("closing",.8,{max:7})});
