@@ -172,6 +172,7 @@
   .controls .play:hover{background:#fff; color:#0a1430}
   .controls .tm{padding:0 12px; font-size:13px; font-weight:800; letter-spacing:.08em; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
   .controls .tm b{color:var(--ink)}
+  .controls #snd.off{color:#e0645a}
   .controls #spd{width:auto; padding:0 12px; border-radius:999px}
   body.clean .controls{display:none}
 
@@ -245,6 +246,7 @@
     <button id="next" title="Next event (→)"><svg viewBox="0 0 24 24"><path d="M8.5 5v14l11-7z"/><rect x="5.1" y="5" width="2.4" height="14" rx="1"/></svg></button>
     <div class="tm" id="tm"></div>
     <button id="spd" title="Speed (S)">1×</button>
+    <button id="snd" title="Sound on / off (M)"><svg id="sndIcon" viewBox="0 0 24 24"></svg></button>
     <button id="hide" title="Hide controls for recording (H)"><svg viewBox="0 0 24 24"><path d="M12 6c-5 0-9 6-9 6s4 6 9 6 9-6 9-6-4-6-9-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg></button>
     <button id="fs" title="Fullscreen (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 3v-3h2v5h-5v-2z"/></svg></button>
   </div>
@@ -689,14 +691,82 @@ function frame(t){
 }
 const fmtT = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
 
+/* ================= sound: crowd bed + cues on scene beats ================= */
+const SND = (() => {
+  const NAMES = ["bed","whoosh","boom","hit","win","loss","roar","fanfare","closing"];
+  const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return {tick(){}, run(){}, toggle(){}, on:false};
+  const ac = new AC(), master = ac.createGain(), bedG = ac.createGain(), buf = {};
+  master.gain.value = 0; bedG.gain.value = .3; bedG.connect(master); master.connect(ac.destination);
+  NAMES.forEach(n => fetch(`audio/sfx_${n}.mp3`).then(r=>r.arrayBuffer()).then(a=>ac.decodeAudioData(a)).then(b=>{ buf[n]=b; }).catch(()=>{}));
+  let on = localStorage.getItem("season-film-sound") !== "0", running = false, bedNext = 0;
+  const unlock = () => { if(ac.state!=="running") ac.resume(); };
+  addEventListener("pointerdown", unlock); addEventListener("keydown", unlock);
+  // the bed: overlapping copies of one clip with 2 s cross-fades, so the loop has no seam
+  const XF = 2;
+  function bedPump(){
+    const b = buf.bed; if(!b) return; const now = ac.currentTime;
+    if(bedNext && bedNext > now + 1) return;
+    const at = Math.max(now, bedNext), src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = b; src.connect(g); g.connect(bedG);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(1, at+XF);
+    g.gain.setValueAtTime(1, at+b.duration-XF); g.gain.linearRampToValueAtTime(0, at+b.duration);
+    src.start(at); bedNext = at + b.duration - XF;
+  }
+  function play(n, vol=1, o={}){
+    const b = buf[n]; if(!b || !running) return;
+    const src = ac.createBufferSource(), g = ac.createGain(), at = ac.currentTime + (o.delay||0);
+    src.buffer = b; src.playbackRate.value = o.rate||1; src.connect(g); g.connect(master);
+    g.gain.setValueAtTime(vol, at);
+    src.start(at, o.off||0);
+    if(o.max){ g.gain.setValueAtTime(vol, at+o.max-.6); g.gain.linearRampToValueAtTime(0, at+o.max); src.stop(at+o.max+.05); }
+  }
+  // crowd level per scene: hushed in flight, up in the stadium
+  const BED = {open:.35, fly:.12, intro:.6, match:.5, status:.45, no1:.45, summary:.3};
+  // cue list on the film clock
+  const cues = [];
+  scenes.forEach(sc => { const e = EV[sc.e];
+    if(sc.k==="open") cues.push({t:sc.t0+.3, f:()=>play("boom",.55,{max:3.5})});
+    if(sc.k==="fly" && sc.from!==sc.e) cues.push({t:sc.t0+.05, f:()=>play("whoosh",.6,{off:.8, max:2.4})});
+    if(sc.k==="intro") cues.push({t:sc.t0+.05, f:()=>play("boom",.7,{max:3})});
+    if(sc.k==="match"){ const m = e.matches[sc.j];
+      cues.push({t:sc.t0+.18, f:()=>{ play("hit",.8,{off:.36, max:1}); play("hit",.55,{off:.36, max:1, delay:.42, rate:1.07}); }});
+      cues.push({t:sc.t0+sc.d*R_AT, f:()=>m.wl==="W" ? play("win",.7,{off:.75, max:3}) : play("loss",.85,{off:.4, max:3})}); }
+    if(sc.k==="status" && e.title) cues.push({t:sc.t0+sc.d*.12, f:()=>{ play("roar",.9,{off:.3, max:4.6}); play("fanfare",.55); }});
+    if(sc.k==="no1") cues.push({t:sc.t0+.1, f:()=>{ play("boom",.8,{max:4}); play("fanfare",.7); play("roar",.9,{off:.3, max:4.6}); }});
+    if(sc.k==="summary") cues.push({t:sc.t0+.2, f:()=>play("closing",.8,{max:7})});
+  });
+  cues.sort((a,b)=>a.t-b.t);
+  function run(v){ running = v && on;
+    master.gain.cancelScheduledValues(ac.currentTime);
+    master.gain.setTargetAtTime(running ? 1 : 0, ac.currentTime, running ? .25 : .08); }
+  return {
+    get on(){ return on; },
+    toggle(){ on = !on; try{ localStorage.setItem("season-film-sound", on?"1":"0"); }catch(e){} run(playing); unlock(); },
+    run,
+    // called every frame: t0 -> t1 on the film clock (a jump longer than half a second is a seek: no cues)
+    tick(t0, t1, sc){
+      if(!running) return; bedPump();
+      bedG.gain.setTargetAtTime(BED[sc.k]??.3, ac.currentTime, .6);
+      if(!(t1 > t0 && t1 - t0 < .5)) return;
+      for(const c of cues){ if(c.t > t1) break; if(c.t > t0) c.f(); }
+    },
+  };
+})();
+function sndIcon(){ $("snd").classList.toggle("off", !SND.on);
+  $("sndIcon").innerHTML = SND.on ? '<path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/>'
+                                  : '<path d="M3 9v6h4l5 5V4L7 9zm13.6 3 2.7-2.7-1.3-1.3-2.7 2.7-2.7-2.7-1.3 1.3 2.7 2.7-2.7 2.7 1.3 1.3 2.7-2.7 2.7 2.7 1.3-1.3z"/>'; }
+$("snd").onclick = () => { SND.toggle(); sndIcon(); };
+sndIcon();
+
 /* ================= playback ================= */
 let tNow = 0, playing = false, speed = 1, lastTs = null;
 const SPEEDS = [1, 2, .5];
 function loop(ts){
+  const t0 = tNow;
   if(playing){ if(lastTs!==null) tNow += (ts-lastTs)/1000*speed; if(tNow >= TOTAL){ tNow = TOTAL-.001; setPlaying(false); } }
-  lastTs = ts; frame(tNow); requestAnimationFrame(loop);
+  lastTs = ts; frame(tNow); SND.tick(t0, tNow, sceneAt(tNow)); requestAnimationFrame(loop);
 }
-function setPlaying(v){ playing = v; $("playIcon").innerHTML = v ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M7 5v14l12-7z"/>'; save(); }
+function setPlaying(v){ playing = v; SND.run(v); $("playIcon").innerHTML = v ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M7 5v14l12-7z"/>'; save(); }
 function seek(t){ tNow = clamp(t, 0, TOTAL-.001); shownScene = -1; $("path").dataset.k = ""; save(); }
 function evIdxAt(t){ return film.indexOf(sceneAt(t).e); }
 function jump(d){ let k = evIdxAt(tNow); const into = tNow - evStart(film[k]);
@@ -716,6 +786,7 @@ addEventListener("keydown", ev => {
   else if(ev.key==="h"||ev.key==="H") document.body.classList.toggle("clean");
   else if(ev.key==="f"||ev.key==="F") $("fs").click();
   else if(ev.key==="s"||ev.key==="S") $("spd").click();
+  else if(ev.key==="m"||ev.key==="M") $("snd").click();
 });
 
 /* state: reload in place (hash + localStorage) */
