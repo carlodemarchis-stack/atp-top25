@@ -93,6 +93,9 @@
   #rl{position:absolute; left:40px; top:18px; font-size:16px; font-weight:800; letter-spacing:.22em; color:var(--acc); text-transform:uppercase}
   #rl span{color:var(--muted-2); margin-left:14px}
   #on{position:absolute; left:40px; top:46px; right:40px; overflow:hidden; font-size:66px; font-weight:800; letter-spacing:-.03em; line-height:1; white-space:nowrap}
+  /* in a match the headline sits over the opponent's photo, right-aligned */
+  #hero.m #rl{left:40px; right:40px; text-align:right}
+  #hero.m #on{text-align:right}
   #on .vs{font-weight:300; color:var(--muted); margin-right:14px}
   #on .fl{font-size:52px; margin-left:16px; vertical-align:-4px}
   #on .rk{display:inline-block; margin-left:14px; padding:6px 12px; border-radius:8px; border:1px solid var(--line); font-size:24px;
@@ -561,6 +564,7 @@ function fitOn(){ const o = $("on"); o.style.fontSize = ""; let f = 66;
 function enter(sc){
   const e = EV[sc.e];
   setEvent(sc.e);
+  $("hero").classList.toggle("m", sc.k==="match");
   requestAnimationFrame(fitOn);
   $("status").className = ""; $("me").classList.remove("lost"); $("opp").classList.remove("lost");
   if(sc.k==="match"){
