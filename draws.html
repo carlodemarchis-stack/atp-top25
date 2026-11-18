@@ -321,6 +321,20 @@
   .tinfo-l .cat.fin, body.wta .tinfo-l .cat.fin{color:var(--ink); border-color:rgba(21,34,56,.35); background:rgba(21,34,56,.07)}
   .pip.fin{--pc:var(--ink)}
   #rrDays{display:none}
+  /* ?story — Instagram story frame (540×960, captured at 2×): no chrome, a title band and a credit band */
+  #storyHead, #storyFoot{display:none}
+  body.story .tbar, body.story .rankpill, body.story .tinfo-l, body.story .tinfo-r, body.story .botbar, body.story .credit,
+  body.story .backnav, body.story #rrDays, body.story .help, body.story .hltoggles, body.story #pinfo, body.story #pmatch{display:none !important}
+  body.story{overflow:hidden !important}
+  body.story #storyHead{display:block; position:fixed; top:58px; left:0; right:0; padding:0 26px; z-index:5; text-align:center}
+  body.story .sh-kick{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  body.story .sh-title{font-size:30px; font-weight:900; letter-spacing:-.025em; color:var(--ink); line-height:1.05; margin-top:5px}
+  body.story .sh-stage{display:inline-block; margin-top:8px; font-size:12.5px; font-weight:800; letter-spacing:.03em; color:#fff;
+    background:var(--acc); padding:5px 13px; border-radius:20px}
+  body.story #storyFoot{display:flex; position:fixed; left:0; right:0; bottom:66px; height:28px; z-index:5; align-items:center; justify-content:center; gap:14px;
+    padding:0 22px; font-size:11.5px; color:var(--muted)}
+  body.story #storyFoot b{color:var(--ink)}
+  body.story .sf-by{font-weight:800; color:var(--gold); letter-spacing:.02em}
   body.rr #rrDays{display:flex}
   body.rr .hltoggles, body.rr #pinfo, body.rr #pmatch, body.rr #statsBtn{display:none}
   body.rrport{overflow-y:auto; overflow-x:hidden}
@@ -362,6 +376,7 @@
   .rrv .prec{font-size:11px; font-weight:600; fill:var(--muted); text-anchor:middle; font-variant-numeric:tabular-nums}
   .rrv .prec .big{font-weight:800; fill:var(--ink); font-size:12.5px}
   .rrv .pnode.out .pname, .rrv .pnode.out .prec{opacity:.5}
+  .rrv .pname, .rrv .prec, .rrv .tag, .rrv .gtitle{paint-order:stroke; stroke:#edf1f7; stroke-width:4px; stroke-linejoin:round}   /* lines pass behind names */
   /* group place: an ordinal pill — top two (the qualifying places) filled, 3rd/4th outlined, out greyed, clinched gold */
   .rrv .badge rect{fill:var(--panel); stroke:var(--muted-2); stroke-width:1.2; filter:drop-shadow(0 2px 5px rgba(30,50,90,.18))}
   .rrv .badge text{fill:var(--ink); font-weight:900; text-anchor:middle; dominant-baseline:central; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
@@ -476,6 +491,7 @@
 <div id="pmatch" class="panel pmatch"></div>
 <div id="tip"></div>
 <div id="rrTip"></div>
+<div id="storyHead"></div><div id="storyFoot"></div>
 <nav id="rrDays" aria-label="Tournament day"></nav>
 <div class="credit">Produced with passion by <a href="https://aguywithascarf.com/">A guy with a scarf</a> (<a href="https://www.linkedin.com/in/carlodemarchis/" target="_blank" rel="noopener noreferrer">Carlo De Marchis</a>)<a class="agwas-ver" data-agwas-ver="tennis" href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener"></a></div>
 <div class="help" id="help">
@@ -523,6 +539,7 @@ const FLAG = {USA:"🇺🇸",CZE:"🇨🇿",UKR:"🇺🇦",BLR:"",RUS:"",KAZ:"�
 const DAYN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const dayDate = d => new Date(start.getTime() + (d-1)*864e5);
 const DEMO = /[?&]demo\b/.test(location.search);
+const STORY = /[?&]story\b/.test(location.search);     // 540×960 Instagram-story frame (tools/story.py captures it at 2×)
 const MAXDAY = 8;
 let D, P, start, TODAY, day = 1, focus = null, animFrom = 0, active = false;
 
@@ -610,9 +627,20 @@ function table(g, d){
 /* ---------- layout ---------- */
 let L;
 function layout(){
-  const W = innerWidth, port = innerHeight > W*1.1;
+  let W = innerWidth, port = innerHeight > W*1.1;
   let H = innerHeight, cx = W/2, cy, R, Rx, Ry, G, SF, pr;
-  if (!port){
+  if (STORY){
+    // story frame: title band 0–100, group 1, knockout, group 2, credit band from ~912
+    // Instagram keeps ~60 px (of 960) at the top for its progress bar + avatar and ~80 at the bottom for the reply field
+    W = 540; H = 960; port = true; cx = W/2;
+    Rx = 150; Ry = 88; R = Ry; pr = 26;
+    const k = Ry*0.707;
+    const g1 = 150 + 12 + 52 + pr + k;            // header ends ~148; group title sits 52 above the top seats
+    cy = g1 + k + pr + 58 + 62;
+    const g2 = cy + 62 + 12 + 52 + pr + k;
+    G = [{x: cx, y: g1, dir: 1}, {x: cx, y: g2, dir: -1}];
+    SF = [{x: cx - 150, y: cy}, {x: cx + 150, y: cy}];
+  } else if (!port){
     cy = H/2 + 8;
     R = Rx = Ry = Math.max(92, Math.min(W*0.135, H*0.25));
     pr = Math.max(22, Math.min(36, R*0.25));
@@ -677,7 +705,7 @@ function draw(){
   const top = mk("g", {class:"rrv"}, svg);
 
   const tables = [table(0, day), table(1, day)];
-  const gLayer = mk("g", {}, top), koLayer = mk("g", {}, top);
+  const koLayer = mk("g", {}, top), gLayer = mk("g", {}, top);      // groups on top: feed lines pass behind names
   drawKO(koLayer, tables);
   D.groups.forEach((g, gi) => drawGroup(gLayer, gi, tables[gi], defs));
   runAnim();
@@ -691,9 +719,10 @@ function drawGroup(root, gi, rows, defs){
   mk("ellipse", {class:"ring", cx:c.x, cy:c.y, rx:L.Rx, ry:L.Ry}, lay);
   mk("text", {class:"gnum", x:c.x, y:c.y + R*0.04, "font-size":R*1.5}, lay, gi + 1);
   // group title sits outside the ring, away from the knockout
-  const ty = port ? c.y - L.Ry*0.707 - pr - 62 : c.y - R - pr - 60;
+  const ty = STORY ? c.y - L.Ry*0.707 - pr - 52 : port ? c.y - L.Ry*0.707 - pr - 62 : c.y - R - pr - 60;
   mk("text", {class:"gtitle", x:c.x, y:ty}, lay, g.name.toUpperCase());
-  if (g.note) mk("text", {class:"gnote", x:c.x, y:ty + 15}, lay, g.note);
+  if (STORY){}                                   // no room for footnotes in the story frame
+  else if (g.note) mk("text", {class:"gnote", x:c.x, y:ty + 15}, lay, g.note);
   else if (g.out.length){
     const alt = g.ids.find(id => P[id].alt);
     mk("text", {class:"gnote", x:c.x, y:ty + 15}, lay, g.out.map(short).join(", ") + " withdrew" + (alt ? " · " + short(alt) + " in as alternate" : ""));
@@ -795,9 +824,9 @@ function drawKO(root, tables){
   const {SF, cx, cy, port, pr} = L;
   const sr = Math.max(19, pr*0.78), off = sr + 7;
   // champion hub
-  const hr = Math.max(40, pr*1.45);
+  const hr = STORY ? 34 : Math.max(40, pr*1.45);
   const rays = mk("g", {class:"rays"}, root);
-  for (let i=0;i<48;i++){ const a = i/48*2*Math.PI, r0 = hr + 8, r1 = hr + (i%4 ? 14 : 24);
+  for (let i=0;i<48;i++){ const a = i/48*2*Math.PI, r0 = hr + 8, r1 = hr + (STORY ? (i%4 ? 11 : 18) : (i%4 ? 14 : 24));
     mk("line", {x1:cx + r0*Math.cos(a), y1:cy + r0*Math.sin(a), x2:cx + r1*Math.cos(a), y2:cy + r1*Math.sin(a)}, rays); }
   const koDone = D.ko.filter(m => m.w && m.day <= day);
   const sfOf = (x, y) => koDone.find(m => m.round == 2 && [m.a, m.b].includes(x) && [m.a, m.b].includes(y));
@@ -809,14 +838,16 @@ function drawKO(root, tables){
   if (fin){
     const ch = fin[fin.w], ru = fin.w === "a" ? fin.b : fin.a;
     photo(root, ch, cx, cy, hr - 3);
-    mk("text", {class:"hublbl", x:cx, y:cy - hr - 34}, root, "CHAMPION");
-    const t = mk("text", {class:"pname", x:cx, y:cy + hr + 36}, root, (FLAG[P[ch].cc] ? FLAG[P[ch].cc] + " " : "") + P[ch].first + " " + P[ch].last);
-    mk("text", {class:"prec", x:cx, y:cy + hr + 52}, root, `d. ${nm(ru)} ${fin.score}`);
-    mk("text", {class:"kodate", x:cx, y:cy + hr + 68}, root, D.trophy);
+    if (!STORY){                                   // the story's title band already names the champion
+      mk("text", {class:"hublbl", x:cx, y:cy - hr - 34}, root, "CHAMPION");
+      mk("text", {class:"pname", x:cx, y:cy + hr + 36}, root, (FLAG[P[ch].cc] ? FLAG[P[ch].cc] + " " : "") + P[ch].first + " " + P[ch].last);
+      mk("text", {class:"prec", x:cx, y:cy + hr + 52}, root, `d. ${nm(ru)} ${fin.score}`);
+      mk("text", {class:"kodate", x:cx, y:cy + hr + 68}, root, D.trophy);
+    }
   } else {
     mk("text", {class:"hublbl", x:cx, y:cy - 3}, root, "FINAL");
     mk("text", {class:"hubsub", x:cx, y:cy + 12}, root, "Sun " + dayDate(8).getUTCDate());
-    mk("text", {class:"kodate", x:cx, y:cy + hr + 40}, root, D.trophy);
+    if (!STORY) mk("text", {class:"kodate", x:cx, y:cy + hr + 40}, root, D.trophy);
   }
 
   // semi-finals: two slots fed by the group gates (crossover)
@@ -842,7 +873,7 @@ function drawKO(root, tables){
         // name sits outside the pair, clear of the feed line and the centre line
         const nmX = port ? sl.x + (s.x < cx ? -sr - 6 : sr + 6) : sl.x + (j ? sr + 5 : -sr - 5);
         const nmY = port ? sl.y : sl.y - sr + 3;
-        mk("text", {class:"slotlbl", x:nmX, y:nmY, "text-anchor": port ? (s.x < cx ? "end" : "start") : (j ? "start" : "end"), style:`font-size:10px;fill:${won ? "var(--ink)" : "var(--muted-2)"};font-weight:${won ? 800 : 600}`}, root, P[who].last);
+        mk("text", {class:"slotlbl", x:nmX, y:nmY, style:`text-anchor:${port ? (s.x < cx ? "end" : "start") : (j ? "start" : "end")};font-size:10px;fill:${won ? "var(--ink)" : "var(--muted-2)"};font-weight:${won ? 800 : 600}`}, root, P[who].last);
       } else {
         mk("circle", {class:"slot", cx:sl.x, cy:sl.y, r:sr}, root);
         mk("text", {class:"slotlbl", x:sl.x, y:sl.y - 5}, root, "G" + (f.g + 1));
@@ -851,16 +882,18 @@ function drawKO(root, tables){
     });
     mk("text", {class:"vs", x:s.x, y:s.y}, root, "v");
     if (res){                         // score pill on the gold line, between the pair and the final
-      const py = port ? s.y + off + sr + 16 : (k === 0 ? s.y + sr + 22 : s.y - sr - 22);
-      const px = s.x;
+      const py = STORY ? s.y : port ? s.y + off + sr + 16 : (k === 0 ? s.y + sr + 22 : s.y - sr - 22);
+      const px = STORY ? s.x + (s.x < cx ? 1 : -1)*(sr + 52) : s.x;     // story: on the line to the final
       const pg = mk("g", {class:"spill"}, root);
       const w = res.score.length*5.9 + 14;
       mk("rect", {x:px - w/2, y:py - 9.5, width:w, height:19, rx:9.5, style:"stroke:var(--gold)"}, pg);
       mk("text", {x:px, y:py}, pg, res.score);
     }
     const ly = port ? s.y - off - sr - 27 : (k === 0 ? s.y - sr - 20 : s.y + sr + 28);
-    mk("text", {class:"kolbl", x:s.x, y:ly}, root, lbl[k]);
-    mk("text", {class:"kodate", x:s.x, y:ly + 13}, root, "Sat " + dayDate(7).getUTCDate());
+    if (!STORY){
+      mk("text", {class:"kolbl", x:s.x, y:ly}, root, lbl[k]);
+      mk("text", {class:"kodate", x:s.x, y:ly + 13}, root, "Sat " + dayDate(7).getUTCDate());
+    }
   });
 }
 
@@ -968,7 +1001,20 @@ function show(data, opts){
   active = true; focus = null; onDay = opts.onDay || null; stopReplay(); hideTip();
   day = (opts.day >= 1 && opts.day <= MAXDAY) ? +opts.day : Math.min(Math.max(1, TODAY), MAXDAY);
   document.body.classList.add("rr");
-  buildDays(); animFrom = opts.animate ? 0 : MAXDAY; draw();
+  buildDays(); animFrom = opts.animate && !STORY ? 0 : MAXDAY; draw();
+  if (STORY) storyBands();
+}
+/* story frame: the title band says which event and which day the picture is of */
+function storyBands(){
+  document.body.classList.add("story");
+  const d = dayDate(day), dn = `${DAYN[d.getUTCDay()]} ${d.getUTCDate()} Nov`;
+  const c = champion(D);
+  const stage = c ? `Champion · ${c.first} ${c.last}` : day >= 8 ? `Final · ${dn}` : day === 7 ? `Semi-finals · ${dn}`
+    : `Round robin · day ${day} · ${dn}`;
+  document.getElementById("storyHead").innerHTML =
+    `<div class="sh-kick">${D.flag} ${D.loc} · ${D.dates}</div><div class="sh-title">${D.name}</div><div class="sh-stage">${stage}</div>`;
+  document.getElementById("storyFoot").innerHTML =
+    `<span>Every match, live: <b>tennis.aguywithascarf.com</b></span><span class="sf-by">A guy with a scarf</span>`;
 }
 function hide(){
   if (!active) return;
@@ -985,7 +1031,7 @@ function sub(data){
   return "Round robin · two groups of four";
 }
 function stage(data){ const t = tday(data); return champion(data) ? "" : t >= 8 ? "Final" : t === 7 ? "Semi-finals" : t >= 1 ? "Round robin" : ""; }
-return {show, hide, isLive, sub, stage, redraw(){ if (active && L && (L.W !== innerWidth || (!L.port && L.H !== innerHeight))){ animFrom = MAXDAY; draw(); } }, get active(){ return active; }, get day(){ return day; }};
+return {story: STORY, show, hide, isLive, sub, stage, redraw(){ if (active && L && (L.W !== innerWidth || (!L.port && L.H !== innerHeight))){ animFrom = MAXDAY; draw(); } }, get active(){ return active; }, get day(){ return day; }};
 })();
 // ---- tournament catalogue (calendar order). Each card is a full draw tree + its identity. ----
 // More events get appended here as their draws are scraped; the UI adapts to the count automatically.
@@ -1795,7 +1841,7 @@ addEventListener("hashchange", ()=>{           // back/forward, or a hash pasted
   if(hv.m) openMatchView(matchById(hv.m));
   else if(openMatch){ openMatch=null; closeShowdown(); tipPinned=false; tip.style.opacity=0; }
 });
-try{ if(!localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
+try{ if(!RR.story && !localStorage.getItem("draws_guide_seen")) openHelp(); }catch(e){}   // show the guide once, first visit
 requestAnimationFrame(draw);                 // redraw once layout settles (correct innerHeight)
 addEventListener("load", ()=>requestAnimationFrame(draw));
 addEventListener("resize", draw);

@@ -159,3 +159,11 @@ ATP groups are set in the script; ATP results go in `data/atp_finals_results.jso
 (read the atptour results page in the browser — Cloudflare blocks curl). The format is in the
 script's docstring: winner's score first, day 1 = Sun 15 Nov … 7 = SF, 8 = Final.
 Append `?demo` to the URL to preview the rest of the week played out by seeding.
+
+### Instagram story of the Finals card
+
+`python3 tools/story.py` → `~/Downloads/dataviz social/story-<tour>-<date>-<time>.png` (1080×1920),
+one per tour, from `draws.html?story` (540×960 frame at 2×: title band + credit inside Instagram's
+safe zones, no chrome, no animation). Needs the local preview server (default base
+`http://localhost:8777`, serving a copy of the repo + `img/`), or `--base https://tennis.aguywithascarf.com`
+after a push. `--day N` for a past day, `--tours atp` for one tour.
