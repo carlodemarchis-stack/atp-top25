@@ -160,7 +160,8 @@
   #cal .blk.done.hard,#cal .blk.cur.hard{background:var(--hard)}
   #cal .blk.done.clay,#cal .blk.cur.clay{background:var(--clay)}
   #cal .blk.done.grass,#cal .blk.cur.grass{background:var(--grass)}
-  #cal .blk.done.ti{background:var(--gold); border-color:var(--gold); color:#2a1d00}
+  /* a title keeps its surface colour (clay, grass, hard) and gets a gold frame + the cup */
+  #cal .blk.done.ti{border:2.5px solid var(--gold); box-shadow:0 0 0 1.5px rgba(242,193,78,.45), 0 0 16px rgba(242,193,78,.55); color:#fff; z-index:2}
   #cal .blk .lb{opacity:0} #cal .blk.done .lb{opacity:1}
   #cal .ph{position:absolute; top:14px; width:2px; height:56px; background:#fff; box-shadow:0 0 12px rgba(255,255,255,.8); pointer-events:none}
   #cal .ph i{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-style:normal; font-size:11px; font-weight:800;
@@ -855,8 +856,10 @@ addEventListener("hashchange", () => { const h = new URLSearchParams(location.ha
   if(h.has("t")) st = {t:+h.get("t"), p:+h.get("p"), s:+(h.get("s")||1)};
   else { try{ st = JSON.parse(localStorage.getItem(KEY)); }catch(e){} }
   if(qs.has("rec")) st = null;
-  if(st){ tNow = clamp(st.t||0, 0, TOTAL-.001); speed = SPEEDS.includes(st.s) ? st.s : 1; $("spd").textContent = speed+"×"; setPlaying(!!st.p); }
-  else setPlaying(!qs.has("rec"));    // ?rec waits for Space so the screen recorder can start first
+  // position and speed come back, but the film always waits for Play: browsers block sound until the first
+  // click or key, so starting on its own would play silently (and ?rec waits for Space anyway)
+  if(st){ tNow = clamp(st.t||0, 0, TOTAL-.001); speed = SPEEDS.includes(st.s) ? st.s : 1; $("spd").textContent = speed+"×"; }
+  setPlaying(false);
 })();
 
 /* scale the 1920x1080 stage to the window */
