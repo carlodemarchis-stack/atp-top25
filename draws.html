@@ -362,10 +362,16 @@
   .rrv .prec{font-size:11px; font-weight:600; fill:var(--muted); text-anchor:middle; font-variant-numeric:tabular-nums}
   .rrv .prec .big{font-weight:800; fill:var(--ink); font-size:12.5px}
   .rrv .pnode.out .pname, .rrv .pnode.out .prec{opacity:.5}
-  .rrv .badge circle{fill:var(--ink)}
-  .rrv .badge text{fill:#fff; font-size:10px; font-weight:800; text-anchor:middle; dominant-baseline:central}
-  .rrv .pnode.q .badge circle{fill:var(--gold)}
-  .rrv .pnode.out .badge circle{fill:var(--muted-2)}
+  /* group place: an ordinal pill — top two (the qualifying places) filled, 3rd/4th outlined, out greyed, clinched gold */
+  .rrv .badge rect{fill:var(--panel); stroke:var(--muted-2); stroke-width:1.2; filter:drop-shadow(0 2px 5px rgba(30,50,90,.18))}
+  .rrv .badge text{fill:var(--ink); font-weight:900; text-anchor:middle; dominant-baseline:central; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .rrv .badge .sfx{font-size:8px; font-weight:800; letter-spacing:.04em}
+  .rrv .badge.top rect{fill:var(--acc); stroke:none}
+  .rrv .badge.top text{fill:#fff}
+  .rrv .pnode.q .badge rect{fill:var(--gold); stroke:none}
+  .rrv .pnode.q .badge text{fill:#fff}
+  .rrv .pnode.out .badge rect{fill:#e4e9f1; stroke:none}
+  .rrv .pnode.out .badge text{fill:var(--muted-2)}
   .rrv .tag{font-size:9px; font-weight:800; letter-spacing:.14em; text-anchor:middle}
   .rrv .tag.q{fill:var(--gold)} .rrv .tag.out{fill:var(--muted-2)} .rrv .tag.alive{fill:var(--acc)}
 
@@ -596,6 +602,7 @@ function table(g, d){
     }
   }
   rows.done = rest.length === 0;
+  rows.started = rest.length < ms.length;
   rows.forEach(r => r.st = rows.done ? (r.pos <= 2 ? "q" : "out") : worst[r.id] <= 2 ? "q" : best[r.id] > 2 ? "out" : "alive");
   return rows;
 }
@@ -755,9 +762,15 @@ function drawGroup(root, gi, rows, defs){
       mk("path", {class:"seg " + (x.r === "t" ? "u" : x.r), d:pth, style: x.r === "t" ? "stroke:var(--live);stroke-width:2" : ""}, n);
     });
     // place badge
-    const bx = s.x + (s.left ? -1 : 1)*(pr*0.78), by = s.y - pr*0.78;
-    const b = mk("g", {class:"badge"}, n);
-    mk("circle", {cx:bx, cy:by, r:9.5}, b); mk("text", {x:bx, y:by + .5}, b, r.pos);
+    if (rows.started){                             // no order to show before a ball is struck
+      const big = r.pos <= 2, fs = big ? 16 : 13.5, bw = big ? 38 : 33, bh = big ? 24 : 21;
+      const bx = s.x + (s.left ? -1 : 1)*(pr + 4), by = s.y - pr*0.82;
+      const b = mk("g", {class:"badge" + (big ? " top" : "")}, n);
+      mk("rect", {x:bx - bw/2, y:by - bh/2, width:bw, height:bh, rx:bh/2}, b);
+      const bt = mk("text", {x:bx, y:by + .5, "font-size":fs}, b);
+      mk("tspan", {}, bt, r.pos);
+      mk("tspan", {class:"sfx", dy:-4}, bt, ["ST","ND","RD","TH"][r.pos - 1]);
+    }
     // label above top seats, below bottom seats
     const up = s.top, yN = up ? s.y - pr - 30 : s.y + pr + 25;
     const t1 = mk("text", {class:"pname", x:s.x, y:yN}, n);
