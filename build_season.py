@@ -51,6 +51,15 @@ COUNTRY2 = {"Germany": "DE", "Spain": "ES", "Italy": "IT", "France": "FR", "Unit
             "Australia": "AU", "Canada": "CA", "Great Britain": "GB", "Czechia": "CZ", "Norway": "NO",
             "Denmark": "DK", "Greece": "GR", "Poland": "PL", "Belgium": "BE", "Argentina": "AR", "Brazil": "BR",
             "Netherlands": "NL", "Switzerland": "CH", "Chile": "CL", "Portugal": "PT", "Kazakhstan": "KZ"}
+# opponents outside the top-100 dataset: ATP id (photo in img/full/<id>.png, gladiator cutout
+# fetched from atptour.com) + full name, from the player's /activity JSON (OpponentId/FirstName)
+OPP_EXTRA = {
+    "G. Diallo": ("d0f6", "Gabriel Diallo"), "A. Muller": ("mp20", "Alexandre Muller"),
+    "C. Moutet": ("mw02", "Corentin Moutet"), "M. Damm": ("d0dt", "Martin Damm"),
+    "C. Garin": ("gd64", "Cristian Garin"), "J. de Jong": ("d0c1", "Jesper de Jong"),
+    "V. Royer": ("r0eb", "Valentin Royer"), "L. Sonego": ("su87", "Lorenzo Sonego"),
+    "J. Shang": ("s0re", "Juncheng Shang"), "Y. Wu": ("wb32", "Yibing Wu"),
+}
 SURF = {"Hard": "hard", "Clay": "clay", "Grass": "grass"}
 CAT = {"GS": "Grand Slam", "1000": "Masters 1000", "500": "ATP 500", "250": "ATP 250", "WC": "ATP Finals"}
 
@@ -137,13 +146,17 @@ def main():
                 continue
             o = by_abbr.get(m["opp"])
             sets = parse_score(m["score"])
+            oid = o["id"] if o and o["id"] in has_full else None
+            xid, xname = OPP_EXTRA.get(m["opp"], (None, None))
+            if not oid and xid in has_full:
+                oid = xid
             matches.append({
                 "round": m["round"], "roundLong": m["roundLong"], "wl": m["wl"],
-                "opp": f"{o['first']} {o['last']}" if o else m["opp"],
+                "opp": f"{o['first']} {o['last']}" if o else (xname or m["opp"]),
                 "oppShort": m["opp"].split(". ", 1)[-1],
                 "oppC": m["oppC"] or "", "oppR": m["oppR"],
                 "oppFlag": "" if (m["oppC"] or "") in NEUTRAL else IOC2.get(m["oppC"] or "", ""),
-                "oppImg": o["id"] if o and o["id"] in has_full else None,
+                "oppImg": oid,
                 "score": m["score"], "sets": sets,
             })
         live = None

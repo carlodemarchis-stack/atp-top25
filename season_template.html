@@ -86,6 +86,10 @@
   #hero{position:absolute; left:860px; top:150px; width:1060px; height:760px; z-index:2}
   #ghost{position:absolute; right:10px; top:40px; font-size:330px; font-weight:800; letter-spacing:-.05em; line-height:.8;
     color:rgba(255,255,255,.045); white-space:nowrap; text-transform:uppercase; pointer-events:none}
+  #rnd{position:absolute; left:50%; top:345px; font-size:310px; font-weight:800; letter-spacing:-.04em; line-height:1; white-space:nowrap;
+    color:rgba(255,255,255,.07); -webkit-text-stroke:2px rgba(255,255,255,.24); pointer-events:none; opacity:0}
+  #rnd.long{font-size:240px}
+  #rnd.f{color:rgba(242,193,78,.1); -webkit-text-stroke-color:rgba(242,193,78,.55)}
   #rl{position:absolute; left:40px; top:18px; font-size:16px; font-weight:800; letter-spacing:.22em; color:var(--acc); text-transform:uppercase}
   #rl span{color:var(--muted-2); margin-left:14px}
   #on{position:absolute; left:40px; top:46px; right:40px; overflow:hidden; font-size:66px; font-weight:800; letter-spacing:-.03em; line-height:1; white-space:nowrap}
@@ -228,6 +232,7 @@
     <div id="ghost"></div>
     <div id="rl"></div>
     <div id="on"></div>
+    <div id="rnd"></div>
     <img class="cut" id="me" alt="">
     <img class="cut" id="opp" alt="">
     <div id="oppPh"></div>
@@ -559,7 +564,8 @@ function enter(sc){
     const m = e.matches[sc.j], n = e.matches.length;
     $("rl").innerHTML = `${ROUND[m.round]||m.roundLong}<span>MATCH ${sc.j+1} OF ${n}</span>`;
     $("on").innerHTML = `<span class="vs">vs</span>${m.opp}<span class="fl">${flag(m.oppFlag)}</span>${m.oppR?`<span class="rk${m.oppR<=10?" top":""}">#${m.oppR}</span>`:""}`;
-    $("ghost").textContent = m.round;
+    $("ghost").textContent = "";
+    $("rnd").textContent = m.round; $("rnd").className = (m.round.length>2 ? "long" : "") + (m.round==="F" ? " f" : "");
     if(m.oppImg){ $("opp").src = `img/full/${m.oppImg}.png`; $("opp").style.display=""; $("oppPh").style.display="none"; }
     else { $("opp").style.display="none"; $("oppPh").style.display="flex"; $("oppPh").innerHTML = `${flag(m.oppFlag)||"🎾"}<small>NO PHOTO</small>`; }
     buildBoard(m);
@@ -675,6 +681,10 @@ function frame(t){
   if(sc.k==="summary"){ const q = eOut(clamp(p/.12)); sm.style.opacity = q;
     sm.querySelector(".t").style.transform = `translateY(${(1-q)*40}px)`;
     sm.querySelectorAll(".sc").forEach((c,i)=>{ const qi = eOut(clamp((p-.06-i*.04)/.12)); c.style.opacity = qi; c.style.transform = `translateY(${(1-qi)*24}px)`; }); }
+  // round letters, big between the two players
+  const rd = $("rnd");
+  if(sc.k==="match"){ const q = eOut(clamp(p/.2)); rd.style.opacity = q; rd.style.transform = `translate(-50%,-50%) scale(${1.3-.3*q})`; }
+  else rd.style.opacity = 0;
   // ghost
   $("ghost").style.transform = `translateX(${-t*6 % 4000}px)`;
   // counters
