@@ -709,7 +709,8 @@ function frame(t){
     const w = $("stWho");
     if(sc.grow){   // starts exactly on the match photo (600px tall, 40px from the right) and grows to 700px from his feet
       const g = eOut(clamp((p-.04)/.45)), s0 = 600/700;
-      w.style.transformOrigin = "100% 100%"; w.style.transform = `translateX(${10*(1-g)}px) scale(${s0+(1-s0)*g})`; }
+      w.style.transformOrigin = "100% 100%"; w.style.transform = `translateX(${10*(1-g)}px) scale(${s0+(1-s0)*g})`;
+      $("opp").style.opacity = 1 - q; }   // cross-fade: the match photo hands over to this one, then is gone (the card is see-through)
     else { w.style.transformOrigin = "50% 100%"; w.style.transform = `translateX(${(1-q)*120}px) scale(${e.title ? 1+.06*p : 1})`; } }
   else if(sc.k==="summary") st.style.opacity = 1;
   else st.style.opacity = 0;
