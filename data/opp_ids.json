@@ -1,0 +1,642 @@
+{
+"A. Blockx": [
+"b0pg",
+"Alexander Blockx"
+],
+"A. Bublik": [
+"bk92",
+"Alexander Bublik"
+],
+"A. Cazaux": [
+"c0h0",
+"Arthur Cazaux"
+],
+"A. Davidovich Fokina": [
+"dh50",
+"Alejandro Davidovich Fokina"
+],
+"A. Fery": [
+"f0dm",
+"Arthur Fery"
+],
+"A. Fils": [
+"f0f1",
+"Arthur Fils"
+],
+"A. Gea": [
+"g0ix",
+"Arthur Gea"
+],
+"A. Kovacevic": [
+"k0az",
+"Aleksandar Kovacevic"
+],
+"A. Mannarino": [
+"me82",
+"Adrian Mannarino"
+],
+"A. Michelsen": [
+"m0qi",
+"Alex Michelsen"
+],
+"A. Molcan": [
+"mv14",
+"Alex Molcan"
+],
+"A. Muller": [
+"mp20",
+"Alexandre Muller"
+],
+"A. Pellegrino": [
+"ph64",
+"Andrea Pellegrino"
+],
+"A. Popyrin": [
+"p09z",
+"Alexei Popyrin"
+],
+"A. Rinderknech": [
+"rc91",
+"Arthur Rinderknech"
+],
+"A. Rublev": [
+"re44",
+"Andrey Rublev"
+],
+"A. Shevchenko": [
+"s0h2",
+"Aleksandr Shevchenko"
+],
+"A. Tabilo": [
+"te30",
+"Alejandro Tabilo"
+],
+"A. Vallejo": [
+"v0dp",
+"Adolfo Daniel Vallejo"
+],
+"A. Vukic": [
+"v832",
+"Aleksandar Vukic"
+],
+"A. Walton": [
+"w09e",
+"Adam Walton"
+],
+"A. Zverev": [
+"z355",
+"Alexander Zverev"
+],
+"A. de Minaur": [
+"dh58",
+"Alex de Minaur"
+],
+"B. Bonzi": [
+"bm95",
+"Benjamin Bonzi"
+],
+"B. Nakashima": [
+"n0ae",
+"Brandon Nakashima"
+],
+"B. Shelton": [
+"s0s1",
+"Ben Shelton"
+],
+"B. van de Zandschulp": [
+"v812",
+"Botic van de Zandschulp"
+],
+"C. Alcaraz": [
+"a0e2",
+"Carlos Alcaraz"
+],
+"C. Garin": [
+"gd64",
+"Cristian Garin"
+],
+"C. Moutet": [
+"mw02",
+"Corentin Moutet"
+],
+"C. Norrie": [
+"n771",
+"Cameron Norrie"
+],
+"C. O'Connell": [
+"o483",
+"Christopher O'Connell"
+],
+"C. Rodesch": [
+"r0e0",
+"Chris Rodesch"
+],
+"C. Ruud": [
+"rh16",
+"Casper Ruud"
+],
+"C. Tabur": [
+"t09x",
+"Clement Tabur"
+],
+"C. Ugo Carabelli": [
+"u182",
+"Camilo Ugo Carabelli"
+],
+"C. Wong": [
+"w0bh",
+"Coleman Wong"
+],
+"D. Altmaier": [
+"ae14",
+"Daniel Altmaier"
+],
+"D. Blanch": [
+"b0no",
+"Darwin Blanch"
+],
+"D. Dedura": [
+"d0lj",
+"Diego Dedura"
+],
+"D. Dzumhur": [
+"d923",
+"Damir Dzumhur"
+],
+"D. Lajovic": [
+"l987",
+"Dusan Lajovic"
+],
+"D. Medvedev": [
+"mm58",
+"Daniil Medvedev"
+],
+"D. Merida": [
+"m0n7",
+"Daniel Merida"
+],
+"D. Prizmic": [
+"p0hw",
+"Dino Prizmic"
+],
+"D. Shapovalov": [
+"su55",
+"Denis Shapovalov"
+],
+"D. Svrcina": [
+"s0gd",
+"Dalibor Svrcina"
+],
+"D. Sweeny": [
+"s0ia",
+"Dane Sweeny"
+],
+"E. Moller": [
+"m0k4",
+"Elmer Moller"
+],
+"E. Nava": [
+"n0am",
+"Emilio Nava"
+],
+"E. Quinn": [
+"q02l",
+"Ethan Quinn"
+],
+"E. Spizzirri": [
+"s0ja",
+"Eliot Spizzirri"
+],
+"F. Auger-Aliassime": [
+"ag37",
+"Felix Auger-Aliassime"
+],
+"F. Cerundolo": [
+"c0au",
+"Francisco Cerundolo"
+],
+"F. Cobolli": [
+"c0e9",
+"Flavio Cobolli"
+],
+"F. Comesana": [
+"c0df",
+"Francisco Comesana"
+],
+"F. Gill": [
+"g0eu",
+"Felix Gill"
+],
+"F. Marozsan": [
+"m0ci",
+"Fabian Marozsan"
+],
+"F. Tiafoe": [
+"td51",
+"Frances Tiafoe"
+],
+"G. Diallo": [
+"d0f6",
+"Gabriel Diallo"
+],
+"G. Dimitrov": [
+"d875",
+"Grigor Dimitrov"
+],
+"G. Mpetshi Perricard": [
+"m0gz",
+"Giovanni Mpetshi Perricard"
+],
+"H. Gaston": [
+"g09o",
+"Hugo Gaston"
+],
+"H. Hurkacz": [
+"hb71",
+"Hubert Hurkacz"
+],
+"H. Rune": [
+"r0dg",
+"Holger Rune"
+],
+"I. Buse": [
+"b0id",
+"Ignacio Buse"
+],
+"J. Brooksby": [
+"b0cd",
+"Jenson Brooksby"
+],
+"J. Cerundolo": [
+"c0c8",
+"Juan Manuel Cerundolo"
+],
+"J. Choinski": [
+"ch12",
+"Jan Choinski"
+],
+"J. Draper": [
+"d0co",
+"Jack Draper"
+],
+"J. Duckworth": [
+"d994",
+"James Duckworth"
+],
+"J. Faria": [
+"f0f2",
+"Jaime Faria"
+],
+"J. Fearnley": [
+"f0by",
+"Jacob Fearnley"
+],
+"J. Fonseca": [
+"f0fv",
+"Joao Fonseca"
+],
+"J. Kubler": [
+"kb95",
+"Jason Kubler"
+],
+"J. Kym": [
+"k0ep",
+"Jerome Kym"
+],
+"J. Lehecka": [
+"l0bv",
+"Jiri Lehecka"
+],
+"J. Mensik": [
+"m0ni",
+"Jakub Mensik"
+],
+"J. Munar": [
+"mu94",
+"Jaume Munar"
+],
+"J. Pinnington Jones": [
+"p0ht",
+"Jack Pinnington Jones"
+],
+"J. Shang": [
+"s0re",
+"Juncheng Shang"
+],
+"J. Sinner": [
+"s0ag",
+"Jannik Sinner"
+],
+"J. Struff": [
+"sl28",
+"Jan-Lennard Struff"
+],
+"J. de Jong": [
+"d0c1",
+"Jesper de Jong"
+],
+"K. Jacquet": [
+"j0az",
+"Kyrian Jacquet"
+],
+"K. Khachanov": [
+"ke29",
+"Karen Khachanov"
+],
+"K. Majchrzak": [
+"mq75",
+"Kamil Majchrzak"
+],
+"K. Nishikori": [
+"n552",
+"Kei Nishikori"
+],
+"L. Darderi": [
+"d0fj",
+"Luciano Darderi"
+],
+"L. Musetti": [
+"m0ej",
+"Lorenzo Musetti"
+],
+"L. Nardi": [
+"n0bg",
+"Luca Nardi"
+],
+"L. Sonego": [
+"su87",
+"Lorenzo Sonego"
+],
+"L. Tien": [
+"t0ha",
+"Learner Tien"
+],
+"L. Tu": [
+"tc01",
+"Li Tu"
+],
+"L. Van Assche": [
+"v0dz",
+"Luca Van Assche"
+],
+"M. Arnaldi": [
+"a0fc",
+"Matteo Arnaldi"
+],
+"M. Bellucci": [
+"b0gg",
+"Mattia Bellucci"
+],
+"M. Berrettini": [
+"bk40",
+"Matteo Berrettini"
+],
+"M. Cassone": [
+"c0ht",
+"Murphy Cassone"
+],
+"M. Cilic": [
+"c977",
+"Marin Cilic"
+],
+"M. Damm": [
+"d0dt",
+"Martin Damm"
+],
+"M. Dhamne": [
+"d0ji",
+"Manas Dhamne"
+],
+"M. Dodig": [
+"d0l3",
+"Matej Dodig"
+],
+"M. Fucsovics": [
+"f724",
+"Marton Fucsovics"
+],
+"M. Giron": [
+"gc88",
+"Marcos Giron"
+],
+"M. Kecmanovic": [
+"ki95",
+"Miomir Kecmanovic"
+],
+"M. Krueger": [
+"kc12",
+"Mitchell Krueger"
+],
+"M. Landaluce": [
+"l0il",
+"Martin Landaluce"
+],
+"M. Navone": [
+"n0bs",
+"Mariano Navone"
+],
+"M. Trungelliti": [
+"ta29",
+"Marco Trungelliti"
+],
+"N. Basavareddy": [
+"b0nn",
+"Nishesh Basavareddy"
+],
+"N. Basilashvili": [
+"bg23",
+"Nikoloz Basilashvili"
+],
+"N. Borges": [
+"bt72",
+"Nuno Borges"
+],
+"N. Budkov Kjaer": [
+"b0u4",
+"Nicolai Budkov Kjaer"
+],
+"N. Djokovic": [
+"d643",
+"Novak Djokovic"
+],
+"N. Jarry": [
+"j551",
+"Nicolas Jarry"
+],
+"O. Virtanen": [
+"v0am",
+"Otto Virtanen"
+],
+"P. Carreno Busta": [
+"cd85",
+"Pablo Carreno Busta"
+],
+"P. Herbert": [
+"h996",
+"Pierre-Hugues Herbert"
+],
+"P. Kotov": [
+"k09f",
+"Pavel Kotov"
+],
+"P. Kypson": [
+"k0a3",
+"Patrick Kypson"
+],
+"P. Llamas Ruiz": [
+"l0cx",
+"Pablo Llamas Ruiz"
+],
+"P. Marinkov": [
+"m0te",
+"Pavle Marinkov"
+],
+"Q. Halys": [
+"hb64",
+"Quentin Halys"
+],
+"R. Burruchaga": [
+"b0fv",
+"Roman Andres Burruchaga"
+],
+"R. Collignon": [
+"c0jp",
+"Raphael Collignon"
+],
+"R. Hijikata": [
+"h0bh",
+"Rinky Hijikata"
+],
+"R. Jodar": [
+"j0dz",
+"Rafael Jodar"
+],
+"R. Opelka": [
+"o522",
+"Reilly Opelka"
+],
+"R. Pacheco Mendez": [
+"p0j1",
+"Rodrigo Pacheco Mendez"
+],
+"R. Safiullin": [
+"sx50",
+"Roman Safiullin"
+],
+"R. Sakamoto": [
+"s0uv",
+"Rei Sakamoto"
+],
+"S. Baez": [
+"b0bi",
+"Sebastian Baez"
+],
+"S. Gorzny": [
+"g0jj",
+"Sebastian Gorzny"
+],
+"S. Korda": [
+"k0ah",
+"Sebastian Korda"
+],
+"S. Mochizuki": [
+"m0hu",
+"Shintaro Mochizuki"
+],
+"S. Ofner": [
+"o513",
+"Sebastian Ofner"
+],
+"S. Shimabukuro": [
+"sy67",
+"Sho Shimabukuro"
+],
+"S. Tsitsipas": [
+"te51",
+"Stefanos Tsitsipas"
+],
+"S. Wawrinka": [
+"w367",
+"Stan Wawrinka"
+],
+"T. Atmane": [
+"a0gc",
+"Terence Atmane"
+],
+"T. Boogaard": [
+"b0t6",
+"Thijs Boogaard"
+],
+"T. Etcheverry": [
+"ea24",
+"Tomas Martin Etcheverry"
+],
+"T. Fritz": [
+"fb98",
+"Taylor Fritz"
+],
+"T. Griekspoor": [
+"gj37",
+"Tallon Griekspoor"
+],
+"T. Machac": [
+"m0fh",
+"Tomas Machac"
+],
+"T. Paul": [
+"pl56",
+"Tommy Paul"
+],
+"T. Schoolkate": [
+"s0n0",
+"Tristan Schoolkate"
+],
+"T. Tirante": [
+"t0a1",
+"Thiago Agustin Tirante"
+],
+"U. Blanchet": [
+"bv16",
+"Ugo Blanchet"
+],
+"U. Humbert": [
+"hh26",
+"Ugo Humbert"
+],
+"V. Kopriva": [
+"ki82",
+"Vit Kopriva"
+],
+"V. Royer": [
+"r0eb",
+"Valentin Royer"
+],
+"V. Vacherot": [
+"va25",
+"Valentin Vacherot"
+],
+"Y. Bu": [
+"y09v",
+"Yunchaokete Bu"
+],
+"Y. Hanfmann": [
+"h997",
+"Yannick Hanfmann"
+],
+"Y. Wu": [
+"wb32",
+"Yibing Wu"
+],
+"Z. Bergs": [
+"bu13",
+"Zizou Bergs"
+],
+"Z. Svajda": [
+"s0k7",
+"Zachary Svajda"
+],
+"Z. Zhang": [
+"z371",
+"Zhizhen Zhang"
+]
+}

@@ -1,6 +1,6 @@
 {
  "player": "z355",
- "source": "atptour.com/en/players/alexander-zverev/z355/rankings-history",
+ "source": "atptour.com /en/-/www/rank/history/z355",
  "captured": "2026-11-18",
  "weeks": [
   {
@@ -152,9 +152,5 @@
    "rank": 1
   }
  ],
- "careerHigh": {
-  "rank": 1,
-  "date": "2026-11-02",
-  "note": "'Career High Rank (2026.11.02)' on the atptour.com player page"
- }
+ "wasNo1Before2026": false
 }

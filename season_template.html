@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Zverev 2026 — Season Film</title>
-<meta name="description" content="An interactive tennis experience by A guy with a scarf (Carlo De Marchis) — Alexander Zverev's 2026 season, event by event and match by match, on a turning globe. Best in landscape.">
+<title>ATP Top 10 — 2026 Season Films</title>
+<meta name="description" content="An interactive tennis experience by A guy with a scarf (Carlo De Marchis) — the 2026 season of each ATP top-10 player, event by event and match by match, on a turning globe. Best in landscape.">
 <link rel="canonical" href="https://tennis.aguywithascarf.com/season.html">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23c9e548'/><path d='M6.5 3.5C12 9 12 23 6.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/><path d='M25.5 3.5C20 9 20 23 25.5 28.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/></svg>">
 <style>
@@ -31,6 +31,10 @@
   .who-name b{font-weight:800}
   .who-sub{margin-top:10px; font-size:14px; font-weight:800; letter-spacing:.22em; color:var(--muted)}
   .who-sub i{font-style:normal; color:var(--gold)}
+  #pick{margin-left:18px; padding:5px 10px; border-radius:999px; border:1px solid rgba(242,193,78,.5); background:rgba(5,10,26,.6);
+    color:var(--gold); font:800 13px "Helvetica Neue",Arial,sans-serif; letter-spacing:.12em; cursor:pointer; vertical-align:1px}
+  #pick option{background:#0a1430; color:#fff}
+  body.clean #pick{display:none}
   #counters{display:flex; gap:14px; align-items:stretch}
   .ctr{display:flex; flex-direction:column; gap:7px}
   .ctr .k{font-size:11px; font-weight:800; letter-spacing:.2em; color:var(--muted-2); padding-left:2px}
@@ -103,6 +107,8 @@
   #on .rk.top{color:var(--gold); border-color:rgba(242,193,78,.45)}
   .cut{position:absolute; bottom:0; height:600px; width:auto; filter:drop-shadow(0 20px 26px rgba(0,0,0,.55))}
   #me{left:30px}
+  .cut.bust{height:430px}
+  #status .who.bust{height:500px}
   #opp{right:40px}
   .cut.lost{filter:grayscale(1) brightness(.45) drop-shadow(0 20px 26px rgba(0,0,0,.55)); transition:filter .5s}
   #oppPh{position:absolute; right:80px; bottom:150px; width:300px; height:300px; border-radius:50%;
@@ -121,6 +127,7 @@
     position:relative; opacity:0; transform:translateY(12px); transition:opacity .25s, transform .3s}
   .brow .st.on{opacity:1; transform:none}
   .brow .st.won{color:#fff}
+  .brow .wo{width:90px; text-align:center; font-size:20px; font-weight:800; letter-spacing:.14em; color:var(--muted)}
   .brow .st sup{position:absolute; top:6px; right:4px; font-size:15px; color:var(--muted)}
   .brow .res{width:76px; height:64px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; letter-spacing:.1em; opacity:0; transition:opacity .3s}
   .brow.win .res{opacity:1; background:rgba(79,208,138,.16); color:var(--green)}
@@ -275,8 +282,11 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script>
-const D = /*__DATA__*/null;
+const ALL = /*__DATA__*/null;
+const PSLUG = new URLSearchParams(location.search).get("p");
+const D = ALL.players.find(x => x.player.slug===PSLUG) || ALL.players[0];
 const EV = D.events, P = D.player;
+document.title = `${P.first} ${P.last} 2026 — Season Film`;
 const $ = id => document.getElementById(id);
 const clamp = (x,a=0,b=1) => Math.max(a, Math.min(b, x));
 const ease = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
@@ -314,13 +324,14 @@ film.forEach((i,n) => {
   add("fly", prev ? 1.6 + Math.min(2.6, km/3200) : 1.2, {e:i, km, from:n>0 ? film[n-1] : i});
   add("intro", 1.9, {e:i});
   EV[i].matches.forEach((m,j) => {
-    const sets = m.sets.map((_,k) => SET0 + k*SET_GAP), res = sets[sets.length-1] + RES_GAP;
+    // a walkover has no sets: the result lands as soon as the board is in
+    const sets = m.sets.map((_,k) => SET0 + k*SET_GAP), res = (sets.length ? sets[sets.length-1] : SET0) + RES_GAP;
     add("match", res + (TAIL[m.round]||.5) + HOLD, {e:i, j, sets, res}); });
   const lastM = EV[i].matches[EV[i].matches.length-1];
   add("status", EV[i].title ? 4.6 : EV[i].live ? 4.2 : 2.9, {e:i, grow: !EV[i].title && !EV[i].live && lastM.wl==="L" && !!lastM.oppImg});
-  // a new career-high No. 1 lands with the ranking published the Monday after this event
-  const ch = D.careerHigh, nxt = ms(EV[i].end)+DAY, prevEnd = n>0 ? ms(EV[film[n-1]].end)+DAY : 0;
-  if(ch && ch.rank===1 && ms(ch.date) > prevEnd && ms(ch.date) <= nxt) add("no1", 4.6, {e:i});
+  // climbing to No. 1 lands with the ranking published the Monday after this event
+  const n1 = D.no1, nxt = ms(EV[i].end)+DAY, prevEnd = n>0 ? ms(EV[film[n-1]].end)+DAY : 0;
+  if(n1 && (ms(n1.date) > prevEnd || n===0) && (ms(n1.date) <= nxt || n===film.length-1)) add("no1", 4.6, {e:i});
 });
 add("summary", 7, {e:film[film.length-1]});
 const evStart = i => scenes.find(s => s.e===i && s.k==="fly").t0;
@@ -328,6 +339,7 @@ const evStart = i => scenes.find(s => s.e===i && s.k==="fly").t0;
 /* ---------- cumulative season stats ---------- */
 function blank(){ return {ev:0,ti:0,mw:0,ml:0,sw:0,sl:0,gw:0,gl:0,pz:0}; }
 function addMatch(s,m,f=1){
+  if(!m.sets.length) return;   // walkovers don't count in W–L (as on the ATP's own records)
   if(m.wl==="W") s.mw+=f; else s.ml+=f;
   for(const [a,b] of m.sets){ if(a>b) s.sw+=f; else s.sl+=f; s.gw+=a*f; s.gl+=b*f; }
 }
@@ -366,6 +378,12 @@ function sceneAt(t){ let i = scenes.length-1; while(i>0 && scenes[i].t0 > t) i--
 /* ================= header ================= */
 $("whoName").innerHTML = `${P.first} <b>${P.last.toUpperCase()}</b>`;
 $("whoSub").innerHTML = `${flag(P.flag)} &nbsp;2026 · <i>THE SEASON FILM</i> · MATCH BY MATCH`;
+(function picker(){   // the ATP top 10 on one page: switching loads ?p=<slug> (each film keeps its own place)
+  const sel = document.createElement("select"); sel.id = "pick"; sel.title = "Choose a player";
+  sel.innerHTML = ALL.players.map(x => `<option value="${x.player.slug}"${x===D?" selected":""}>#${x.player.rank} ${x.player.last.toUpperCase()}</option>`).join("");
+  sel.onchange = () => { location.href = `${location.pathname}?p=${sel.value}`; };
+  $("whoSub").appendChild(sel);
+})();
 $("me").src = $("openCut").src = `img/full/${P.id}.png`;
 $("sumCut").src = `img/full/${P.id}.png`;
 $("sumA").textContent = `${P.first.toUpperCase()} ${P.last.toUpperCase()} · 2026 · THE SEASON SO FAR`;
@@ -575,6 +593,7 @@ function buildBoard(m){
   const row = (nm, f, sub, side) => `<div class="brow" data-side="${side}"><div class="nm"><span class="f">${flag(f)}</span>${nm}${sub?`<small>${sub}</small>`:""}</div>`+
     m.sets.map(([a,b,tb],k)=>{ const mine = side==="me" ? a : b, other = side==="me" ? b : a, won = mine>other;
       return `<div class="st${won?" won":""}" data-k="${k}">${mine}${tb!=null && !won ? `<sup>${tb}</sup>`:""}</div>`; }).join("")+
+    (n ? "" : `<div class="wo">W/O</div>`) +
     `<div class="res">${side==="me" ? (m.wl==="W"?"WIN":"") : (m.wl==="L"?"WIN":"")}</div></div>`;
   $("board").innerHTML = row(P.last, P.flag, "", "me") + row(m.oppShort, m.oppFlag, m.oppR?"#"+m.oppR:"", "op");
 }
@@ -594,7 +613,7 @@ function enter(sc){
     $("on").innerHTML = `<span class="vs">vs</span>${m.opp}<span class="fl">${flag(m.oppFlag)}</span>${m.oppR?`<span class="rk${m.oppR<=10?" top":""}">#${m.oppR}</span>`:""}`;
     $("ghost").textContent = "";
     $("rnd").textContent = m.round; $("rnd").className = (m.round.length>2 ? "long" : "") + (m.round==="F" ? " f" : "");
-    if(m.oppImg){ $("opp").src = `img/full/${m.oppImg}.png`; $("opp").style.display=""; $("oppPh").style.display="none"; }
+    if(m.oppImg){ $("opp").src = `img/full/${m.oppImg}.png`; $("opp").classList.toggle("bust", m.oppKind==="bust"); $("opp").style.display=""; $("oppPh").style.display="none"; }
     else { $("opp").style.display="none"; $("oppPh").style.display="flex"; $("oppPh").innerHTML = `${flag(m.oppFlag)||"🎾"}<small>NO PHOTO</small>`; }
     buildBoard(m);
     pathChips(sc.e, sc.j);
@@ -603,6 +622,7 @@ function enter(sc){
     if(sc.grow){   // keep the winner on screen (the status card fades in over him, and his photo there grows from this one)
       const lm = e.matches[e.matches.length-1], o = $("opp");
       if(!o.src.endsWith(`/${lm.oppImg}.png`)) o.src = `img/full/${lm.oppImg}.png`;
+      o.classList.toggle("bust", lm.oppKind==="bust");
       o.classList.remove("lost"); o.style.display = ""; o.style.opacity = 1; o.style.transform = "";
     } else $("opp").style.display="none";
     if(sc.k==="fly"||sc.k==="intro"||sc.k==="open"){
@@ -619,14 +639,14 @@ function enter(sc){
       const r0 = rankAt(ms(e.start)), r1 = rankAt(ms(e.end));
       const rankPill = r0 && r1 && r0!==r1 ? `<div class="pill"><small>ATP RANK</small>#${r0} → #${r1}</div>` : "";
       const pill = (k,v) => `<div class="pill"><small>${k}</small>${v}</div>`;
-      $("stWho").src = `img/full/${P.id}.png`;
+      $("stWho").src = `img/full/${P.id}.png`; $("stWho").classList.remove("bust");
       if(sc.k==="no1"){
-        const d = new Date(ms(D.careerHigh.date));
+        const d = new Date(ms(D.no1.date));
         st.className = "gold";
         $("stK").textContent = `ATP Ranking · ${d.getUTCDate()} ${MON[d.getUTCMonth()]} 2026`;
         $("stB").textContent = "World No. 1";
-        $("stS").innerHTML = `For the first time in his career`;
-        $("stP").innerHTML = pill("ATP RANK", `#${rankAt(ms(D.careerHigh.date)-7*DAY)} → #1`);
+        $("stS").innerHTML = D.no1.first ? `For the first time in his career` : `Back on top of the world`;
+        $("stP").innerHTML = pill("ATP RANK", `#${D.no1.from} → #1`);
       } else if(e.live){
         $("stK").textContent = `${e.city} · ${e.name} · in progress`;
         $("stB").textContent = w===e.matches.length ? "Unbeaten" : `${w}–${l}`;
@@ -642,7 +662,7 @@ function enter(sc){
         $("stS").innerHTML = `def. <b>${last.opp}</b> ${flag(last.oppFlag)} in the final<br>${last.score}`;
         $("stP").innerHTML = pill("W–L", `${w}–${l}`) + pill("POINTS", e.points) + pill("PRIZE", money(e.prizeUSD)) + rankPill;
       } else {
-        $("stWho").src = last.oppImg ? `img/full/${last.oppImg}.png` : "";
+        $("stWho").src = last.oppImg ? `img/full/${last.oppImg}.png` : ""; $("stWho").classList.toggle("bust", last.oppKind==="bust");
         $("stK").textContent = `${e.city} · Out in the ${(ROUND[last.round]||last.roundLong).toLowerCase()} · defeated by`;
         $("stB").textContent = last.opp;
         $("stS").innerHTML = `${flag(last.oppFlag)} ${last.oppR?"#"+last.oppR+" · ":""}<b>${last.score}</b>`;
@@ -709,7 +729,7 @@ function frame(t){
     st.querySelector(".burst").style.transform = `rotate(${t*6}deg)`;
     const w = $("stWho");
     if(sc.grow){   // starts exactly on the match photo (600px tall, 40px from the right) and grows to 700px from his feet
-      const g = eOut(clamp((p-.04)/.45)), s0 = 600/700;
+      const g = eOut(clamp((p-.04)/.45)), s0 = $("opp").offsetHeight / (w.offsetHeight || 1);
       w.style.transformOrigin = "100% 100%"; w.style.transform = `translateX(${10*(1-g)}px) scale(${s0+(1-s0)*g})`;
       $("opp").style.opacity = 1 - q; }   // cross-fade: the match photo hands over to this one, then is gone (the card is see-through)
     else { w.style.transformOrigin = "50% 100%"; w.style.transform = `translateX(${(1-q)*120}px) scale(${e.title ? 1+.06*p : 1})`; } }
@@ -834,6 +854,7 @@ $("spd").onclick = () => { speed = SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.lengt
 $("hide").onclick = () => document.body.classList.add("clean");
 $("fs").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 addEventListener("keydown", ev => {
+  if(ev.target.tagName==="SELECT") return;   // the player picker keeps its own keys
   if(ev.key===" "){ ev.preventDefault(); $("play").click(); }
   else if(ev.key==="ArrowRight") jump(1); else if(ev.key==="ArrowLeft") jump(-1);
   else if(ev.key==="Home") $("restart").click();

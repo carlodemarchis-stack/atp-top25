@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Build season.html — the animated "player 2026 film" (globe + match-by-match).
 
-Reads data/players.json (+ data/rank_history_<id>.json) and inlines one player's
-ATP-tour season into season_template.html.  Team events (United Cup, Davis Cup,
-Laver Cup) and byes are left out.
+One page for the ATP top 10: reads data/players.json, data/rank_history_<id>.json
+(weekly 2026 ranks, from atptour /en/-/www/rank/history/<id>) and data/opp_ids.json
+(opponent "F. Last" -> [ATP id, full name], from each player's 2026 activity JSON),
+and inlines every player's ATP-tour season into season_template.html; the page picks
+one with ?p=<slug>.  Team events (United Cup, Davis Cup, Laver Cup) and byes are left out.
 
-  python3 build_season.py                 # Zverev
-  python3 build_season.py --player z355
+  python3 build_season.py            # current top 10
+  python3 build_season.py --top 12
 """
-import argparse, json, os, re
+import argparse, json, os, re, unicodedata
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ATP_TYPES = ("GS", "1000", "500", "250", "WC")
@@ -51,15 +54,6 @@ COUNTRY2 = {"Germany": "DE", "Spain": "ES", "Italy": "IT", "France": "FR", "Unit
             "Australia": "AU", "Canada": "CA", "Great Britain": "GB", "Czechia": "CZ", "Norway": "NO",
             "Denmark": "DK", "Greece": "GR", "Poland": "PL", "Belgium": "BE", "Argentina": "AR", "Brazil": "BR",
             "Netherlands": "NL", "Switzerland": "CH", "Chile": "CL", "Portugal": "PT", "Kazakhstan": "KZ"}
-# opponents outside the top-100 dataset: ATP id (photo in img/full/<id>.png, gladiator cutout
-# fetched from atptour.com) + full name, from the player's /activity JSON (OpponentId/FirstName)
-OPP_EXTRA = {
-    "G. Diallo": ("d0f6", "Gabriel Diallo"), "A. Muller": ("mp20", "Alexandre Muller"),
-    "C. Moutet": ("mw02", "Corentin Moutet"), "M. Damm": ("d0dt", "Martin Damm"),
-    "C. Garin": ("gd64", "Cristian Garin"), "J. de Jong": ("d0c1", "Jesper de Jong"),
-    "V. Royer": ("r0eb", "Valentin Royer"), "L. Sonego": ("su87", "Lorenzo Sonego"),
-    "J. Shang": ("s0re", "Juncheng Shang"), "Y. Wu": ("wb32", "Yibing Wu"),
-}
 SURF = {"Hard": "hard", "Clay": "clay", "Grass": "grass"}
 CAT = {"GS": "Grand Slam", "1000": "Masters 1000", "500": "ATP 500", "250": "ATP 250", "WC": "ATP Finals"}
 
@@ -81,8 +75,39 @@ def fmt_score(sets):
 def opp_entry(o, rnd, rnd_long, won, sets, has_full):
     return {"round": rnd, "roundLong": rnd_long, "wl": "W" if won else "L",
             "opp": f"{o['first']} {o['last']}", "oppShort": o["last"], "oppC": "", "oppR": o["rank"],
-            "oppFlag": COUNTRY2.get(o["country"], ""), "oppImg": o["id"] if o["id"] in has_full else None,
+            "oppFlag": COUNTRY2.get(o["country"], ""), "oppImg": o["id"] if has_full.get(o["id"]) else None,
+            "oppKind": has_full.get(o["id"]),
             "score": fmt_score(sets), "sets": sets}
+
+
+def photo_kind(path, _cache={}):
+    """'full' body cutout, 'bust' (head-and-shoulders close-up, drawn smaller) or None for
+    ATP's grey silhouette placeholder."""
+    if path in _cache:
+        return _cache[path]
+    im = Image.open(path).convert("RGBA"); w, h = im.size; px = im.load()
+    opaque = [px[x, y] for y in range(0, h, 6) for x in range(0, w, 6) if px[x, y][3] > 128]
+    if not opaque or sum(max(p[:3]) - min(p[:3]) for p in opaque) / len(opaque) < 6:
+        kind = None
+    else:
+        y = int(h * .2); xs = [x for x in range(w) if px[x, y][3] > 128]
+        kind = "bust" if xs and (max(xs) - min(xs)) / w > .45 else "full"
+    _cache[path] = kind
+    return kind
+
+
+def slug_of(p):
+    s = unicodedata.normalize("NFKD", p["last"]).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z]+", "-", s).strip("-")
+
+
+def no1_beat(weeks, was_no1):
+    """the 2026 week a player climbs to No. 1 (first time ever, or back) — None if he never does"""
+    for a, b in zip(weeks, weeks[1:]):
+        if b["rank"] == 1 and a["rank"] > 1:
+            first = not was_no1 and not any(w["rank"] == 1 for w in weeks[:weeks.index(b)])
+            return {"date": b["date"], "from": a["rank"], "first": first}
+    return None
 
 
 def finals_matches(pid, players, has_full):
@@ -118,20 +143,10 @@ def finals_matches(pid, players, has_full):
     return out, {"next": nxt}
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--player", default="z355")
-    a = ap.parse_args()
-
-    d = json.load(open(os.path.join(HERE, "data/players.json")))
-    players = d["players"]
-    p = next(x for x in players if x["id"] == a.player)
-    by_abbr = {f"{x['first'][0]}. {x['last']}": x for x in players}
-    cal = {c["id"]: c for c in d["calendar"]}
-    has_full = set(f[:-4] for f in os.listdir(os.path.join(HERE, "img/full")))
-    rh_path = os.path.join(HERE, f"data/rank_history_{a.player}.json")
+def build_player(p, d, players, by_abbr, cal, has_full, opp_ids):
+    rh_path = os.path.join(HERE, f"data/rank_history_{p['id']}.json")
     rh = json.load(open(rh_path)) if os.path.exists(rh_path) else {}
-    ranks, career_high = rh.get("weeks", []), rh.get("careerHigh")
+    ranks = rh.get("weeks", [])
 
     events = []
     for t in sorted(p["tournaments"], key=lambda t: t["date"]):
@@ -146,22 +161,20 @@ def main():
                 continue
             o = by_abbr.get(m["opp"])
             sets = parse_score(m["score"])
-            oid = o["id"] if o and o["id"] in has_full else None
-            xid, xname = OPP_EXTRA.get(m["opp"], (None, None))
-            if not oid and xid in has_full:
-                oid = xid
+            xid, xname = opp_ids.get(m["opp"], (None, None))
+            oid = next((i for i in ((o or {}).get("id"), xid) if i and has_full.get(i)), None)
             matches.append({
                 "round": m["round"], "roundLong": m["roundLong"], "wl": m["wl"],
                 "opp": f"{o['first']} {o['last']}" if o else (xname or m["opp"]),
                 "oppShort": m["opp"].split(". ", 1)[-1],
                 "oppC": m["oppC"] or "", "oppR": m["oppR"],
                 "oppFlag": "" if (m["oppC"] or "") in NEUTRAL else IOC2.get(m["oppC"] or "", ""),
-                "oppImg": oid,
-                "score": m["score"], "sets": sets,
+                "oppImg": oid, "oppKind": has_full.get(oid),
+                "score": m["score"] or "W/O", "sets": sets,   # an empty score is a walkover
             })
         live = None
         if t["type"] == "WC":
-            matches, live = finals_matches(a.player, players, has_full)
+            matches, live = finals_matches(p["id"], players, has_full)
         lat, lon = CITY.get(city, (0, 0))
         events.append({
             "live": live,
@@ -176,17 +189,36 @@ def main():
             "matches": matches,
         })
 
-    data = {
-        "player": {"id": p["id"], "first": p["first"], "last": p["last"], "country": p["country"],
-                   "flag": COUNTRY2.get(p["country"], "")},
-        "rankingDate": d.get("ranking_date"), "ranks": ranks, "careerHigh": career_high, "events": events,
-    }
-    tpl = open(os.path.join(HERE, "season_template.html"), encoding="utf-8").read()
-    html = tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False, separators=(",", ":")))
-    open(os.path.join(HERE, "season.html"), "w", encoding="utf-8").write(html)
     nm = sum(len(e["matches"]) for e in events)
-    print(f"season.html: {p['first']} {p['last']} · {len(events)} ATP events · {nm} matches · "
-          f"prize ≈ ${sum(e['prizeUSD'] for e in events):,} (ytd {p['ytdPrize']})")
+    print(f"  #{p['rank']:<2} {p['first']} {p['last']:<12} {len(events):2} events · {nm:2} matches · "
+          f"prize ≈ ${sum(e['prizeUSD'] for e in events):,} · No.1 beat {no1_beat(ranks, rh.get('wasNo1Before2026'))}")
+    return {
+        "player": {"id": p["id"], "slug": slug_of(p), "rank": p["rank"], "first": p["first"], "last": p["last"],
+                   "country": p["country"], "flag": COUNTRY2.get(p["country"], "")},
+        "rankingDate": d.get("ranking_date"), "ranks": ranks,
+        "no1": no1_beat(ranks, rh.get("wasNo1Before2026")), "events": events,
+    }
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--top", type=int, default=10)
+    a = ap.parse_args()
+
+    d = json.load(open(os.path.join(HERE, "data/players.json")))
+    players = d["players"]
+    by_abbr = {f"{x['first'][0]}. {x['last']}": x for x in players}
+    cal = {c["id"]: c for c in d["calendar"]}
+    imgdir = os.path.join(HERE, "img/full")
+    has_full = {f[:-4]: photo_kind(os.path.join(imgdir, f)) for f in os.listdir(imgdir) if f.endswith(".png")}
+    opp_ids = json.load(open(os.path.join(HERE, "data/opp_ids.json")))
+    top = sorted((x for x in players if x.get("rank")), key=lambda x: x["rank"])[:a.top]
+    print(f"season.html: ATP top {len(top)}")
+    films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids) for p in top]
+    tpl = open(os.path.join(HERE, "season_template.html"), encoding="utf-8").read()
+    html = tpl.replace("/*__DATA__*/null", json.dumps({"players": films}, ensure_ascii=False, separators=(",", ":")))
+    open(os.path.join(HERE, "season.html"), "w", encoding="utf-8").write(html)
+    print(f"  {len(html)//1024} KB")
 
 
 if __name__ == "__main__":
