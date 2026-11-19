@@ -149,6 +149,9 @@
   #stPath .pc .n{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   #stPath .pc .n small{color:var(--muted-2); font-weight:700; margin-left:6px; font-size:15px}
   #stPath .pc .s{font-variant-numeric:tabular-nums; color:var(--muted); font-size:18px; font-weight:600; white-space:nowrap}
+  /* loss card: the player stays where he stood in the match, greyed exactly as at its end (the winner grows on the right) */
+  #stMe{position:absolute; left:-30px; bottom:520px; height:780px; width:auto; display:none;
+    filter:grayscale(1) brightness(.45) drop-shadow(0 20px 26px rgba(0,0,0,.55))}
   #status .who{position:absolute; right:-30px; bottom:520px; height:900px; width:auto; filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
   #status .who.bust{height:640px}
   #status .fade{position:absolute; left:0; right:0; top:900px; bottom:0; background:linear-gradient(180deg, transparent 0, rgba(5,10,26,.85) 32%, rgba(5,10,26,.96) 100%)}
@@ -254,7 +257,7 @@
       <div id="oppPh"></div>
       <div id="board"></div>
     </section>
-    <div id="status"><div class="bg"></div><div class="burst"></div><canvas id="stMap"></canvas><div id="stPath"></div><img class="who" id="stWho" alt=""><div class="fade"></div>
+    <div id="status"><div class="bg"></div><div class="burst"></div><canvas id="stMap"></canvas><div id="stPath"></div><img id="stMe" alt=""><img class="who" id="stWho" alt=""><div class="fade"></div>
       <div class="tx"><div class="k" id="stK"></div><div class="b" id="stB"></div><div class="s" id="stS"></div><div class="pills" id="stP"></div></div></div>
   </section>
 
@@ -374,7 +377,7 @@ function sceneAt(t){ let i = scenes.length-1; while(i>0 && scenes[i].t0 > t) i--
 
 /* ================= fixed text ================= */
 $("idl").innerHTML = `${flag(P.flag)} ${P.first.toUpperCase()} ${P.last.toUpperCase()}<span>2026 SEASON</span>`;
-$("me").src = $("openCut").src = $("sumCut").src = `img/full/${P.id}.png`;
+$("me").src = $("openCut").src = $("sumCut").src = $("stMe").src = `img/full/${P.id}.png`;
 $("sumA").textContent = `${P.first.toUpperCase()} ${P.last.toUpperCase()} · 2026`;
 $("openName").innerHTML = `${P.first}<b>${P.last.toUpperCase()}</b>`;
 $("openC").textContent = `THE SEASON · ${film.length} EVENTS · EVERY MATCH`;
@@ -661,7 +664,12 @@ function enter(sc){
     }
     $("stWho").style.display = $("stWho").getAttribute("src") ? "" : "none";
     fitBig($("stB"), sc.k==="no1"||e.title ? 150 : 120, 2);
-    if(sc.k==="status"){ drawMini(sc.e); stPath(sc.e); } else { $("stPath").innerHTML = ""; mctx.clearRect(0,0,MW,MW); }
+    // title / live cards are his: his matches + the globe on the left. A loss card shows the winner big, so a list
+    // there would read as the winner's matches: instead the player himself, faded, where he stood
+    const lossCard = sc.k==="status" && !e.title && !e.live;
+    $("stMe").style.display = lossCard ? "block" : "none";
+    if(sc.k==="status" && !lossCard){ drawMini(sc.e); stPath(sc.e); }
+    else { $("stPath").innerHTML = ""; mctx.clearRect(0,0,MW,MW); mcv.style.display = "none"; }
     if(sc.k==="summary") buildSummary();
   }
 }
@@ -723,6 +731,8 @@ function frame(t){
     st.querySelector(".tx").style.transform = `translateY(${(1-q)*40}px)`;
     st.querySelector(".burst").style.transform = `rotate(${t*6}deg)`;
     $("stMap").style.opacity = .75*eOut(clamp((p-.05)/.25));
+    { const g = eOut(clamp((p-.04)/.45)), me = $("stMe");   // the beaten player steps back as the winner grows
+      me.style.transformOrigin = "0 100%"; me.style.transform = `scale(${1-.2*g})`; me.style.opacity = 1-.25*g; }
     st.querySelectorAll(".pc").forEach((c,k) => { const qk = eOut(clamp((p-.08-k*.035)/.15)); c.style.opacity = qk; c.style.transform = `translateX(${(1-qk)*-30}px)`; });
     const w = $("stWho");
     if(sc.grow){   // starts exactly on the match photo (same corner) and grows from his feet
