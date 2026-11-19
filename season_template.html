@@ -292,7 +292,7 @@
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script>
 const ALL = /*__DATA__*/null;
-const PSLUG = new URLSearchParams(location.search).get("p");
+const PSLUG = (new URLSearchParams(location.search).get("p")||"").toLowerCase().replace(/[^a-z]/g,"");   // "?p=sinner." still finds Sinner
 const D = ALL.players.find(x => x.player.slug===PSLUG) || ALL.players[0];
 const EV = D.events, P = D.player;
 document.title = `${P.first} ${P.last} 2026 — Season Film`;

@@ -137,6 +137,18 @@
   #status .burst{position:absolute; left:-260px; top:200px; width:1600px; height:1600px; border-radius:50%; display:none;
     background:repeating-conic-gradient(rgba(242,193,78,.13) 0 6deg, transparent 6deg 18deg)}
   #status.gold .burst{display:block}
+  /* left of the result card: a small globe on the venue (the season's route so far) and the event's matches over it */
+  #stMap{position:absolute; left:10px; top:740px; width:560px; height:560px; opacity:0}
+  #stPath{position:absolute; left:40px; top:450px; width:500px; display:flex; flex-direction:column; gap:6px}
+  #stPath .pc{display:grid; grid-template-columns:68px 34px 1fr auto; align-items:center; gap:10px; height:48px; padding:0 14px 0 0;
+    border-radius:9px; background:rgba(10,20,48,.88); border:1px solid var(--line); font-size:21px; overflow:hidden; opacity:0}
+  #stPath .pc .r{height:100%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; letter-spacing:.06em;
+    background:rgba(79,208,138,.18); color:var(--green)}
+  #stPath .pc.L .r{background:rgba(255,107,107,.16); color:var(--red)}
+  #stPath .pc .f{font-size:24px; text-align:center}
+  #stPath .pc .n{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #stPath .pc .n small{color:var(--muted-2); font-weight:700; margin-left:6px; font-size:15px}
+  #stPath .pc .s{font-variant-numeric:tabular-nums; color:var(--muted); font-size:18px; font-weight:600; white-space:nowrap}
   #status .who{position:absolute; right:-30px; bottom:520px; height:900px; width:auto; filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
   #status .who.bust{height:640px}
   #status .fade{position:absolute; left:0; right:0; top:900px; bottom:0; background:linear-gradient(180deg, transparent 0, rgba(5,10,26,.85) 32%, rgba(5,10,26,.96) 100%)}
@@ -242,7 +254,7 @@
       <div id="oppPh"></div>
       <div id="board"></div>
     </section>
-    <div id="status"><div class="bg"></div><div class="burst"></div><img class="who" id="stWho" alt=""><div class="fade"></div>
+    <div id="status"><div class="bg"></div><div class="burst"></div><canvas id="stMap"></canvas><div id="stPath"></div><img class="who" id="stWho" alt=""><div class="fade"></div>
       <div class="tx"><div class="k" id="stK"></div><div class="b" id="stB"></div><div class="s" id="stS"></div><div class="pills" id="stP"></div></div></div>
   </section>
 
@@ -276,7 +288,7 @@
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script>
 const ALL = /*__DATA__*/null;
-const PSLUG = new URLSearchParams(location.search).get("p");
+const PSLUG = (new URLSearchParams(location.search).get("p")||"").toLowerCase().replace(/[^a-z]/g,"");   // "?p=sinner." still finds Sinner
 const D = ALL.players.find(x => x.player.slug===PSLUG) || ALL.players[0];
 const EV = D.events, P = D.player;
 document.title = `${P.first} ${P.last} 2026 — Season Film (vertical)`;
@@ -532,6 +544,41 @@ function fitGhost(){ const g = $("ghost"); let f = 260; g.style.fontSize = "";
   while(g.scrollWidth > g.clientWidth + 1 && f > 80){ f -= 10; g.style.fontSize = f+"px"; } }
 function fitOn(){ const o = $("on"); o.style.fontSize = ""; let f = 64;
   while(o.scrollWidth > o.clientWidth && f > 34){ f -= 4; o.style.fontSize = f+"px"; } }
+/* the result card's left side: mini globe on the venue + the event's matches, sized to stay above the card's text */
+const MW = 560, mcv = $("stMap"), mctx = mcv.getContext("2d");
+mcv.width = MW*DPR; mcv.height = MW*DPR; mctx.scale(DPR,DPR);
+function drawMini(i){
+  const e = EV[i], pr = d3.geoOrthographic().clipAngle(90).precision(.6).translate([MW/2,MW/2]).scale(MW*.42).rotate([-e.lon, -e.lat-8]);
+  const pa = d3.geoPath(pr, mctx), map = MAP.hi || MAP.lo;
+  mctx.clearRect(0,0,MW,MW);
+  const r = MW*.42, oc = mctx.createRadialGradient(MW/2-r*.35, MW/2-r*.4, r*.05, MW/2, MW/2, r);
+  oc.addColorStop(0,"#1d3a7a"); oc.addColorStop(.7,"#0d1d45"); oc.addColorStop(1,"#071230");
+  mctx.fillStyle = oc; mctx.beginPath(); pa({type:"Sphere"}); mctx.fill();
+  if(map){ mctx.fillStyle = "#2a4683"; mctx.beginPath(); pa(map.land); mctx.fill();
+    mctx.strokeStyle = "rgba(170,195,245,.2)"; mctx.lineWidth = .6; mctx.beginPath(); pa(map.bord); mctx.stroke(); }
+  const pts = film.filter(k => k<=i).map(k => [EV[k].lon, EV[k].lat]);
+  mctx.strokeStyle = "rgba(242,193,78,.55)"; mctx.lineWidth = 1.6; mctx.beginPath(); pa({type:"LineString", coordinates:pts}); mctx.stroke();
+  film.filter(k => k<i).forEach(k => { const xy = pr([EV[k].lon, EV[k].lat]);
+    if(xy && d3.geoDistance([EV[k].lon,EV[k].lat], pr.invert([MW/2,MW/2])) < Math.PI/2){ mctx.beginPath(); mctx.arc(xy[0],xy[1],EV[k].title?5:3.5,0,7);
+      mctx.fillStyle = EV[k].title ? "#f2c14e" : SURFC[EV[k].surface]; mctx.fill(); } });
+  const [x,y] = pr([e.lon, e.lat]);
+  mctx.beginPath(); mctx.arc(x,y,18,0,7); mctx.strokeStyle = "rgba(255,255,255,.35)"; mctx.lineWidth = 2; mctx.stroke();
+  mctx.beginPath(); mctx.arc(x,y,9,0,7); mctx.fillStyle = SURFC[e.surface]; mctx.fill(); mctx.lineWidth = 3; mctx.strokeStyle = "#fff"; mctx.stroke();
+  const sh = mctx.createRadialGradient(MW/2-r*.25,MW/2-r*.3,r*.3,MW/2,MW/2,r);
+  sh.addColorStop(0,"rgba(5,10,26,0)"); sh.addColorStop(1,"rgba(5,10,26,.6)");
+  mctx.fillStyle = sh; mctx.beginPath(); pa({type:"Sphere"}); mctx.fill();
+}
+function stPath(i){
+  const box = $("stPath"), ms_ = EV[i].matches;
+  box.innerHTML = ms_.map(m => `<div class="pc ${m.wl}"><span class="r">${m.round}</span><span class="f">${flag(m.oppFlag)}</span><span class="n">${m.oppShort}<small>${m.oppR?"#"+m.oppR:""}</small></span><span class="s">${m.score}</span></div>`).join("");
+  // keep the list clear of the card's text (which grows with a two-line name)
+  const room = $("status").querySelector(".tx").offsetTop - box.offsetTop - 30, n = ms_.length;
+  const h = Math.max(30, Math.min(48, Math.floor((room - (n-1)*6)/n)));
+  box.querySelectorAll(".pc").forEach(c => { c.style.height = h+"px"; c.style.fontSize = Math.round(21*h/48)+"px"; });
+  // the globe fills what is left between the list and the text, centred in the left column
+  const top = box.offsetTop + box.offsetHeight + 16, size = Math.min(MW, $("status").querySelector(".tx").offsetTop - top - 16);
+  Object.assign(mcv.style, {display: size < 160 ? "none" : "", top: top+"px", width: size+"px", height: size+"px", left: (290 - size/2)+"px"});
+}
 function setEvent(i){
   if(shownEv===i) return; shownEv = i; const e = EV[i];
   document.documentElement.style.setProperty("--acc", SURFC[e.surface]);
@@ -614,6 +661,7 @@ function enter(sc){
     }
     $("stWho").style.display = $("stWho").getAttribute("src") ? "" : "none";
     fitBig($("stB"), sc.k==="no1"||e.title ? 150 : 120, 2);
+    if(sc.k==="status"){ drawMini(sc.e); stPath(sc.e); } else { $("stPath").innerHTML = ""; mctx.clearRect(0,0,MW,MW); }
     if(sc.k==="summary") buildSummary();
   }
 }
@@ -674,6 +722,8 @@ function frame(t){
   if(sc.k==="status"||sc.k==="no1"){ const q = eOut(clamp(p/.16)); st.style.opacity = q;
     st.querySelector(".tx").style.transform = `translateY(${(1-q)*40}px)`;
     st.querySelector(".burst").style.transform = `rotate(${t*6}deg)`;
+    $("stMap").style.opacity = .75*eOut(clamp((p-.05)/.25));
+    st.querySelectorAll(".pc").forEach((c,k) => { const qk = eOut(clamp((p-.08-k*.035)/.15)); c.style.opacity = qk; c.style.transform = `translateX(${(1-qk)*-30}px)`; });
     const w = $("stWho");
     if(sc.grow){   // starts exactly on the match photo (same corner) and grows from his feet
       const g = eOut(clamp((p-.04)/.45)), s0 = $("opp").offsetHeight / (w.offsetHeight || 1);
