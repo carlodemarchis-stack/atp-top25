@@ -196,6 +196,11 @@
   #sndHint.show{display:block}
   .controls #spd{width:auto; padding:0 12px; border-radius:999px}
   body.clean .controls{display:none}
+  /* after hiding the controls: how to get them back, then it fades (so it stays out of a recording) */
+  #ctlHint{position:absolute; left:50%; bottom:22px; transform:translateX(-50%); z-index:41; pointer-events:none; opacity:0; transition:opacity .6s;
+    padding:10px 20px; border-radius:999px; background:rgba(5,10,26,.92); border:1px solid var(--line);
+    color:var(--muted); font-size:15px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap}
+  #ctlHint.show{opacity:1}
 
   #status .pill.live{color:#fff; border-color:rgba(255,107,107,.6); background:rgba(255,107,107,.18)}
   /* ---------- closing summary ---------- */
@@ -261,6 +266,7 @@
   <div id="cal"></div>
 
   <div id="credit"><a href="https://aguywithascarf.com/" target="_blank" rel="noopener">A guy with a scarf</a> · data ATP Tour<a class="agwas-ver" data-agwas-ver="tennis" href="https://dataviz.aguywithascarf.com/releases/#tennis" target="_blank" rel="noopener"></a></div>
+  <div id="ctlHint">Controls hidden · press H or double-click to show</div>
   <div id="sndHint">🔈 Click for sound</div>
   <div class="controls" id="controls">
     <button id="restart" title="Restart (Home)"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
@@ -270,7 +276,7 @@
     <div class="tm" id="tm"></div>
     <button id="spd" title="Speed (S)">1×</button>
     <button id="snd" title="Sound on / off (M)"><svg id="sndIcon" viewBox="0 0 24 24"></svg></button>
-    <button id="hide" title="Hide controls for recording (H)"><svg viewBox="0 0 24 24"><path d="M12 6c-5 0-9 6-9 6s4 6 9 6 9-6 9-6-4-6-9-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg></button>
+    <button id="hide" title="Hide controls (H; H, Esc or double-click brings them back)"><svg viewBox="0 0 24 24"><path d="M12 6c-5 0-9 6-9 6s4 6 9 6 9-6 9-6-4-6-9-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg></button>
     <button id="recBtn" title="Record a video with sound (R)" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg></button>
     <button id="fs" title="Fullscreen (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 3v-3h2v5h-5v-2z"/></svg></button>
   </div>
@@ -856,7 +862,15 @@ $("restart").onclick = () => { seek(0); setPlaying(true); };
 $("prev").onclick = () => jump(-1);
 $("next").onclick = () => jump(1);
 $("spd").onclick = () => { speed = SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length]; $("spd").textContent = speed+"×"; save(); };
-$("hide").onclick = () => document.body.classList.add("clean");
+// controls: hide (button / H) shows a short hint; H, Esc, double-click or double-tap bring them back
+let ctlT = 0;
+function setClean(v){ document.body.classList.toggle("clean", v); clearTimeout(ctlT);
+  $("ctlHint").classList.toggle("show", v); if(v) ctlT = setTimeout(() => $("ctlHint").classList.remove("show"), 3000); }
+$("hide").onclick = () => setClean(true);
+addEventListener("dblclick", () => { if(!REC && document.body.classList.contains("clean")) setClean(false); });
+let lastTap = 0;
+addEventListener("touchend", () => { const n = Date.now();
+  if(n - lastTap < 350 && !REC && document.body.classList.contains("clean")) setClean(false); lastTap = n; });
 $("fs").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 $("recBtn").onclick = () => record();
 addEventListener("keydown", ev => {
@@ -865,7 +879,8 @@ addEventListener("keydown", ev => {
   if(ev.key===" "){ ev.preventDefault(); $("play").click(); }
   else if(ev.key==="ArrowRight") jump(1); else if(ev.key==="ArrowLeft") jump(-1);
   else if(ev.key==="Home") $("restart").click();
-  else if(ev.key==="h"||ev.key==="H") document.body.classList.toggle("clean");
+  else if(ev.key==="h"||ev.key==="H") setClean(!document.body.classList.contains("clean"));
+  else if(ev.key==="Escape" && document.body.classList.contains("clean")) setClean(false);
   else if(ev.key==="f"||ev.key==="F") $("fs").click();
   else if(ev.key==="s"||ev.key==="S") $("spd").click();
   else if(ev.key==="m"||ev.key==="M") $("snd").click();
