@@ -5,7 +5,8 @@ One page for the ATP top 10: reads data/players.json, data/rank_history_<id>.jso
 (weekly 2026 ranks, from atptour /en/-/www/rank/history/<id>) and data/opp_ids.json
 (opponent "F. Last" -> [ATP id, full name], from each player's 2026 activity JSON),
 and inlines every player's ATP-tour season into season_template.html; the page picks
-one with ?p=<slug>.  Team events (United Cup, Davis Cup, Laver Cup) and byes are left out.
+one with ?p=<slug>.  The same data also fills season_vertical_template.html ->
+season-vertical.html, the 9:16 Instagram Reel version (one match per screen, <= 2:55).  Team events (United Cup, Davis Cup, Laver Cup) and byes are left out.
 
   python3 build_season.py            # current top 10
   python3 build_season.py --top 12
@@ -215,10 +216,13 @@ def main():
     top = sorted((x for x in players if x.get("rank")), key=lambda x: x["rank"])[:a.top]
     print(f"season.html: ATP top {len(top)}")
     films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids) for p in top]
-    tpl = open(os.path.join(HERE, "season_template.html"), encoding="utf-8").read()
-    html = tpl.replace("/*__DATA__*/null", json.dumps({"players": films}, ensure_ascii=False, separators=(",", ":")))
-    open(os.path.join(HERE, "season.html"), "w", encoding="utf-8").write(html)
-    print(f"  {len(html)//1024} KB")
+    data = json.dumps({"players": films}, ensure_ascii=False, separators=(",", ":"))
+    # the landscape film and its 9:16 Instagram twin share the same data
+    for tpl_name, out in (("season_template.html", "season.html"), ("season_vertical_template.html", "season-vertical.html")):
+        tpl = open(os.path.join(HERE, tpl_name), encoding="utf-8").read()
+        html = tpl.replace("/*__DATA__*/null", data)
+        open(os.path.join(HERE, out), "w", encoding="utf-8").write(html)
+        print(f"  {out}: {len(html)//1024} KB")
 
 
 if __name__ == "__main__":

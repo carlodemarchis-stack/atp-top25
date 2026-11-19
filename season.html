@@ -684,7 +684,7 @@ function enter(sc){
 }
 
 function buildSummary(){
-  const s = statsAt(TOTAL), rk = rankAt(dateAt(TOTAL)), ti = EV.filter(e=>e.title);
+  const s = statsAt(TOTAL), rk = rankAt(Infinity), ti = EV.filter(e=>e.title);
   $("sumBig").textContent = rk===1 ? "World No. 1" : `World No. ${rk}`;
   const cell = (k,v,c="") => `<div class="sc ${c}"><small>${k}</small>${v}</div>`;
   $("sumGrid").innerHTML = cell("EVENTS", s.ev) + cell("TITLES", s.ti, "g") + cell("MATCHES W–L", `${Math.round(s.mw)}–${Math.round(s.ml)}`) +
