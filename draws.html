@@ -621,6 +621,7 @@ function table(g, d){
   rows.done = rest.length === 0;
   rows.started = rest.length < ms.length;
   rows.forEach(r => r.st = rows.done ? (r.pos <= 2 ? "q" : "out") : worst[r.id] <= 2 ? "q" : best[r.id] > 2 ? "out" : "alive");
+  rows.forEach(r => r.lock = rows.done ? r.pos : best[r.id] === worst[r.id] ? best[r.id] : 0);   // place already certain
   return rows;
 }
 
@@ -808,7 +809,7 @@ function drawGroup(root, gi, rows, defs){
     const t2 = mk("text", {class:"prec", x:s.x, y:yN + 15}, n);
     mk("tspan", {class:"big"}, t2, `${r.w}–${r.l}`);
     mk("tspan", {dx:6}, t2, L.W < 560 ? `sets ${r.sw}–${r.sl}` : `sets ${r.sw}–${r.sl} · games ${r.gw}–${r.gl}`);
-    const tagTxt = r.st === "q" ? (rows.done ? (r.pos === 1 ? "WINS GROUP" : "QUALIFIED") : "QUALIFIED") : r.st === "out" ? "ELIMINATED" : "";
+    const tagTxt = r.st === "q" ? (r.lock === 1 ? "WINS GROUP" : "QUALIFIED") : r.st === "out" ? "ELIMINATED" : "";
     if (tagTxt) mk("text", {class:"tag " + r.st, x:s.x, y: up ? yN - 15 : yN + 29}, n, tagTxt);
     n.addEventListener("click", () => { focus = focus === id ? null : id; applyFocus(); });
     n.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); focus = focus === id ? null : id; applyFocus(); } });
@@ -856,7 +857,7 @@ function drawKO(root, tables){
     const slots = port ? [{x:s.x, y:s.y - off}, {x:s.x, y:s.y + off}] : [{x:s.x - off, y:s.y}, {x:s.x + off, y:s.y}];
     // which group/place feeds which slot
     const feeds = [{g:0, place: k === 0 ? 1 : 2}, {g:1, place: k === 0 ? 2 : 1}];
-    const occ = feeds.map(f => { if (!tables[f.g].done) return null; const sid = tables[f.g][f.place - 1].id; return subIn(f.g, sid) || sid; });
+    const occ = feeds.map(f => { const r = tables[f.g].find(r => r.lock === f.place); return r ? (subIn(f.g, r.id) || r.id) : null; });
     const res = occ[0] && occ[1] ? sfOf(occ[0], occ[1]) : null;
     if (res){ finLines[k].setAttribute("class", "finalline on"); sfWin[k] = res[res.w]; }
     feeds.forEach((f, j) => {
