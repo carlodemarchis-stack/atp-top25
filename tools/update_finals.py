@@ -8,9 +8,10 @@ ATP  — groups below + seeds from data/players.json (Race order of the eight wh
        data/atp_finals_results.json when it exists (atptour is behind Cloudflare: read the results page
        in the browser and write them there). Format, winner's score first:
          {"rr": [{"a": "z355", "b": "s0s1", "day": 1, "w": "a", "score": "6-4 7-6(3)", "dur": "1:32"}],
-          "ko": [{"round": 2, "a": "z355", "b": "c0e9", "w": "a", "score": "6-3 6-4"},   # semi-finals
+          "ko": [{"id": "SF1", "round": 2, "a": "z355", "b": "c0e9", "w": "a", "score": "6-3 6-4"},   # semi-finals
                  {"round": 1, "a": "...", "b": "...", "w": "b", "score": "..."}],         # final
-          "days": {"z355-j0dz": {"day": 1, "time": "14:00"}}}                              # order of play (Turin time), optional
+          "days": {"z355-j0dz": {"day": 1, "time": "14:00"}},                              # order of play (Turin time), optional
+          "ko_times": {"SF1": "20:30", "SF2": "14:30", "F": "18:00"}}                       # SF1 = G1 1st v G2 2nd
        day 1 = Sun 15 Nov … day 6 = Fri 20 (round robin), 7 = SF (Sat 21), 8 = Final (Sun 22).
 """
 import datetime as dt, itertools, json, os, re, sys, urllib.request
@@ -149,8 +150,11 @@ def build_atp():
                     if len(m["maybe"]) == 1:                       # only one date left: it is that one
                         m["day"] = m.pop("maybe")[0]
     ko = [{"id": "SF1", "day": 7, "round": 2}, {"id": "SF2", "day": 7, "round": 2}, {"id": "F", "day": 8, "round": 1}]
-    for r in res.get("ko", []):
-        slot = next(k for k in ko if k["round"] == r["round"] and "w" not in k)
+    for k in ko:                                         # order of play (Turin time), until the result is in
+        if res.get("ko_times", {}).get(k["id"]):
+            k["time"] = res["ko_times"][k["id"]]
+    for r in res.get("ko", []):                          # "id" (SF1 / SF2 / F) pins the slot; else the first free one
+        slot = next(k for k in ko if (k["id"] == r["id"] if r.get("id") else k["round"] == r["round"] and "w" not in k))
         slot.update(a=r["a"], b=r["b"], w=r["w"], score=r["score"])
     return {"tour": "atp", "short": "ATP Finals", "name": "Nitto ATP Finals", "loc": "Turin", "flag": "🇮🇹",
             "dates": "15–22 Nov", "start": "2026-11-15", "utc": 1, "trophy": "", "asof": NOW,
