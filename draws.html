@@ -679,6 +679,7 @@ function gatePos(g, place){
   const towardSF = (g === 0) === (place === 1) ? 0 : 1;     // G1#1→SF0, G1#2→SF1, G2#1→SF1, G2#2→SF0
   let a;
   if (!port){ const base = G[g].dir > 0 ? 0 : 180; a = base + (towardSF === 0 ? -1 : 1) * (G[g].dir > 0 ? 20 : -20); }
+  else if (STORY) return {x: G[g].x + (towardSF === 0 ? -L.Rx : L.Rx), y: G[g].y, sf: towardSF};
   else return {x: G[g].x + (towardSF === 0 ? -14 : 14), y: G[g].y + (G[g].dir > 0 ? L.Ry : -L.Ry), sf: towardSF};
   a *= Math.PI/180;
   return {x: G[g].x + R*Math.cos(a), y: G[g].y + R*Math.sin(a), a, sf: towardSF};
@@ -810,7 +811,8 @@ function drawGroup(root, gi, rows, defs){
     mk("tspan", {class:"big"}, t2, `${r.w}–${r.l}`);
     mk("tspan", {dx:6}, t2, L.W < 560 ? `sets ${r.sw}–${r.sl}` : `sets ${r.sw}–${r.sl} · games ${r.gw}–${r.gl}`);
     const tagTxt = r.st === "q" ? (r.lock === 1 ? "WINS GROUP" : "QUALIFIED") : r.st === "out" ? "ELIMINATED" : "";
-    if (tagTxt) mk("text", {class:"tag " + r.st, x:s.x, y: up ? yN - 15 : yN + 29}, n, tagTxt);
+    if (tagTxt && STORY && up) mk("tspan", {class:"tag " + r.st, dx:7}, t2, tagTxt);
+    else if (tagTxt) mk("text", {class:"tag " + r.st, x:s.x, y: up ? yN - 15 : yN + 29}, n, tagTxt);
     n.addEventListener("click", () => { focus = focus === id ? null : id; applyFocus(); });
     n.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); focus = focus === id ? null : id; applyFocus(); } });
   });
@@ -864,7 +866,9 @@ function drawKO(root, tables){
     feeds.forEach((f, j) => {
       const gp = gatePos(f.g, f.place), sl = slots[j];
       const who = occ[j];
-      mk("path", {class:"feed" + (who ? " on" : ""), d:bez(gp, port ? {x: sl.x, y: sl.y + (j ? sr : -sr)} : {x: sl.x + (j ? sr : -sr), y: sl.y}, port)}, root);
+      const end = port ? {x: sl.x, y: sl.y + (j ? sr : -sr)} : {x: sl.x + (j ? sr : -sr), y: sl.y};
+      const bx = gp.x + (gp.x < cx ? -60 : 60), ey = end.y + (j ? 50 : -50);      // story: out past the names, then into the slot
+      mk("path", {class:"feed" + (who ? " on" : ""), d: STORY ? `M${gp.x},${gp.y} C${bx},${gp.y} ${bx},${ey} ${end.x},${end.y}` : bez(gp, end, port)}, root);
       mk("circle", {class:"gate", cx:gp.x, cy:gp.y, r:3.5}, root);
       if (!port) mk("text", {class:"gatelbl", x:gp.x + (port ? 9 : (f.g === 0 ? 7 : -7)), y:gp.y + (port ? 3 : (gp.y < L.G[f.g].y ? -7 : 14)), "text-anchor": port ? "start" : (f.g === 0 ? "start" : "end")}, root, f.place === 1 ? "1ST" : "2ND");
       if (who){
@@ -891,11 +895,16 @@ function drawKO(root, tables){
       mk("rect", {x:px - w/2, y:py - 9.5, width:w, height:19, rx:9.5, style:"stroke:var(--gold)"}, pg);
       mk("text", {x:px, y:py}, pg, res.score);
     }
+    const kt = (D.ko.filter(m => m.round == 2)[k] || {}).time;
+    if (STORY && !res && kt){
+      const px = s.x + (s.x < cx ? 1 : -1)*(sr + 52), pg = mk("g", {class:"spill up"}, root), w = (kt.length + 4)*6 + 14;
+      mk("rect", {x:px - w/2, y:s.y - 9.5, width:w, height:19, rx:9.5}, pg);
+      mk("text", {x:px, y:s.y}, pg, "Sat " + kt);
+    }
     const ly = port ? s.y - off - sr - 27 : (k === 0 ? s.y - sr - 20 : s.y + sr + 28);
     if (!STORY){
       mk("text", {class:"kolbl", x:s.x, y:ly}, root, lbl[k]);
-      const kt = !res && (D.ko.filter(m => m.round == 2)[k] || {}).time;
-      mk("text", {class:"kodate", x:s.x, y:ly + 13}, root, "Sat " + dayDate(7).getUTCDate() + (kt ? " · " + kt : ""));
+      mk("text", {class:"kodate", x:s.x, y:ly + 13}, root, "Sat " + dayDate(7).getUTCDate() + (kt && !res ? " · " + kt : ""));
     }
   });
 }
@@ -1013,6 +1022,7 @@ function storyBands(){
   const d = dayDate(day), dn = `${DAYN[d.getUTCDay()]} ${d.getUTCDate()} Nov`;
   const c = champion(D);
   const stage = c ? `Champion · ${c.first} ${c.last}` : day >= 8 ? `Final · ${dn}` : day === 7 ? `Semi-finals · ${dn}`
+    : D.matches.every(m => played(m, day)) ? `Round robin complete · semi-finals Sat ${dayDate(7).getUTCDate()} Nov`
     : `Round robin · day ${day} · ${dn}`;
   document.getElementById("storyHead").innerHTML =
     `<div class="sh-kick">${D.flag} ${D.loc} · ${D.dates}</div><div class="sh-title">${D.name}</div><div class="sh-stage">${stage}</div>`;
