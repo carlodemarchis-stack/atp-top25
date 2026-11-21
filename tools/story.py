@@ -34,7 +34,7 @@ def shoot(url, out, wait=14):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default="http://localhost:8777")
+    ap.add_argument("--base", default="https://tennis.aguywithascarf.com")      # --base http://localhost:8777 for a local build
     ap.add_argument("--tours", default="atp,wta")
     ap.add_argument("--day", type=int, default=0, help="tournament day 1-8 (default: today)")
     ap.add_argument("--out", default=os.path.expanduser("~/Downloads/dataviz social"))

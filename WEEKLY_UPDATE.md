@@ -164,6 +164,6 @@ Append `?demo` to the URL to preview the rest of the week played out by seeding.
 
 `python3 tools/story.py` → `~/Downloads/dataviz social/story-<tour>-<date>-<time>.png` (1080×1920),
 one per tour, from `draws.html?story` (540×960 frame at 2×: title band + credit inside Instagram's
-safe zones, no chrome, no animation). Needs the local preview server (default base
-`http://localhost:8777`, serving a copy of the repo + `img/`), or `--base https://tennis.aguywithascarf.com`
-after a push. `--day N` for a past day, `--tours atp` for one tour.
+safe zones, no chrome, no animation). Shoots the live site by default (so push first);
+`--base http://localhost:8777` for a local build (serving a copy of the repo **with `img/`** — missing
+photos render as blank placeholders). `--day N` for a past day, `--tours atp` for one tour.
