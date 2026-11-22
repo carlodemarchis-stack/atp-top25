@@ -850,7 +850,8 @@ function drawKO(root, tables){
   } else {
     mk("text", {class:"hublbl", x:cx, y:cy - 3}, root, "FINAL");
     const ft = (D.ko.find(m => m.round == 1) || {}).time;
-    mk("text", {class:"hubsub", x:cx, y:cy + 12}, root, "Sun " + dayDate(8).getUTCDate() + (ft ? " · " + ft : ""));
+    mk("text", {class:"hubsub", x:cx, y:cy + 12}, root, "Sun " + dayDate(8).getUTCDate());
+    if (ft) mk("text", {class:"hubsub", x:cx, y:cy + 25}, root, ft);              // own line: the hub is narrow
     if (!STORY) mk("text", {class:"kodate", x:cx, y:cy + hr + 40}, root, D.trophy);
   }
 
