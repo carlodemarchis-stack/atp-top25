@@ -153,7 +153,8 @@ def finals_matches(pid, players, has_full):
     return out, {"next": nxt}, None
 
 
-def build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act={}):
+def build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act={}, prize_all={}):
+    prize_usd = prize_all.get(p["id"], {})
     rh_path = os.path.join(HERE, f"data/rank_history_{p['id']}.json")
     rh = json.load(open(rh_path)) if os.path.exists(rh_path) else {}
     ranks = rh.get("weeks", [])
@@ -168,6 +169,8 @@ def build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act={}):
         matches = []
         for m in reversed(t["matches"]):  # data is latest-round-first
             if m.get("bye") or not m.get("opp"):
+                continue
+            if re.fullmatch(r"Q\d", str(m.get("round", ""))):   # qualifying (Q1-Q3; not QF): not in the film, nor in the ATP's W-L
                 continue
             o = by_abbr.get(m["opp"])
             sets = parse_score(m["score"])
@@ -199,7 +202,8 @@ def build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act={}):
             "start": c.get("start", t["date"][:10]), "end": c.get("end", t["date"][:10]),
             "draw": t["draw"], "seed": t["seed"], "points": t["points"],
             "result": t["result"], "resultLong": t["resultLong"], "title": t["title"],
-            "prizeUSD": round((t.get("prize") or 0) * TO_USD.get(t.get("cur", "$"), 1)),
+            # the ATP's own US$ figure for the event when we have it, else an approximate conversion
+            "prizeUSD": prize_usd.get(t["name"]) if t["name"] in prize_usd else round((t.get("prize") or 0) * TO_USD.get(t.get("cur", "$"), 1)),
             "prize": t.get("prize") or 0, "cur": t.get("cur", "$"),
             "matches": matches,
         })
@@ -233,9 +237,11 @@ def main():
     # ATP Finals points + prize per player, from each player's ATP activity once the event is over (optional)
     fa_path = os.path.join(HERE, "data/finals_activity.json")
     finals_act = json.load(open(fa_path)) if os.path.exists(fa_path) else {}
+    pu_path = os.path.join(HERE, "data/prize_usd.json")   # per-event PrizeUsd from each player's ATP activity
+    prize_all = json.load(open(pu_path)) if os.path.exists(pu_path) else {}
     top = sorted((x for x in players if x.get("rank")), key=lambda x: x["rank"])[:a.top]
     print(f"season.html: ATP top {len(top)}")
-    films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act) for p in top]
+    films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act, prize_all) for p in top]
     films.sort(key=lambda f: f["player"]["rank"])
     data = json.dumps({"players": films}, ensure_ascii=False, separators=(",", ":"))
     # the landscape film and its 9:16 Instagram twin share the same data

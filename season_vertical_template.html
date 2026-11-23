@@ -682,7 +682,7 @@ function buildSummary(){
     cell("SETS W–L", `${Math.round(s.sw)}–${Math.round(s.sl)}`) + cell("GAMES W–L", `${Math.round(s.gw)}–${Math.round(s.gl)}`) + cell("PRIZE MONEY", money(s.pz), "m");
   $("sumTitles").innerHTML = ti.map(e=>`<span>🏆 ${shortName(e)}</span>`).join("") + EV.filter(e=>e.live).map(e=>`<span class="lv">● ${shortName(e)} · in progress</span>`).join("");
   const d = new Date(ms(D.rankingDate||"2026-11-16"));
-  $("sumFn").textContent = `ATP tour events only (no United Cup, Davis Cup, Laver Cup) · prize money in US$ at approximate rates · ranking of ${d.getUTCDate()} ${MON[d.getUTCMonth()]} 2026`;
+  $("sumFn").textContent = `ATP tour main draws only (no qualifying, United Cup, Davis Cup, Laver Cup) · prize money in US$ as published by the ATP · ranking of ${d.getUTCDate()} ${MON[d.getUTCMonth()]} 2026`;
 }
 
 /* frame: everything that depends continuously on t */
