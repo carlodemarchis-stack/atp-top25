@@ -116,7 +116,7 @@ def finals_matches(pid, players, has_full):
     read-only here). Scores there are winner-first; flip them to the player's view."""
     path = os.path.join(HERE, "data/atp_finals_results.json")
     if not os.path.exists(path):
-        return [], None
+        return [], None, None
     fr, byid = json.load(open(path)), {x["id"]: x for x in players}
     out = []
     for stage, rows in (("RR", fr.get("rr", [])), ("KO", fr.get("ko", []))):
@@ -129,9 +129,18 @@ def finals_matches(pid, players, has_full):
             sets = parse_score(m["score"])
             if not won:
                 sets = [[y, x, tb] for x, y, tb in sets]
-            rnd = "RR" if stage == "RR" else m.get("round", "SF")
+            # knockout rows carry round 2 = semi-final, 1 = final
+            rnd = "RR" if stage == "RR" else {2: "SF", 1: "F"}.get(m.get("round"), "SF")
             if o:
-                out.append(opp_entry(o, rnd, "Round Robin" if rnd == "RR" else rnd, won, sets, has_full))
+                out.append(opp_entry(o, rnd, {"RR": "Round Robin", "SF": "Semi-final", "F": "Final"}[rnd], won, sets, has_full))
+    # his Finals are over once he loses a knockout match, wins the final, or the semi-finals are set without him
+    ko = [m for m in fr.get("ko", []) if pid in (m.get("a"), m.get("b"))]
+    sf_set = any(m.get("a") and m.get("b") for m in fr.get("ko", []) if m.get("round") == 2)
+    lost_ko = any(m.get("w") and (m["w"] == "a") != (m["a"] == pid) for m in ko)
+    won_f = any(m.get("round") == 1 and m.get("w") and (m["w"] == "a") == (m["a"] == pid) for m in ko)
+    if lost_ko or won_f or (sf_set and not ko):
+        res = "W" if won_f else "F" if any(m.get("round") == 1 for m in ko) else "SF" if ko else "RR"
+        return out, None, {"result": res, "title": won_f}
     played = {(m["a"], m["b"]) for m in fr.get("rr", []) if m.get("w")}
     nxt = None
     for key, v in sorted(fr.get("days", {}).items(), key=lambda kv: kv[1]["day"]):
@@ -141,10 +150,10 @@ def finals_matches(pid, players, has_full):
             if o:
                 nxt = {"opp": f"{o['first']} {o['last']}", "day": v["day"], "time": v.get("time")}
             break
-    return out, {"next": nxt}
+    return out, {"next": nxt}, None
 
 
-def build_player(p, d, players, by_abbr, cal, has_full, opp_ids):
+def build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act={}):
     rh_path = os.path.join(HERE, f"data/rank_history_{p['id']}.json")
     rh = json.load(open(rh_path)) if os.path.exists(rh_path) else {}
     ranks = rh.get("weeks", [])
@@ -173,9 +182,14 @@ def build_player(p, d, players, by_abbr, cal, has_full, opp_ids):
                 "oppImg": oid, "oppKind": has_full.get(oid),
                 "score": m["score"] or "W/O", "sets": sets,   # an empty score is a walkover
             })
-        live = None
+        live, done = None, None
         if t["type"] == "WC":
-            matches, live = finals_matches(p["id"], players, has_full)
+            matches, live, done = finals_matches(p["id"], players, has_full)
+        if done:   # a finished Finals: result + title from the results file, points/prize from the ATP once published
+            fa = finals_act.get(p["id"], {})
+            RL = {"W": "Winner", "F": "Finalist", "SF": "Semi-finalist", "RR": "Round robin"}
+            t = dict(t, result=done["result"], resultLong=RL[done["result"]], title=done["title"],
+                     points=fa.get("points", t["points"]), prize=fa.get("prize", t.get("prize")), cur=fa.get("cur", t.get("cur", "$")))
         lat, lon = CITY.get(city, (0, 0))
         events.append({
             "live": live,
@@ -193,10 +207,13 @@ def build_player(p, d, players, by_abbr, cal, has_full, opp_ids):
     nm = sum(len(e["matches"]) for e in events)
     print(f"  #{p['rank']:<2} {p['first']} {p['last']:<12} {len(events):2} events · {nm:2} matches · "
           f"prize ≈ ${sum(e['prizeUSD'] for e in events):,} · No.1 beat {no1_beat(ranks, rh.get('wasNo1Before2026'))}")
+    # rank + ranking date from his own weekly history when it is newer than players.json (refreshed per film)
+    last = ranks[-1] if ranks else None
+    newer = last and last["date"] > (d.get("ranking_date") or "")
     return {
-        "player": {"id": p["id"], "slug": slug_of(p), "rank": p["rank"], "first": p["first"], "last": p["last"],
+        "player": {"id": p["id"], "slug": slug_of(p), "rank": last["rank"] if newer else p["rank"], "first": p["first"], "last": p["last"],
                    "country": p["country"], "flag": COUNTRY2.get(p["country"], "")},
-        "rankingDate": d.get("ranking_date"), "ranks": ranks,
+        "rankingDate": last["date"] if newer else d.get("ranking_date"), "ranks": ranks,
         "no1": no1_beat(ranks, rh.get("wasNo1Before2026")), "events": events,
     }
 
@@ -213,9 +230,13 @@ def main():
     imgdir = os.path.join(HERE, "img/full")
     has_full = {f[:-4]: photo_kind(os.path.join(imgdir, f)) for f in os.listdir(imgdir) if f.endswith(".png")}
     opp_ids = json.load(open(os.path.join(HERE, "data/opp_ids.json")))
+    # ATP Finals points + prize per player, from each player's ATP activity once the event is over (optional)
+    fa_path = os.path.join(HERE, "data/finals_activity.json")
+    finals_act = json.load(open(fa_path)) if os.path.exists(fa_path) else {}
     top = sorted((x for x in players if x.get("rank")), key=lambda x: x["rank"])[:a.top]
     print(f"season.html: ATP top {len(top)}")
-    films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids) for p in top]
+    films = [build_player(p, d, players, by_abbr, cal, has_full, opp_ids, finals_act) for p in top]
+    films.sort(key=lambda f: f["player"]["rank"])
     data = json.dumps({"players": films}, ensure_ascii=False, separators=(",", ":"))
     # the landscape film and its 9:16 Instagram twin share the same data
     for tpl_name, out in (("season_template.html", "season.html"), ("season_vertical_template.html", "season-vertical.html")):
